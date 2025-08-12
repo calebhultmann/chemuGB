@@ -17,32 +17,32 @@ public:
 	~CPU();
 
 private:
-	Reg16 AF;
+	Reg16 af;
 		// Flag bits 7: z, 6: n, 5: h, 4:c, 3210: unused
-	Reg16 BC;
-	Reg16 DE;
-	Reg16 HL;
-	uint16_t SP;
-	uint16_t PC;
+	Reg16 bc;
+	Reg16 de;
+	Reg16 hl;
+	uint16_t sp;
+	uint16_t pc;
 
 public:
-	uint8_t&  A()  { return AF.high; }
-	uint16_t& AF() { return AF.reg; }
+	uint8_t&  A()  { return af.high; }
+	uint16_t& AF() { return af.reg; }
 
-	uint8_t&  B()  { return BC.high; }
-	uint8_t&  C()  { return BC.low; }
-	uint16_t& BC() { return BC.reg; }
+	uint8_t&  B()  { return bc.high; }
+	uint8_t&  C()  { return bc.low; }
+	uint16_t& BC() { return bc.reg; }
 
-	uint8_t&  D()  { return DE.high; }
-	uint8_t&  E()  { return DE.low; }
-	uint16_t& DE() { return DE.reg; }
+	uint8_t&  D()  { return de.high; }
+	uint8_t&  E()  { return de.low; }
+	uint16_t& DE() { return de.reg; }
 
-	uint8_t&  H()  { return HL.high; }
-	uint8_t&  L()  { return HL.low; }
-	uint16_t& HL() { return HL.reg; }
+	uint8_t&  H()  { return hl.high; }
+	uint8_t&  L()  { return hl.low; }
+	uint16_t& HL() { return hl.reg; }
 
-	uint16_t& SP() { return SP; }
-	uint16_t& PC() { return PC; }
+	uint16_t& SP() { return sp; }
+	uint16_t& PC() { return pc; }
 
 private:
 
