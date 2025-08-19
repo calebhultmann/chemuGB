@@ -32,13 +32,45 @@ Cartridge::Cartridge(const std::string& filename) {
 		return;
 	}
 
+	ifs.seekg(0x100);
+	ifs.read((char*)&header, sizeof(header));
+
+	// cartridge type
+	//switch (header.cartridge_type) {
+	//case 0x01:
+	//}
+
+	if (header.rom_size > 8) {
+		std::cout << "uh oh rom\n";
+		return;
+	}
+	int nROMbanks = (1 << header.rom_size) * 2;
+
+	romBanks.resize(nROMbanks, std::vector<uint8_t>(ROM_BANK_SIZE));
+
+	if (header.ram_size == 1 || header.ram_size > 5) {
+		std::cout << "uh oh ram\n";
+		return;
+	}
+
+	int nRAMbanks = 0;
+	switch (header.ram_size) {
+	case 0: nRAMbanks = 0; break;
+	case 2: nRAMbanks = 1; break;
+	case 3: nRAMbanks = 4; break;
+	case 4: nRAMbanks = 16; break;
+	case 5: nRAMbanks = 8; break;
+	}
+
+	romBanks.resize(nRAMbanks, std::vector<uint8_t>(RAM_BANK_SIZE));
+
+
+
+
 	ifs.seekg(0, ifs.end);
 	int len = int(ifs.tellg());
-	std::cout << "Length of rom: " << std::hex << len << "\n\n";
-
-	ifs.seekg(0x100);
-
-	ifs.read((char*)&header, sizeof(header));
+	std::cout << "Length of rom: 0x" << std::hex << len << "\n";
+	std::cout << std::dec << "ROM banks: " << nROMbanks << ", RAM banks: " << nRAMbanks << "\n\n";
 
 	std::cout << "Entry point: ";
 	for (int i = 0; i < 4; i++) {
@@ -69,6 +101,10 @@ Cartridge::Cartridge(const std::string& filename) {
 	for (int i = 0; i < 2; i++) {
 		std::cout << std::hex << int(header.global_checksum[i]) << " ";
 	} std::cout << '\n';
+
+
+
+
 }
 
 Cartridge::~Cartridge() {

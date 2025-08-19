@@ -2,6 +2,9 @@
 #include <string>
 #include <vector>
 
+constexpr size_t ROM_BANK_SIZE = 0x4000; // 16 KiB
+constexpr size_t RAM_BANK_SIZE = 0x2000; // 8 KiB
+
 class Cartridge
 {
 public:
@@ -9,6 +12,7 @@ public:
 	~Cartridge();
 
 	std::vector<std::vector<uint8_t>> romBanks; // 0x4000 per bank
+	std::vector<std::vector<uint8_t>> ramBanks; // 0x2000 per bank
 
 
 	//rom, external ram, mbc
