@@ -4,6 +4,8 @@
 #include <iostream>
 #include <vector>
 
+#include "mapper_MBC1.h"
+
 Cartridge::Cartridge(const std::string& filename) {
 	struct gbHeader {
 		uint8_t	entry_point[4];
@@ -35,19 +37,15 @@ Cartridge::Cartridge(const std::string& filename) {
 	ifs.seekg(0x100);
 	ifs.read((char*)&header, sizeof(header));
 
-	// cartridge type
-	//switch (header.cartridge_type) {
-	//case 0x01:
-	//}
-
+	// Set up ROM banks
 	if (header.rom_size > 8) {
 		std::cout << "uh oh rom\n";
 		return;
 	}
 	int nROMbanks = (1 << header.rom_size) * 2;
-
 	romBanks.resize(nROMbanks, std::vector<uint8_t>(ROM_BANK_SIZE));
 
+	// Set up RAM banks
 	if (header.ram_size == 1 || header.ram_size > 5) {
 		std::cout << "uh oh ram\n";
 		return;
@@ -61,12 +59,27 @@ Cartridge::Cartridge(const std::string& filename) {
 	case 4: nRAMbanks = 16; break;
 	case 5: nRAMbanks = 8; break;
 	}
+	ramBanks.resize(nRAMbanks, std::vector<uint8_t>(RAM_BANK_SIZE));
 
-	romBanks.resize(nRAMbanks, std::vector<uint8_t>(RAM_BANK_SIZE));
+	// Set up Mapper
+	switch (header.cartridge_type) {
+	case 0x01:
+	case 0x02:
+	case 0x03: mapper = std::make_shared<Mapper_MBC1>(nROMbanks, nRAMbanks); break;
+	//case 0x05:
+	//case 0x06: mapper = std::make_shared<Mapper_MBC2>(nROMbanks, nRAMbanks); break;
+	}
+
+	// Read ROM data
+	ifs.seekg(0);
+	for (int i = 0; i < nROMbanks; i++) {
+		ifs.read((char*)romBanks[i].data(), ROM_BANK_SIZE);
+	}
 
 
 
 
+	// Debugging info:
 	ifs.seekg(0, ifs.end);
 	int len = int(ifs.tellg());
 	std::cout << "Length of rom: 0x" << std::hex << len << "\n";
@@ -101,10 +114,6 @@ Cartridge::Cartridge(const std::string& filename) {
 	for (int i = 0; i < 2; i++) {
 		std::cout << std::hex << int(header.global_checksum[i]) << " ";
 	} std::cout << '\n';
-
-
-
-
 }
 
 Cartridge::~Cartridge() {

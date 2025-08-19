@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
+#include "mapper.h"
 
 constexpr size_t ROM_BANK_SIZE = 0x4000; // 16 KiB
 constexpr size_t RAM_BANK_SIZE = 0x2000; // 8 KiB
@@ -14,8 +16,7 @@ public:
 	std::vector<std::vector<uint8_t>> romBanks; // 0x4000 per bank
 	std::vector<std::vector<uint8_t>> ramBanks; // 0x2000 per bank
 
-
-	//rom, external ram, mbc
+	std::shared_ptr<Mapper> mapper;
 
 	// Cartridge Types
 	//$00	ROM ONLY
