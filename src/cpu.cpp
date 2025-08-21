@@ -211,41 +211,118 @@ void CPU::decode(uint8_t opcode) {
 	}
 
 	case GROUP_3:
-		if (second_octal(opcode) == 0b110) {
-			// ___ a, imm8
+		switch (second_octal(opcode)) {
+		case 0:
 			switch (first_octal(opcode)) {
-			case 0:
-				//add
-				break;
-			case 1:
-				//adc
-				break;
-			case 2:
-				//sub
-				break;
-			case 3:
-				//sbc
-				break;
 			case 4:
-				//and
+				// ldh [imm8], a
 				break;
 			case 5:
-				//xor
+				// add sp, imm8
 				break;
 			case 6:
-				//or
+				// ldh a, [imm8]
 				break;
 			case 7:
-				//cp
+				// ld hl, sp + imm8
+				break;
+			default:
+				// ret cond			1	1	0	(cond)	0	0	0
+			}
+			break;
+		case 1:
+			switch (first_octal(opcode)) {
+			case 1:
+				// ret
+				break;
+			case 3:
+				// reti
+				break;
+			case 5:
+				// jp hl
+				break;
+			case 7:
+				// ld sp, hl
+				break;
+			default:
+				// pop r16stk	1	1  (r16stk)	0	0	0	1
+			}
+			break;
+		case 2:
+			switch (first_octal(opcode)) {
+			case 4:
+				// ldh [c], a
+				break;
+			case 5:
+				// ld [imm16], a
+				break;
+			case 6:
+				// ldh a, [c]
+				break;
+			case 7:
+				// ld a, [imm16]
+				break;
+			default:
+				// jp cond, imm16	1	1	0	(cond)	0	1	0
+			}
+			break;
+		case 3:
+			switch (first_octal(opcode)) {
+			case 0:
+				// jp imm16
+				break;
+			case 1:
+				// $CB prefix
+				break;
+			case 6:
+				// di
+				break;
+			case 7:
+				// ei
+				break;
+			default:
+				// ELSE INVALID OPCODE
+			}
+			break;
+		case 4:
+			// call cond, imm16	1	1	0	(cond)	1	0	0
+			// ELSE INVALID OPCODE
+			break;
+		case 5:
+			// call imm16	1	1	0	0	1	1	0	1
+			// push r16stk	1	1  (r16stk)	0	1	0	1
+			break;
+		case 6:
+			switch (first_octal(opcode)) {
+			case 0:
+				// add a, imm8
+				break;
+			case 1:
+				// adc a, imm8
+				break;
+			case 2:
+				// sub a, imm8
+				break;
+			case 3:
+				// sbc a, imm8
+				break;
+			case 4:
+				// and a, imm8
+				break;
+			case 5:
+				// xor a, imm8
+				break;
+			case 6:
+				// or a, imm8
+				break;
+			case 7:
+				// cp a, imm8
 				break;
 			}
-		}
-		else if ((opcode & 0b11110111) == 0b11110011) {
-			((opcode >> 3) & 1) ? /* ei */ : /* di */;
-		}
-		else if ((opcode & 0b00001011) == 0b0001) {
-			uint8_t reg = select_r16stk((opcode & 0b00111000) >> 3);
-			((opcode >> 2) & 1) ? /* pop reg */ : /* push reg */;
+			break;
+		case 7:
+			// rst tgt3	1	1	(tgt3)	1	1	1
+			break;
 		}
 
 	}
