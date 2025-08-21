@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add dependencies
-find_package(SDL3 CONFIG REQUIRED)
+#find_package(SDL3 CONFIG REQUIRED)
 
 # No C++20 modules
 set(CMAKE_CXX_SCAN_FOR_MODULES OFF) 
@@ -41,7 +41,7 @@ target_compile_definitions(Emulator PRIVATE
 
 # Automatically links to these libs
 target_link_libraries(Emulator PRIVATE
-    SDL3::SDL3
+    #SDL3::SDL3
 )
 
 # Add directories with any random loose .dlls or .libs here

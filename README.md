@@ -1,7 +1,11 @@
 Important References:
 
 https://gbdev.io/pandocs/
+	Pandocs
+
 https://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
-https://archive.org/details/GameBoyProgManVer1.1/page/n85/mode/2up
-https://github.com/rockytriton/LLD_gbemu/raw/main/docs/The%20Cycles-Accurate%20Game%20Boy%20Docs.pdf
-https://github.com/rockytriton/LLD_gbemu/raw/main/docs/gbctr.pdf
+	Opcode table
+
+https://ia803208.us.archive.org/9/items/GameBoyProgManVer1.1/GameBoyProgManVer1.1.pdf
+https://gekkio.fi/files/gb-docs/gbctr.pdf
+https://www.copetti.org/writings/consoles/game-boy/
