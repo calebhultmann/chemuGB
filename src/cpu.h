@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <vector>
 
 union Reg16 {
 	struct {
@@ -45,16 +46,43 @@ public:
 	uint16_t& PC() { return pc; }
 
 private:
-
-	// First octal
-	// Second octal
-	//	  Similar to opcode_group()
-
 	void decode(uint8_t opcode);
 	uint8_t&  select_r8(uint8_t selector);
 	uint16_t& select_r16(uint8_t selector);
 	uint16_t& select_r16stk(uint8_t selector);
 	uint16_t& select_r16mem(uint8_t selector);
+
+public:
+	enum class OperandType {
+		R8,
+		R16,
+		R16STK,
+		R16MEM,
+		COND,
+		B3,
+		TGT3,
+		IMM8,
+		IMM16,
+		NONE
+	};
+
+	struct Operand {
+		OperandType type;
+		int val;
+	};
+
+	Operand empty_operand = { OperandType::NONE, 0 };
+	struct Instruction {
+		std::string mnemonic;
+		int cycles;
+		void (*execute)(Operand, Operand);
+		Operand src;
+		Operand dst;
+	};
+
+
+	std::vector<Instruction> lookup;
+
 	// cond
 	// b3?
 	// tgt3??

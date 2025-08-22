@@ -2,9 +2,17 @@
 #include <stdexcept>
 
 CPU::CPU() {
+	lookup =
+	{
+		{"NOP", 4, NOP, CPU::empty_operand, CPU::empty_operand}, {"LD BC, IMM16", 3, {CPU::OperandType::IMM16, 0}, {CPU::OperandType::R16, CPU::BC()}}
+	};
 }
 
 CPU::~CPU() {
+
+}
+
+void NOP(CPU::Operand src, CPU::Operand dst) {
 
 }
 
@@ -96,6 +104,7 @@ void CPU::decode(uint8_t opcode) {
 				break;
 			default:
 				// jr cond,imm8	0	0	1	(cond)	0	0	0
+				break;
 			}
 			break;
 		case 1:
@@ -228,6 +237,7 @@ void CPU::decode(uint8_t opcode) {
 				break;
 			default:
 				// ret cond			1	1	0	(cond)	0	0	0
+				break;
 			}
 			break;
 		case 1:
@@ -246,6 +256,7 @@ void CPU::decode(uint8_t opcode) {
 				break;
 			default:
 				// pop r16stk	1	1  (r16stk)	0	0	0	1
+				break;
 			}
 			break;
 		case 2:
@@ -264,6 +275,7 @@ void CPU::decode(uint8_t opcode) {
 				break;
 			default:
 				// jp cond, imm16	1	1	0	(cond)	0	1	0
+				break;
 			}
 			break;
 		case 3:
@@ -282,6 +294,7 @@ void CPU::decode(uint8_t opcode) {
 				break;
 			default:
 				// ELSE INVALID OPCODE
+				break;
 			}
 			break;
 		case 4:
@@ -291,6 +304,7 @@ void CPU::decode(uint8_t opcode) {
 		case 5:
 			// call imm16	1	1	0	0	1	1	0	1
 			// push r16stk	1	1  (r16stk)	0	1	0	1
+			// ELSE INVALID OPCODE
 			break;
 		case 6:
 			switch (first_octal(opcode)) {
@@ -324,6 +338,5 @@ void CPU::decode(uint8_t opcode) {
 			// rst tgt3	1	1	(tgt3)	1	1	1
 			break;
 		}
-
 	}
 }
