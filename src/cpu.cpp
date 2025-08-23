@@ -4,7 +4,7 @@
 CPU::CPU() {
 	lookup =
 	{
-		{"NOP", 4, NOP, CPU::empty_operand, CPU::empty_operand}, {"LD BC, IMM16", 3, {CPU::OperandType::IMM16, 0}, {CPU::OperandType::R16, CPU::BC()}}
+		{"NOP", 4, NOP, empty_operand, empty_operand}, {"LD BC, IMM16", 3, {CPU::OperandType::IMM16, 0}, {CPU::OperandType::R16, CPU::BC()}}
 	};
 }
 
@@ -12,14 +12,23 @@ CPU::~CPU() {
 
 }
 
-void NOP(CPU::Operand src, CPU::Operand dst) {
-
+uint8_t CPU::read(uint16_t addr) {
+	return bus->read(addr);
 }
 
-constexpr int GROUP_0 = 0b00;
-constexpr int GROUP_1 = 0b01;
-constexpr int GROUP_2 = 0b10;
-constexpr int GROUP_3 = 0b11;
+void CPU::write(uint16_t addr, uint8_t data) {
+	bus->write(addr, data);
+}
+
+uint8_t CPU::fetchByte() {
+	return bus->read(pc++);
+}
+
+uint16_t CPU::fetchWord() {
+	uint16_t lo = bus->read(pc++);
+	uint16_t hi = bus->read(pc++);
+	return (hi << 8) | lo;
+}
 
 uint8_t& CPU::select_r8(uint8_t selector) {
 	switch (selector) {
@@ -339,4 +348,220 @@ void CPU::decode(uint8_t opcode) {
 			break;
 		}
 	}
+}
+
+
+
+void CPU::readOperand(Operand op) {
+	switch (op.type) {
+	case R8:
+	case R16:
+	case R16STK:
+	case R16MEM:
+	case COND:
+
+	case B3:
+	case TGT3:
+	case IMM8: 
+	case IMM16:
+	}
+}
+
+
+
+
+// Loads
+void CPU::LD(Operand src, Operand dst) {
+	uint16_t value = readOperand(src);
+	writeOperand(dst, value);
+}
+
+void CPU::LDH(Operand src, Operand dst) {
+	// Not implemented
+}
+
+// Arithmetic
+void CPU::ADC(Operand src, Operand dst) {
+
+}
+
+void CPU::ADD(Operand src, Operand dst) {
+
+}
+
+void CPU::SBC(Operand src, Operand dst) {
+
+}
+
+void CPU::SUB(Operand src, Operand dst) {
+
+}
+
+void CPU::INC(Operand src, Operand dst) {
+
+}
+
+void CPU::DEC(Operand src, Operand dst) {
+
+}
+
+void CPU::CP(Operand src, Operand dst) {
+
+}
+
+// Bitwise Logic
+void CPU::AND(Operand src, Operand dst) {
+
+}
+
+void CPU::CPL(Operand src, Operand dst) {
+
+}
+
+void CPU::OR(Operand src, Operand dst) {
+
+}
+
+void CPU::XOR(Operand src, Operand dst) {
+
+}
+
+// Bit Flag
+void CPU::BIT(Operand src, Operand dst) {
+
+}
+
+void CPU::SET(Operand src, Operand dst) {
+
+}
+
+void CPU::RES(Operand src, Operand dst) {
+
+}
+
+// Bit Shift
+
+void CPU::RL(Operand src, Operand dst) {
+
+}
+
+void CPU::RLA(Operand src, Operand dst) {
+
+}
+
+void CPU::RLC(Operand src, Operand dst) {
+
+}
+
+void CPU::RLCA(Operand src, Operand dst) {
+
+}
+
+void CPU::RR(Operand src, Operand dst) {
+
+}
+
+void CPU::RRA(Operand src, Operand dst) {
+
+}
+
+void CPU::RRC(Operand src, Operand dst) {
+
+}
+
+void CPU::RRCA(Operand src, Operand dst) {
+
+}
+
+void CPU::SLA(Operand src, Operand dst) {
+
+}
+
+void CPU::SRA(Operand src, Operand dst) {
+
+}
+
+void CPU::SRL(Operand src, Operand dst) {
+
+}
+
+void CPU::SWAP(Operand src, Operand dst) {
+
+}
+
+// Jumps and Subroutines
+void CPU::CALL(Operand src, Operand dst) {
+
+}
+
+void CPU::JP(Operand src, Operand dst) {
+
+}
+
+void CPU::JR(Operand src, Operand dst) {
+
+}
+
+void CPU::RET(Operand src, Operand dst) {
+
+}
+
+void CPU::RETI(Operand src, Operand dst) {
+
+}
+
+void CPU::RST(Operand src, Operand dst) {
+
+}
+
+// Carry Flag
+void CPU::CCF(Operand src, Operand dst) {
+
+}
+
+void CPU::SCF(Operand src, Operand dst) {
+
+}
+
+// Stack
+void CPU::POP(Operand src, Operand dst) {
+
+}
+
+void CPU::PUSH(Operand src, Operand dst) {
+
+}
+
+// Interrupt-related
+void CPU::DI(Operand src, Operand dst) {
+
+}
+
+void CPU::EI(Operand src, Operand dst) {
+
+}
+
+void CPU::HALT(Operand src, Operand dst) {
+
+}
+
+// Miscellaneous
+void CPU::DAA(Operand src, Operand dst) {
+
+}
+
+void CPU::NOP(Operand src, Operand dst) {
+
+}
+
+void CPU::STOP(Operand src, Operand dst) {
+
+}
+
+void CPU::CB(Operand src, Operand dst) {
+
+}
+
+void CPU::INVALID(Operand src, Operand dst) {
+
 }

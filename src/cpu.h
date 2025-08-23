@@ -1,6 +1,33 @@
 #include <stdint.h>
 #include <vector>
 
+constexpr int GROUP_0 = 0b00;
+constexpr int GROUP_1 = 0b01;
+constexpr int GROUP_2 = 0b10;
+constexpr int GROUP_3 = 0b11;
+
+constexpr int REG_B = 0;
+constexpr int REG_C = 1;
+constexpr int REG_D = 2;
+constexpr int REG_E = 3;
+constexpr int REG_H = 4;
+constexpr int REG_L = 5;
+constexpr int REG_HL_DATA = 6;
+constexpr int REG_A = 7;
+
+constexpr int REG_BC = 0;
+constexpr int REG_DE = 1;
+constexpr int REG_HL = 2;
+constexpr int REG_SP = 3;
+constexpr int REG_AF = 3;
+constexpr int REG_HLI = 2;
+constexpr int REG_HLD = 3;
+
+constexpr int COND_NZ = 0;
+constexpr int COND_Z = 1;
+constexpr int COND_NC = 2;
+constexpr int COND_C = 3;
+
 union Reg16 {
 	struct {
 		uint8_t low;
@@ -11,11 +38,16 @@ union Reg16 {
 	Reg16() : reg(0) {}
 };
 
+class Bus;
+
 //the SM83 chip
 class CPU {
 public:
 	CPU();
 	~CPU();
+
+	Bus* bus = nullptr;
+	void connectBus(Bus* b) { bus = b; }
 
 private:
 	Reg16 af;
@@ -45,6 +77,12 @@ public:
 	uint16_t& SP() { return sp; }
 	uint16_t& PC() { return pc; }
 
+public:
+	uint8_t read(uint16_t addr);
+	uint16_t write(uint16_t addr, uint8_t data);
+	uint8_t fetchByte();
+	uint16_t fetchWord();
+
 private:
 	void decode(uint8_t opcode);
 	uint8_t&  select_r8(uint8_t selector);
@@ -59,19 +97,22 @@ public:
 		R16STK,
 		R16MEM,
 		COND,
+
 		B3,
 		TGT3,
 		IMM8,
 		IMM16,
+
 		NONE
 	};
 
 	struct Operand {
 		OperandType type;
-		int val;
+		int index;
 	};
 
 	Operand empty_operand = { OperandType::NONE, 0 };
+
 	struct Instruction {
 		std::string mnemonic;
 		int cycles;
@@ -79,6 +120,9 @@ public:
 		Operand src;
 		Operand dst;
 	};
+
+
+
 
 
 	std::vector<Instruction> lookup;
@@ -89,6 +133,74 @@ public:
 	// imm8?
 	// imm16?
 
+	void readOperand(Operand op);
+
+
+	// Loads
+	void LD(Operand src, Operand dst);
+	void LDH(Operand src, Operand dst);
+	
+	// Arithmetic
+	void ADC(Operand src, Operand dst);
+	void ADD(Operand src, Operand dst);
+	void SBC(Operand src, Operand dst);
+	void SUB(Operand src, Operand dst);
+	void INC(Operand src, Operand dst);
+	void DEC(Operand src, Operand dst);
+	void CP(Operand src, Operand dst);
+
+	// Bitwise Logic
+	void AND(Operand src, Operand dst);
+	void CPL(Operand src, Operand dst);
+	void OR(Operand src, Operand dst);
+	void XOR(Operand src, Operand dst); 
+
+	// Bit flag
+	void BIT(Operand src, Operand dst);
+	void SET(Operand src, Operand dst);
+	void RES(Operand src, Operand dst);
+	
+	// Bit Shift
+	void RL(Operand src, Operand dst);
+	void RLA(Operand src, Operand dst);
+	void RLC(Operand src, Operand dst);
+	void RLCA(Operand src, Operand dst);
+	void RR(Operand src, Operand dst);
+	void RRA(Operand src, Operand dst);
+	void RRC(Operand src, Operand dst);
+	void RRCA(Operand src, Operand dst);
+	void SLA(Operand src, Operand dst);
+	void SRA(Operand src, Operand dst);
+	void SRL(Operand src, Operand dst);
+	void SWAP(Operand src, Operand dst);
+
+	// Jumps and Subroutines
+	void CALL(Operand src, Operand dst);
+	void JP(Operand src, Operand dst);
+	void JR(Operand src, Operand dst);
+	void RET(Operand src, Operand dst);
+	void RETI(Operand src, Operand dst);
+	void RST(Operand src, Operand dst);
+
+	// Carry Flag
+	void CCF(Operand src, Operand dst);
+	void SCF(Operand src, Operand dst);
+
+	// Stack
+	void POP(Operand src, Operand dst);
+	void PUSH(Operand src, Operand dst);
+
+	// Interrupt-related
+	void DI(Operand src, Operand dst);
+	void EI(Operand src, Operand dst);
+	void HALT(Operand src, Operand dst);
+
+	// Miscellaneous
+	void DAA(Operand src, Operand dst);
+	void NOP(Operand src, Operand dst);
+	void STOP(Operand src, Operand dst);
+	void CB(Operand src, Operand dst); // Should I construct this function? Yes right?
+	void INVALID(Operand src, Operand dst);
 };
 
 // DMB Boot rom dump:

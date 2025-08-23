@@ -1,7 +1,7 @@
 #include "bus.h"
 
 Bus::Bus() {
-
+	cpu.connectBus(this);
 }
 
 Bus::~Bus() {
