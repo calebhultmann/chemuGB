@@ -2,9 +2,13 @@
 #include <stdexcept>
 
 CPU::CPU() {
+	using o = OperandType;
+	using empt = empty_operand;
+	using n16 = { OperandType::R16, 0 };
 	lookup =
 	{
-		{"NOP", 4, NOP, empty_operand, empty_operand}, {"LD BC, IMM16", 3, {CPU::OperandType::IMM16, 0}, {CPU::OperandType::R16, CPU::BC()}}
+		{"NOP", 1, NOP, empt, empt}, {"LD BC, IMM16", 3, LD, {o::IMM16, 0}, {o::R16, REG_BC}}, {"LD [BC], A", 2, LD, {o::R8, REG_A}, {o::R16MEM, REG_BC}}, {"INC BC", 2, INC, {o::R16, REG_BC}, empt}, {"INC B", 1, INC, {o::R8, REG_B}, empt}, {"DEC B", 1, DEC, {o::R8, REG_B}, empt}, {"LD B, IMM8", 2, LD, {o::IMM8, 0}, {o::R8, REG_B}}, {"RLCA", 1, RLCA, empt, empt},
+		{"LD [IMM16], SP", 5, LD, {o::R16, REG_SP}, {o::IMM16, 0}}, {"ADD HL, BC", 2, ADD, {o::R16, REG_BC}, {o::R16, REG_HL}},
 	};
 }
 
