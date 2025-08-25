@@ -79,7 +79,7 @@ public:
 
 public:
 	uint8_t read(uint16_t addr);
-	uint16_t write(uint16_t addr, uint8_t data);
+	void write(uint16_t addr, uint8_t data);
 	uint8_t fetchByte();
 	uint16_t fetchWord();
 
@@ -98,10 +98,13 @@ public:
 		R16MEM,
 		COND,
 
+		VEC,
 		B3,
 		TGT3,
-		IMM8,
-		IMM16,
+		n8,
+		n16,
+		a8,
+		a16,
 
 		NONE
 	};
@@ -111,12 +114,10 @@ public:
 		int index;
 	};
 
-	Operand empty_operand = { OperandType::NONE, 0 };
-
 	struct Instruction {
 		std::string mnemonic;
 		int cycles;
-		void (*execute)(Operand, Operand);
+		void (CPU::*execute)(Operand, Operand);
 		Operand src;
 		Operand dst;
 	};
@@ -200,7 +201,7 @@ public:
 	void NOP(Operand src, Operand dst);
 	void STOP(Operand src, Operand dst);
 	void CB(Operand src, Operand dst); // Should I construct this function? Yes right?
-	void INVALID(Operand src, Operand dst);
+	void INV(Operand src, Operand dst);
 };
 
 // DMB Boot rom dump:
