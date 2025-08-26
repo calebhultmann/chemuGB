@@ -97,10 +97,9 @@ public:
 		R16STK,
 		R16MEM,
 		COND,
-
 		VEC,
 		B3,
-		TGT3,
+
 		n8,
 		n16,
 		a8,
@@ -126,7 +125,8 @@ public:
 
 
 
-	std::vector<Instruction> lookup;
+	std::vector<Instruction> opcode_lookup;
+	std::vector<Instruction> cb_lookup;
 
 	// cond
 	// b3?
