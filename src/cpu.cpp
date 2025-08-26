@@ -122,22 +122,22 @@ uint16_t CPU::fetchWord() {
 
 uint8_t& CPU::select_r8(uint8_t selector) {
 	switch (selector) {
-	case 0:
+	case REG_B:
 		return B();
-	case 1:
+	case REG_C:
 		return C();
-	case 2:
+	case REG_D:
 		return D();
-	case 3:
+	case REG_E:
 		return E();
-	case 4:
+	case REG_H:
 		return H();
-	case 5:
+	case REG_L:
 		return L();
-	case 6:
+	case REG_HL_DATA:
 		// NOT IMPLEMENTED YET, FETCH BYTE AT [HL]
 		break;
-	case 7:
+	case REG_A:
 		return A();
 	}
 	throw std::runtime_error("Invalid r8 selection");
@@ -145,13 +145,13 @@ uint8_t& CPU::select_r8(uint8_t selector) {
 
 uint16_t& CPU::select_r16(uint8_t selector) {
 	switch (selector) {
-	case 0:
+	case REG_BC:
 		return BC();
-	case 1:
+	case REG_DE:
 		return DE();
-	case 2:
+	case REG_HL:
 		return HL();
-	case 3:
+	case REG_SP:
 		return SP();
 	}
 	throw std::runtime_error("Invalid r16 selection");
@@ -159,17 +159,46 @@ uint16_t& CPU::select_r16(uint8_t selector) {
 
 uint16_t& CPU::select_r16stk(uint8_t selector) {
 	switch (selector) {
-	case 0:
+	case REG_BC:
 		return BC();
-	case 1:
+	case REG_DE:
 		return DE();
-	case 2:
+	case REG_HL:
 		return HL();
-	case 3:
+	case REG_AF:
 		return AF();
 	}
 	throw std::runtime_error("Invalid r16stk selection");
 }
+
+uint8_t CPU::select_r16mem(uint8_t selector) {
+	switch (selector) {
+	case REG_BC:
+		return read(BC());
+	case REG_DE:
+		return read(DE());
+	case REG_HLI:
+		return read(HL()++);
+	case REG_HLD:
+		return read(HL()--);
+	}
+	throw std::runtime_error("Invalid r16mem selection");
+}
+
+bool CPU::check_cond(uint8_t selector) {
+	switch (selector) {
+	case COND_NZ:
+		return (AF() & 0b10000000) == 0;
+	case COND_Z:
+		return (AF() & 0b10000000);
+	case COND_NC:
+		return (AF() & 0b00010000) == 0;
+	case COND_C:
+		return (AF() & 0b00010000);
+	}
+	throw std::runtime_error("Invalid cond selection");
+}
+
 
 void CPU::decode(uint8_t opcode) {
 	
@@ -177,19 +206,22 @@ void CPU::decode(uint8_t opcode) {
 
 
 
-void CPU::readOperand(Operand op) {
+uint16_t CPU::readOperand(Operand op) {
 	switch (op.type) {
-	case R8:
-	case R16:
-	case R16STK:
-	case R16MEM:
-	case COND:
-
-	case B3:
-	case TGT3:
-	case IMM8: 
-	case IMM16:
+	case OperandType::R8:     return select_r8(op.index);
+	case OperandType::R16:    return select_r16(op.index);
+	case OperandType::R16STK: return select_r16stk(op.index);
+	case OperandType::R16MEM: return select_r16mem(op.index);
+	case OperandType::COND:   return check_cond(op.index);
+	case OperandType::VEC:    return op.index;
+	case OperandType::B3:     return op.index;
+	case OperandType::n8:     return fetchByte();
+	case OperandType::n16:    return fetchWord();
+	case OperandType::a8:     return read(0xFF00 | fetchByte());
+	case OperandType::a16:    return read(fetchWord());
+	case OperandType::NONE:   return 0;
 	}
+	throw std::runtime_error("Invalid operand type");
 }
 
 

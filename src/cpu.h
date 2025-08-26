@@ -88,7 +88,8 @@ private:
 	uint8_t&  select_r8(uint8_t selector);
 	uint16_t& select_r16(uint8_t selector);
 	uint16_t& select_r16stk(uint8_t selector);
-	uint16_t& select_r16mem(uint8_t selector);
+	uint8_t select_r16mem(uint8_t selector);
+	bool check_cond(uint8_t selector);
 
 public:
 	enum class OperandType {
@@ -134,7 +135,7 @@ public:
 	// imm8?
 	// imm16?
 
-	void readOperand(Operand op);
+	uint16_t readOperand(Operand op);
 
 
 	// Loads
