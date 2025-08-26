@@ -1,32 +1,38 @@
+#pragma once
+
 #include <stdint.h>
 #include <vector>
+#include <string>
 
-constexpr int GROUP_0 = 0b00;
-constexpr int GROUP_1 = 0b01;
-constexpr int GROUP_2 = 0b10;
-constexpr int GROUP_3 = 0b11;
+enum r8 : uint8_t {
+	REG_B,
+	REG_C,
+	REG_D,
+	REG_E,
+	REG_H,
+	REG_L,
+	REG_HL_DATA,
+	REG_A
+};
 
-constexpr int REG_B = 0;
-constexpr int REG_C = 1;
-constexpr int REG_D = 2;
-constexpr int REG_E = 3;
-constexpr int REG_H = 4;
-constexpr int REG_L = 5;
-constexpr int REG_HL_DATA = 6;
-constexpr int REG_A = 7;
+enum r16 : uint8_t {
+	REG_BC = 0,
+	REG_DE = 1,
+	REG_HL = 2,
+	REG_SP = 3,
 
-constexpr int REG_BC = 0;
-constexpr int REG_DE = 1;
-constexpr int REG_HL = 2;
-constexpr int REG_SP = 3;
-constexpr int REG_AF = 3;
-constexpr int REG_HLI = 2;
-constexpr int REG_HLD = 3;
+	REG_AF = 3,
+	
+	REG_HLI = 2,
+	REG_HLD = 3,
+};
 
-constexpr int COND_NZ = 0;
-constexpr int COND_Z = 1;
-constexpr int COND_NC = 2;
-constexpr int COND_C = 3;
+enum cond : uint8_t {
+	COND_NZ,
+	COND_Z,
+	COND_NC,
+	COND_C
+};
 
 union Reg16 {
 	struct {
