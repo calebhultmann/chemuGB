@@ -1,32 +1,38 @@
+#pragma once
+
 #include <stdint.h>
 #include <vector>
+#include <string>
 
-constexpr int GROUP_0 = 0b00;
-constexpr int GROUP_1 = 0b01;
-constexpr int GROUP_2 = 0b10;
-constexpr int GROUP_3 = 0b11;
+enum r8 : uint8_t {
+	REG_B,
+	REG_C,
+	REG_D,
+	REG_E,
+	REG_H,
+	REG_L,
+	REG_HL_DATA,
+	REG_A
+};
 
-constexpr int REG_B = 0;
-constexpr int REG_C = 1;
-constexpr int REG_D = 2;
-constexpr int REG_E = 3;
-constexpr int REG_H = 4;
-constexpr int REG_L = 5;
-constexpr int REG_HL_DATA = 6;
-constexpr int REG_A = 7;
+enum r16 : uint8_t {
+	REG_BC = 0,
+	REG_DE = 1,
+	REG_HL = 2,
+	REG_SP = 3,
 
-constexpr int REG_BC = 0;
-constexpr int REG_DE = 1;
-constexpr int REG_HL = 2;
-constexpr int REG_SP = 3;
-constexpr int REG_AF = 3;
-constexpr int REG_HLI = 2;
-constexpr int REG_HLD = 3;
+	REG_AF = 3,
+	
+	REG_HLI = 2,
+	REG_HLD = 3,
+};
 
-constexpr int COND_NZ = 0;
-constexpr int COND_Z = 1;
-constexpr int COND_NC = 2;
-constexpr int COND_C = 3;
+enum cond : uint8_t {
+	COND_NZ,
+	COND_Z,
+	COND_NC,
+	COND_C
+};
 
 union Reg16 {
 	struct {
@@ -79,7 +85,7 @@ public:
 
 public:
 	uint8_t read(uint16_t addr);
-	uint16_t write(uint16_t addr, uint8_t data);
+	void write(uint16_t addr, uint8_t data);
 	uint8_t fetchByte();
 	uint16_t fetchWord();
 
@@ -88,7 +94,8 @@ private:
 	uint8_t&  select_r8(uint8_t selector);
 	uint16_t& select_r16(uint8_t selector);
 	uint16_t& select_r16stk(uint8_t selector);
-	uint16_t& select_r16mem(uint8_t selector);
+	uint8_t select_r16mem(uint8_t selector);
+	bool check_cond(uint8_t selector);
 
 public:
 	enum class OperandType {
@@ -97,11 +104,13 @@ public:
 		R16STK,
 		R16MEM,
 		COND,
-
+		VEC,
 		B3,
-		TGT3,
-		IMM8,
-		IMM16,
+
+		n8,
+		n16,
+		a8,
+		a16,
 
 		NONE
 	};
@@ -111,12 +120,10 @@ public:
 		int index;
 	};
 
-	Operand empty_operand = { OperandType::NONE, 0 };
-
 	struct Instruction {
 		std::string mnemonic;
 		int cycles;
-		void (*execute)(Operand, Operand);
+		void (CPU::*execute)(Operand, Operand);
 		Operand src;
 		Operand dst;
 	};
@@ -125,7 +132,8 @@ public:
 
 
 
-	std::vector<Instruction> lookup;
+	std::vector<Instruction> opcode_lookup;
+	std::vector<Instruction> cb_lookup;
 
 	// cond
 	// b3?
@@ -133,7 +141,7 @@ public:
 	// imm8?
 	// imm16?
 
-	void readOperand(Operand op);
+	uint16_t readOperand(Operand op);
 
 
 	// Loads
@@ -200,7 +208,7 @@ public:
 	void NOP(Operand src, Operand dst);
 	void STOP(Operand src, Operand dst);
 	void CB(Operand src, Operand dst); // Should I construct this function? Yes right?
-	void INVALID(Operand src, Operand dst);
+	void INV(Operand src, Operand dst);
 };
 
 // DMB Boot rom dump:
