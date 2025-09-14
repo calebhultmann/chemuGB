@@ -1,9 +1,7 @@
 #pragma once
 
 #include "emulator.h"
-#include <SDL3/SDL_video.h>
-#include <SDL3/SDL.h>
-#include <SDL3/SDL_rect.h>
+#include <iostream>
 
 chemuGB::chemuGB() {
 
@@ -13,34 +11,52 @@ chemuGB::~chemuGB() {
 
 }
 
-void chemuGB::start() {
+bool chemuGB::initialize() {
 
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
-		return;
+		return false;
 	}
-	bool done = false;
-	SDL_Window* window = SDL_CreateWindow("Test SDL Window", 1280, 1152, 0);
-
+	window = SDL_CreateWindow("Test SDL Window", 1280, 1152, 0);
 	if (window == NULL) {
 		SDL_Log("Window could not be created! %s", SDL_GetError());
 		SDL_Quit();
-		return;
+		return false;
 	}
 
-	SDL_Renderer* renderer = SDL_CreateRenderer(window, NULL);
+
+	renderer = SDL_CreateRenderer(window, NULL);
 
 	for (int i = 0; i < 160; i++) {
 		for (int j = 0; j < 144; j++) {
 			SDL_SetRenderDrawColor(renderer, 100, i, j, 255);
-				SDL_FRect rect = { float(i * 8), float(j * 8), float(8), float(8) };
-				SDL_RenderFillRect(renderer, &rect);
-
-			if ((i + j) % 2 == 1) {
-			}
+			SDL_FRect rect = { float(i * 8), float(j * 8), float(8), float(8) };
+			SDL_RenderFillRect(renderer, &rect);
 		}
 	}
 	SDL_RenderPresent(renderer);
 
+	return true;
+}
+
+void chemuGB::start() { 
+	for (int y = 0; y < 48; y++) {
+		if (y % 8 == 0) {
+			std::cout << "\n";
+		}
+		for (int x = 0; x < 16; x++) {
+			cpe::Pixel current = font.getPixel(x, y);
+
+			if (current.b == 255) {
+				std::cout << ".";
+			}
+			else {
+				std::cout << "0";
+			}
+		}
+		std::cout << "\n";
+	}
+	
+	bool done = false;
 	while (!done) {
 		SDL_Event event;
 
