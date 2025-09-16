@@ -2,6 +2,8 @@
 
 #include "emulator.h"
 #include <iostream>
+#include <SDL3/SDL_render.h>
+#include <SDL3/SDL.h>
 
 chemuGB::chemuGB() {
 
@@ -23,8 +25,9 @@ bool chemuGB::initialize() {
 		return false;
 	}
 
-
 	renderer = SDL_CreateRenderer(window, NULL);
+	font.toTexture(renderer, fontTexture);
+	SDL_SetTextureScaleMode(fontTexture, SDL_SCALEMODE_NEAREST);
 
 	for (int i = 0; i < 160; i++) {
 		for (int j = 0; j < 144; j++) {
@@ -34,28 +37,12 @@ bool chemuGB::initialize() {
 		}
 	}
 	SDL_RenderPresent(renderer);
-
 	return true;
 }
 
-void chemuGB::start() { 
-	for (int y = 0; y < 48; y++) {
-		if (y % 8 == 0) {
-			std::cout << "\n";
-		}
-		for (int x = 0; x < 16; x++) {
-			cpe::Pixel current = font.getPixel(x, y);
+void chemuGB::start() {
+	DrawString(0, 0, "Hello, World!", cpe::Pixel{ 0,0,0 });
 
-			if (current.b == 255) {
-				std::cout << ".";
-			}
-			else {
-				std::cout << "0";
-			}
-		}
-		std::cout << "\n";
-	}
-	
 	bool done = false;
 	while (!done) {
 		SDL_Event event;

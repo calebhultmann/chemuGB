@@ -28,6 +28,7 @@ namespace cpe
 		std::vector<Pixel> data;
 
 		void resize(int w, int h);
+		void toTexture(SDL_Renderer* renderer, SDL_Texture*& texture);
 
 		void setPixel(int x, int y, Pixel color);
 		Pixel& getPixel(int x, int y);
@@ -41,6 +42,7 @@ namespace cpe
 		SDL_Renderer* renderer = nullptr;
 
 		Sprite font;
+		SDL_Texture* fontTexture = nullptr;
 
 		void constructFontSheet();
 		void DrawString(int x, int y, std::string text, Pixel color);

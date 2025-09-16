@@ -44,6 +44,22 @@ namespace cpe
 		data.resize(width * height);
 	}
 
+	void Sprite::toTexture(SDL_Renderer* renderer, SDL_Texture*& texture) {
+		std::vector<uint32_t> sdlPixels(width * height);
+		for (int i = 0; i < width * height; i++) {
+			const cpe::Pixel& p = data[i];
+			sdlPixels[i] = (255 << 24) | (p.r << 16) | (p.g << 8) | (p.b);
+		}
+
+		texture = SDL_CreateTexture(renderer,
+									SDL_PIXELFORMAT_ARGB8888,
+									SDL_TEXTUREACCESS_STATIC,
+									width,
+									height);
+		SDL_UpdateTexture(texture, nullptr, sdlPixels.data(), width * sizeof(uint32_t));
+	}
+
+
 	void Sprite::setPixel(int x, int y, Pixel color) {
 		data[y * width + x] = color;
 	}
@@ -97,5 +113,21 @@ namespace cpe
 				}
 			}
 		}
+	}
+
+	void pixelEngine::DrawString(int x, int y, std::string text, Pixel color) {
+		for (size_t i = 0; i < text.length(); i++) {
+			char c = text[i];
+			std::cout << "Printing char: " << c << "\n";
+			int index = c - 32;
+			int srcX = (index % 16) * 8;
+			int srcY = (index / 16) * 8;
+			
+			SDL_FRect srcRect = { static_cast<float>(srcX), static_cast<float>(srcY), 8, 8 };
+			SDL_FRect dstRect = { static_cast<float>(x + i * 16), static_cast<float>(y), 16, 16 };
+
+			SDL_RenderTexture(renderer, fontTexture, &srcRect, &dstRect);
+		}
+		SDL_RenderPresent(renderer);
 	}
 }
