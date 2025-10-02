@@ -21,6 +21,8 @@ namespace cpe
 		b = blue;
 	}
 
+
+
 	// O------------------------------------------------------------------------------O
 	// | cpe::Sprite IMPLEMENTATION                                                   |
 	// O------------------------------------------------------------------------------O
@@ -56,6 +58,7 @@ namespace cpe
 									SDL_TEXTUREACCESS_STATIC,
 									width,
 									height);
+
 		SDL_UpdateTexture(texture, nullptr, sdlPixels.data(), width * sizeof(uint32_t));
 	}
 
@@ -116,18 +119,27 @@ namespace cpe
 	}
 
 	void pixelEngine::DrawString(int x, int y, std::string text, Pixel color) {
+		//x += 161 * SCALE; // DEBUG_X
+		//y += 1 * SCALE;
+		SDL_SetTextureColorMod(fontTexture, color.r, color.g, color.b);
+		int init_x = x;
 		for (size_t i = 0; i < text.length(); i++) {
+			
 			char c = text[i];
-			std::cout << "Printing char: " << c << "\n";
+			if (c == '\n') {
+				x = init_x;
+				y += (2 * SCALE);
+				continue;
+			}
 			int index = c - 32;
 			int srcX = (index % 16) * 8;
 			int srcY = (index / 16) * 8;
 			
 			SDL_FRect srcRect = { static_cast<float>(srcX), static_cast<float>(srcY), 8, 8 };
-			SDL_FRect dstRect = { static_cast<float>(x + i * 16), static_cast<float>(y), 16, 16 };
+			SDL_FRect dstRect = { static_cast<float>(x), static_cast<float>(y), 16, 16 };
+			x += (2 * SCALE);
 
 			SDL_RenderTexture(renderer, fontTexture, &srcRect, &dstRect);
 		}
-		SDL_RenderPresent(renderer);
 	}
 }

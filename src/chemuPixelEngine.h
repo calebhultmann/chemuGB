@@ -36,6 +36,8 @@ namespace cpe
 
 	class pixelEngine {
 	public:
+		int SCALE = 0;
+
 		pixelEngine();
 
 		SDL_Window* window = nullptr;

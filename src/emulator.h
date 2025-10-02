@@ -6,6 +6,7 @@
 class chemuGB : public cpe::pixelEngine {
 public:
 	chemuGB();
+	chemuGB(int s);
 	~chemuGB();
 
 public:
