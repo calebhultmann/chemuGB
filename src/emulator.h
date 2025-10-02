@@ -12,4 +12,6 @@ public:
 public:
 	bool initialize();
 	void start();
+
+	void drawDebug();
 };
