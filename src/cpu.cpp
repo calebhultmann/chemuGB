@@ -221,13 +221,22 @@ uint16_t CPU::readOperand(Operand op) {
 	case OperandType::n16:    return fetchWord();
 	case OperandType::a8:     return read(0xFF00 | fetchByte());
 	case OperandType::a16:    return read(fetchWord());
-	case OperandType::NONE:   return 0;
 	}
-	throw std::runtime_error("Invalid operand type");
+	throw std::runtime_error("readOperand: Invalid operand type");
 }
 
 void CPU::writeOperand(Operand op, uint16_t value) {
-
+	switch (op.type) {
+	case OperandType::R8: select_r8(op.index) = (value & 0xFF); break;
+	case OperandType::R16: select_r16(op.index) = value; break;
+	case OperandType::R16STK: select_r16stk(op.index) = value; break;
+	//case OperandType::R16MEM: select_r16mem(op.index) = value; break;
+	//case OperandType::B3: (write flag op.index, value)
+	//case OperandType::a8
+	//case OperandType::a8
+	// invalid: cond, vec, n8, n16
+	}
+	throw std::runtime_error("writeOperand: Invalid operand type");
 }
 
 
