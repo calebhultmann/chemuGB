@@ -104,6 +104,18 @@ CPU::~CPU() {
 
 }
 
+bool CPU::getFlag(uint8_t flag) {
+	uint8_t offset = 0;
+	switch (flag) {
+	case FLAG_Z: offset = 0b10000000; break;
+	case FLAG_N: offset = 0b01000000; break;
+	case FLAG_H: offset = 0b00100000; break;
+	case FLAG_C: offset = 0b00010000; break;
+	default:
+	}
+	return af.low & offset;
+}
+
 uint8_t CPU::read(uint16_t addr) {
 	return bus->read(addr);
 }

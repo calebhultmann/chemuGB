@@ -34,6 +34,13 @@ enum cond : uint8_t {
 	COND_C
 };
 
+enum flag : uint8_t {
+	FLAG_Z,
+	FLAG_N,
+	FLAG_H,
+	FLAG_C
+};
+
 union Reg16 {
 	struct {
 		uint8_t low;
@@ -82,6 +89,10 @@ public:
 
 	uint16_t& SP() { return sp; }
 	uint16_t& PC() { return pc; }
+
+	bool getFlag(uint8_t flag);
+	void setFlag(uint8_t flag);
+	void clearFlag(uint8_t flag);
 
 public:
 	uint8_t read(uint16_t addr);
