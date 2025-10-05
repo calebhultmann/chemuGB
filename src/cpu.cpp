@@ -19,7 +19,7 @@ CPU::CPU() {
 
 	using c = CPU;
 
-	opcode_lookup =
+	opcode_lookup = 
 	{
 	//   MNEMONIC        C  FUNC      SRC            DST                MNEMONIC      C  FUNC      SRC          DST                MNEMONIC       C  FUNC     SRC              DST                MNEMONIC      C  FUNC     SRC          DST                MNEMONIC        C  FUNC      SRC              DST                MNEMONIC      C  FUNC      SRC          DST                MNEMONIC       C  FUNC      SRC              DST                MNEMONIC      C  FUNC      SRC        DST
 		{"NOP",          1, &c::NOP,  empt,          empt},            {"LD BC, n16", 3, &c::LD,   n16,         R16(REG_BC)},     {"LD [BC], A",  2, &c::LD,  R8(REG_A),       R16MEM(REG_BC)},  {"INC BC",     2, &c::INC, R16(REG_BC), empt},            {"INC B",        1, &c::INC,  R8(REG_B),       empt},            {"DEC B",      1, &c::DEC,  R8(REG_B),   empt},            {"LD B, n8",    2, &c::LD,   n8,              R8(REG_B)},       {"RLCA",       1, &c::RLCA, empt,      empt},
@@ -226,76 +226,103 @@ uint16_t CPU::readOperand(Operand op) {
 	throw std::runtime_error("Invalid operand type");
 }
 
+void CPU::writeOperand(Operand op, uint16_t value) {
+
+}
 
 
+// Check all instructions for flag changes
+// Implement flag functions
 
 // Loads
 void CPU::LD(Operand src, Operand dst) {
-	uint16_t value = readOperand(src);
-	//writeOperand(dst, value);
+	uint16_t src_v = readOperand(src);
+	writeOperand(dst, src_v);
 }
 
 void CPU::LDH(Operand src, Operand dst) {
-	// Not implemented
+	uint16_t src_v = readOperand(src);
+	writeOperand(dst, src_v);
 }
 
 // Arithmetic
 void CPU::ADC(Operand src, Operand dst) {
-
+	uint16_t src_v = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	uint16_t sum = src_v + dst_v; // PLUS CARRY FLAGGGGG
+	writeOperand(dst, sum);
 }
 
 void CPU::ADD(Operand src, Operand dst) {
-
+	uint16_t src_v = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	uint16_t sum = src_v + dst_v;
+	writeOperand(dst, sum);
 }
 
 void CPU::SBC(Operand src, Operand dst) {
-
+	uint16_t src_v = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	uint16_t sum = dst_v - src_v; // CARRY FLAGGGG
+	writeOperand(dst, sum);
 }
 
 void CPU::SUB(Operand src, Operand dst) {
-
+	uint16_t src_v = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	uint16_t sum = dst_v - src_v;
+	writeOperand(dst, sum);
 }
 
 void CPU::INC(Operand src, Operand dst) {
-
+	uint16_t src_v = readOperand(src);
+	writeOperand(dst, src_v++);
 }
 
 void CPU::DEC(Operand src, Operand dst) {
-
+	uint16_t src_v = readOperand(src);
+	writeOperand(dst, src_v--);
 }
 
 void CPU::CP(Operand src, Operand dst) {
-
+	// Not implemented
 }
 
 // Bitwise Logic
 void CPU::AND(Operand src, Operand dst) {
-
+	uint16_t src_v = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	writeOperand(dst, src_v & dst_v);
 }
 
 void CPU::CPL(Operand src, Operand dst) {
-
+	uint16_t src_v = readOperand(src);
+	writeOperand(dst, ~src_v);
 }
 
 void CPU::OR(Operand src, Operand dst) {
-
+	uint16_t src_v = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	writeOperand(dst, src_v | dst_v);
 }
 
 void CPU::XOR(Operand src, Operand dst) {
-
+	uint16_t src_v = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	writeOperand(dst, src_v ^ dst_v);
 }
 
 // Bit Flag
 void CPU::BIT(Operand src, Operand dst) {
-
+	// Not implemented
 }
 
 void CPU::SET(Operand src, Operand dst) {
-
+	// Not implemented
 }
 
 void CPU::RES(Operand src, Operand dst) {
-
+	// Not implemented
 }
 
 // Bit Shift

@@ -142,7 +142,7 @@ public:
 	// imm16?
 
 	uint16_t readOperand(Operand op);
-
+	void writeOperand(Operand op, uint16_t value);
 
 	// Loads
 	void LD(Operand src, Operand dst);
