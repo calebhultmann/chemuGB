@@ -358,7 +358,7 @@ void CPU::XOR(Operand src, Operand dst) {
 	uint16_t result = src_v ^ dst_v;
 	writeOperand(dst, result);
 
-	putFlag(FLAG_Z, (result == 0));
+	putFlag(FLAG_Z, (result & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	clearFlag(FLAG_C);
@@ -392,11 +392,25 @@ void CPU::RES(Operand src, Operand dst) {
 // Bit Shift
 
 void CPU::RL(Operand src, Operand dst) {
+	uint16_t src_v = readOperand(src);
+	src_v = (src_v << 1) | getFlag(FLAG_C);
+	writeOperand(src, src_v);
 
+	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
+	clearFlag(FLAG_N);
+	clearFlag(FLAG_H);
+	putFlag(FLAG_C, src_v & 0xFF00);
 }
 
 void CPU::RLA(Operand src, Operand dst) {
+	uint16_t src_v = readOperand(src);
+	src_v = (src_v << 1) | getFlag(FLAG_C);
+	writeOperand(src, src_v);
 
+	clearFlag(FLAG_Z);
+	clearFlag(FLAG_N);
+	clearFlag(FLAG_H);
+	putFlag(FLAG_C, src_v & 0xFF00);
 }
 
 void CPU::RLC(Operand src, Operand dst) {
