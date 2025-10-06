@@ -105,15 +105,15 @@ CPU::~CPU() {
 }
 
 bool CPU::getFlag(uint8_t flag) {
-	uint8_t offset = 0;
-	switch (flag) {
-	case FLAG_Z: offset = 0b10000000; break;
-	case FLAG_N: offset = 0b01000000; break;
-	case FLAG_H: offset = 0b00100000; break;
-	case FLAG_C: offset = 0b00010000; break;
-	default:
-	}
-	return af.low & offset;
+	return af.low & flag;
+}
+
+void CPU::setFlag(uint8_t flag) {
+	af.low |= flag;
+}
+
+void CPU::clearFlag(uint8_t flag) {
+	af.low &= ~flag;
 }
 
 uint8_t CPU::read(uint16_t addr) {
@@ -245,7 +245,7 @@ void CPU::writeOperand(Operand op, uint16_t value) {
 	//case OperandType::R16MEM: select_r16mem(op.index) = value; break;
 	//case OperandType::B3: (write flag op.index, value)
 	//case OperandType::a8
-	//case OperandType::a8
+	//case OperandType::a16
 	// invalid: cond, vec, n8, n16
 	}
 	throw std::runtime_error("writeOperand: Invalid operand type");

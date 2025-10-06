@@ -35,10 +35,10 @@ enum cond : uint8_t {
 };
 
 enum flag : uint8_t {
-	FLAG_Z,
-	FLAG_N,
-	FLAG_H,
-	FLAG_C
+	FLAG_Z = 0b10000000,
+	FLAG_N = 0b01000000,
+	FLAG_H = 0b00100000,
+	FLAG_C = 0b00010000
 };
 
 union Reg16 {
