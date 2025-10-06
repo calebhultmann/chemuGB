@@ -116,6 +116,10 @@ void CPU::clearFlag(uint8_t flag) {
 	af.low &= ~flag;
 }
 
+void CPU::putFlag(uint8_t flag, bool value) {
+	value ? setFlag(flag) : clearFlag(flag);
+}
+
 uint8_t CPU::read(uint16_t addr) {
 	return bus->read(addr);
 }
@@ -270,8 +274,14 @@ void CPU::LDH(Operand src, Operand dst) {
 void CPU::ADC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
-	uint16_t sum = src_v + dst_v; // PLUS CARRY FLAGGGGG
+	uint16_t sum = src_v + dst_v + getFlag(FLAG_C);
 	writeOperand(dst, sum);
+
+	// Flags change depending on 16 bit vs 8 bit arithmetic
+	/*putFlag(FLAG_Z, (sum == 0));
+	clearFlag(FLAG_N);
+	putFlag(FLAG_H, 0);
+	putFlag(FLAG_C, (sum & 0xFF00))*/
 }
 
 void CPU::ADD(Operand src, Operand dst) {
@@ -284,7 +294,7 @@ void CPU::ADD(Operand src, Operand dst) {
 void CPU::SBC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
-	uint16_t sum = dst_v - src_v; // CARRY FLAGGGG
+	uint16_t sum = dst_v - src_v - getFlag(FLAG_C);
 	writeOperand(dst, sum);
 }
 
@@ -313,37 +323,70 @@ void CPU::CP(Operand src, Operand dst) {
 void CPU::AND(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
-	writeOperand(dst, src_v & dst_v);
+	uint16_t result = src_v & dst_v;
+	writeOperand(dst, result);
+
+	putFlag(FLAG_Z, (result == 0));
+	clearFlag(FLAG_N);
+	setFlag(FLAG_H);
+	clearFlag(FLAG_C);
 }
 
 void CPU::CPL(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	writeOperand(dst, ~src_v);
+
+	setFlag(FLAG_N);
+	setFlag(FLAG_H);
 }
 
 void CPU::OR(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
-	writeOperand(dst, src_v | dst_v);
+	uint16_t result = src_v | dst_v;
+	writeOperand(dst, result);
+
+	putFlag(FLAG_Z, (result == 0));
+	clearFlag(FLAG_N);
+	clearFlag(FLAG_H);
+	clearFlag(FLAG_C);
 }
 
 void CPU::XOR(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
-	writeOperand(dst, src_v ^ dst_v);
+	uint16_t result = src_v ^ dst_v;
+	writeOperand(dst, result);
+
+	putFlag(FLAG_Z, (result == 0));
+	clearFlag(FLAG_N);
+	clearFlag(FLAG_H);
+	clearFlag(FLAG_C);
 }
 
 // Bit Flag
 void CPU::BIT(Operand src, Operand dst) {
-	// Not implemented
+	uint16_t bit = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	uint16_t value = dst_v & (1 << bit);
+
+	putFlag(FLAG_Z, (value == 0));
+	clearFlag(FLAG_N);
+	setFlag(FLAG_H);
 }
 
 void CPU::SET(Operand src, Operand dst) {
-	// Not implemented
+	uint16_t bit = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	dst_v |= (1 << bit);
+	writeOperand(dst, dst_v);
 }
 
 void CPU::RES(Operand src, Operand dst) {
-	// Not implemented
+	uint16_t bit = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	dst_v &= ~(1 << bit);
+	writeOperand(dst, dst_v);
 }
 
 // Bit Shift

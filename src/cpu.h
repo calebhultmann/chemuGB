@@ -93,6 +93,7 @@ public:
 	bool getFlag(uint8_t flag);
 	void setFlag(uint8_t flag);
 	void clearFlag(uint8_t flag);
+	void putFlag(uint8_t flag, bool value);
 
 public:
 	uint8_t read(uint16_t addr);
