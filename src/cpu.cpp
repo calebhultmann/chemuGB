@@ -542,11 +542,26 @@ void CPU::SWAP(Operand src, Operand dst) {
 
 // Jumps and Subroutines
 void CPU::CALL(Operand src, Operand dst) {
+	uint16_t call_addr = readOperand(src);
+	if (dst.type == OperandType::COND && !readOperand(dst)) {
+		return;
+	}
 
+	SP()--;
+	write(SP(), (PC() + 1,0xFF00) >> 8);
+	SP()--;
+	write(SP(), (PC() + 1, 0xFF));
+
+	PC() = call_addr;
 }
 
 void CPU::JP(Operand src, Operand dst) {
+	uint16_t jp_addr = readOperand(src);
+	if (dst.type == OperandType::COND && !readOperand(dst)) {
+		return;
+	}
 
+	PC() = jp_addr;
 }
 
 void CPU::JR(Operand src, Operand dst) {
@@ -554,7 +569,16 @@ void CPU::JR(Operand src, Operand dst) {
 }
 
 void CPU::RET(Operand src, Operand dst) {
+	if (src.type == OperandType::COND && !readOperand(src)) {
+		return;
+	}
 
+	uint16_t low = read(SP());
+	SP()++;
+	uint16_t high = read(SP());
+	SP()++;
+
+	PC() = (high << 8) | low;
 }
 
 void CPU::RETI(Operand src, Operand dst) {
