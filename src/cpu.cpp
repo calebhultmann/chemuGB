@@ -138,7 +138,7 @@ uint16_t CPU::fetchWord() {
 	return (hi << 8) | lo;
 }
 
-uint8_t& CPU::select_r8(uint8_t selector) {
+uint8_t CPU::read_r8(uint8_t selector) {
 	switch (selector) {
 	case REG_B:
 		return B();
@@ -161,6 +161,54 @@ uint8_t& CPU::select_r8(uint8_t selector) {
 	}
 	throw std::runtime_error("Invalid r8 selection");
 }
+
+uint8_t CPU::read_r8(uint8_t selector) {
+	switch (selector) {
+	case REG_B:
+		return B();
+	case REG_C:
+		return C();
+	case REG_D:
+		return D();
+	case REG_E:
+		return E();
+	case REG_H:
+		return H();
+	case REG_L:
+		return L();
+	case REG_HL_DATA: {
+		uint8_t temp = read(HL());
+		return temp;
+	}
+	case REG_A:
+		return A();
+	}
+	throw std::runtime_error("Invalid r8 selection");
+}
+
+//uint8_t& CPU::select_r8(uint8_t selector) {
+//	switch (selector) {
+//	case REG_B:
+//		return B();
+//	case REG_C:
+//		return C();
+//	case REG_D:
+//		return D();
+//	case REG_E:
+//		return E();
+//	case REG_H:
+//		return H();
+//	case REG_L:
+//		return L();
+//	case REG_HL_DATA: {
+//		//uint8_t temp = read(HL());
+//		//return temp;
+//	}
+//	case REG_A:
+//		return A();
+//	}
+//	throw std::runtime_error("Invalid r8 selection");
+//}
 
 uint16_t& CPU::select_r16(uint8_t selector) {
 	switch (selector) {
@@ -550,7 +598,7 @@ void CPU::RES(Operand src, Operand dst) {
 
 void CPU::RL(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	src_v = (src_v << 1) | getFlag(FLAG_C);
+	src_v = (src_v << 1) | (uint8_t)getFlag(FLAG_C);
 	writeOperand(src, src_v);
 
 	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
@@ -561,7 +609,7 @@ void CPU::RL(Operand src, Operand dst) {
 
 void CPU::RLA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	src_v = (src_v << 1) | getFlag(FLAG_C);
+	src_v = (src_v << 1) | (uint8_t)getFlag(FLAG_C);
 	writeOperand(src, src_v);
 
 	clearFlag(FLAG_Z);

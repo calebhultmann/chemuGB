@@ -72,23 +72,23 @@ private:
 	uint16_t pc;
 
 public:
-	uint8_t&  A()  { return af.high; }
-	uint16_t& AF() { return af.reg; }
+	uint8_t  A()  { return af.high; }
+	uint16_t AF() { return af.reg; }
 
-	uint8_t&  B()  { return bc.high; }
-	uint8_t&  C()  { return bc.low; }
-	uint16_t& BC() { return bc.reg; }
+	uint8_t  B()  { return bc.high; }
+	uint8_t  C()  { return bc.low; }
+	uint16_t BC() { return bc.reg; }
 
-	uint8_t&  D()  { return de.high; }
-	uint8_t&  E()  { return de.low; }
-	uint16_t& DE() { return de.reg; }
+	uint8_t  D()  { return de.high; }
+	uint8_t  E()  { return de.low; }
+	uint16_t DE() { return de.reg; }
 
-	uint8_t&  H()  { return hl.high; }
-	uint8_t&  L()  { return hl.low; }
-	uint16_t& HL() { return hl.reg; }
+	uint8_t  H()  { return hl.high; }
+	uint8_t  L()  { return hl.low; }
+	uint16_t HL() { return hl.reg; }
 
-	uint16_t& SP() { return sp; }
-	uint16_t& PC() { return pc; }
+	uint16_t SP() { return sp; }
+	uint16_t PC() { return pc; }
 
 	bool getFlag(uint8_t flag);
 	void setFlag(uint8_t flag);
@@ -103,6 +103,9 @@ public:
 
 private:
 	void decode(uint8_t opcode);
+	uint8_t read_r8(uint8_t selector);
+	void    write_r8(uint8_t selector, uint8_t data);
+
 	uint8_t&  select_r8(uint8_t selector);
 	uint16_t& select_r16(uint8_t selector);
 	uint16_t& select_r16stk(uint8_t selector);
