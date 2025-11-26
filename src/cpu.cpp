@@ -141,113 +141,127 @@ uint16_t CPU::fetchWord() {
 uint8_t CPU::read_r8(uint8_t selector) {
 	switch (selector) {
 	case REG_B:
-		return B();
+		return bc.high;
 	case REG_C:
-		return C();
+		return bc.low;
 	case REG_D:
-		return D();
+		return de.high;
 	case REG_E:
-		return E();
+		return de.low;
 	case REG_H:
-		return H();
+		return hl.high;
 	case REG_L:
-		return L();
-	case REG_HL_DATA: {
-		uint8_t temp = read(HL());
-		return temp;
-	}
+		return hl.low;
+	case REG_HL_DATA:
+		return read(hl.reg);
 	case REG_A:
-		return A();
+		return af.high;
 	}
 	throw std::runtime_error("Invalid r8 selection");
 }
 
-uint8_t CPU::read_r8(uint8_t selector) {
+void CPU::write_r8(uint8_t selector, uint8_t data) {
 	switch (selector) {
 	case REG_B:
-		return B();
+		bc.high = data;
 	case REG_C:
-		return C();
+		bc.low = data;
 	case REG_D:
-		return D();
+		de.high = data;
 	case REG_E:
-		return E();
+		de.low = data;
 	case REG_H:
-		return H();
+		hl.high = data;
 	case REG_L:
-		return L();
-	case REG_HL_DATA: {
-		uint8_t temp = read(HL());
-		return temp;
-	}
+		hl.low = data;
+	case REG_HL_DATA:
+		write(hl.reg, data);
 	case REG_A:
-		return A();
+		af.high = data;
 	}
 	throw std::runtime_error("Invalid r8 selection");
 }
 
-//uint8_t& CPU::select_r8(uint8_t selector) {
-//	switch (selector) {
-//	case REG_B:
-//		return B();
-//	case REG_C:
-//		return C();
-//	case REG_D:
-//		return D();
-//	case REG_E:
-//		return E();
-//	case REG_H:
-//		return H();
-//	case REG_L:
-//		return L();
-//	case REG_HL_DATA: {
-//		//uint8_t temp = read(HL());
-//		//return temp;
-//	}
-//	case REG_A:
-//		return A();
-//	}
-//	throw std::runtime_error("Invalid r8 selection");
-//}
-
-uint16_t& CPU::select_r16(uint8_t selector) {
+uint16_t CPU::read_r16(uint8_t selector) {
 	switch (selector) {
 	case REG_BC:
-		return BC();
+		return bc.reg;
 	case REG_DE:
-		return DE();
+		return de.reg;
 	case REG_HL:
-		return HL();
+		return hl.reg;
 	case REG_SP:
-		return SP();
+		return sp;
 	}
 	throw std::runtime_error("Invalid r16 selection");
 }
 
-uint16_t& CPU::select_r16stk(uint8_t selector) {
+void CPU::write_r16(uint8_t selector, uint16_t data) {
 	switch (selector) {
 	case REG_BC:
-		return BC();
+		bc.reg = data;
 	case REG_DE:
-		return DE();
+		de.reg = data;
 	case REG_HL:
-		return HL();
+		hl.reg = data;
+	case REG_SP:
+		sp = data;
+	}
+	throw std::runtime_error("Invalid r16 selection");
+}
+
+uint16_t CPU::read_r16stk(uint8_t selector) {
+	switch (selector) {
+	case REG_BC:
+		return bc.reg;
+	case REG_DE:
+		return de.reg;
+	case REG_HL:
+		return hl.reg;
 	case REG_AF:
-		return AF();
+		return af.reg;
 	}
 	throw std::runtime_error("Invalid r16stk selection");
 }
 
-uint8_t CPU::select_r16mem(uint8_t selector) {
+void CPU::write_r16stk(uint8_t selector, uint16_t data) {
 	switch (selector) {
 	case REG_BC:
-		return read(BC());
+		bc.reg = data;
 	case REG_DE:
-		return read(DE());
+		de.reg = data;
+	case REG_HL:
+		hl.reg = data;
+	case REG_AF:
+		af.reg = data;
+	}
+	throw std::runtime_error("Invalid r16stk selection");
+}
+
+uint8_t CPU::read_r16mem(uint8_t selector) {
+	switch (selector) {
+	case REG_BC:
+		return read(bc.reg);
+	case REG_DE:
+		return read(de.reg);
 	case REG_HLI:
-		return read(HL()++);
+		return read(hl.reg++);
 	case REG_HLD:
-		return read(HL()--);
+		return read(hl.reg--);
+	}
+	throw std::runtime_error("Invalid r16mem selection");
+}
+
+void CPU::write_r16mem(uint8_t selector, uint8_t data) {
+	switch (selector) {
+	case REG_BC:
+		write(bc.reg, data);
+	case REG_DE:
+		write(de.reg, data);
+	case REG_HLI:
+		write(hl.reg++, data);
+	case REG_HLD:
+		write(hl.reg--, data);
 	}
 	throw std::runtime_error("Invalid r16mem selection");
 }
@@ -275,10 +289,10 @@ void CPU::decode(uint8_t opcode) {
 
 uint16_t CPU::readOperand(Operand op) {
 	switch (op.type) {
-	case OperandType::R8:     return select_r8(op.index);
-	case OperandType::R16:    return select_r16(op.index);
-	case OperandType::R16STK: return select_r16stk(op.index);
-	case OperandType::R16MEM: return select_r16mem(op.index);
+	case OperandType::R8:     return read_r8(op.index);
+	case OperandType::R16:    return read_r16(op.index);
+	case OperandType::R16STK: return read_r16stk(op.index);
+	case OperandType::R16MEM: return read_r16mem(op.index);
 	case OperandType::COND:   return check_cond(op.index);
 	case OperandType::VEC:    return op.index;
 	case OperandType::B3:     return op.index;
@@ -292,10 +306,10 @@ uint16_t CPU::readOperand(Operand op) {
 
 void CPU::writeOperand(Operand op, uint16_t value) {
 	switch (op.type) {
-	case OperandType::R8: select_r8(op.index) = (value & 0xFF); break;
-	case OperandType::R16: select_r16(op.index) = value; break;
-	case OperandType::R16STK: select_r16stk(op.index) = value; break;
-	//case OperandType::R16MEM: select_r16mem(op.index) = value; break;
+	case OperandType::R8: write_r8(op.index, value & 0xFF); break;
+	case OperandType::R16: write_r16(op.index, value); break;
+	case OperandType::R16STK: write_r16stk(op.index, value); break;
+	case OperandType::R16MEM: write_r16mem(op.index, value & 0xFF); break;
 	//case OperandType::B3: (write flag op.index, value)
 	//case OperandType::a8
 	//case OperandType::a16
