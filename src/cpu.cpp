@@ -555,15 +555,34 @@ void CPU::SUB(Operand src, Operand dst) {
 void CPU::INC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	writeOperand(dst, src_v++);
+
+	if (src.type == OperandType::R8) {
+		putFlag(FLAG_Z, sum == 0);
+		clearFlag(FLAG_N);
+		putFlag(FLAG_H, checkOverflow(3, src_v, 1, false));
+	}
 }
 
 void CPU::DEC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	writeOperand(dst, src_v--);
+
+	if (src.type == OperandType::R8) {
+		putFlag(FLAG_Z, sum == 0);
+		setFlag(FLAG_N);
+		putFlag(FLAG_H, 1 > (src_v & 0xF));
+	}
 }
 
 void CPU::CP(Operand src, Operand dst) {
-	// Not implemented
+	uint16_t src_v = readOperand(src);
+	uint16_t dst_v = readOperand(dst);
+	uint16_t sum = dst_v - src_v;
+
+	putFlag(FLAG_Z, sum == 0);
+	setFlag(FLAG_N);
+	putFlag(FLAG_H, (src & 0xF) > (dst & 0xF));
+	putFlag(FLAG_C, src > dst);
 }
 
 // Bitwise Logic
