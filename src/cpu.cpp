@@ -338,16 +338,8 @@ bool checkOverflow(int bit, uint16_t num1, uint16_t num2, bool carry) {
 Check off the following instructions to make sure all are working properly:
 
 Jumps and subroutine instructions
-CALL n16
-CALL cc,n16
-JP HL
-JP n16
-JP cc,n16
 JR n16
 JR cc,n16
-RET cc
-RET
-RETI
 RST vec
 
 Stack manipulation instructions
@@ -359,8 +351,6 @@ PUSH AF
 PUSH r16
 
 Interrupt-related instructions
-DI
-EI
 HALT
 
 Miscellaneous instructions
@@ -695,12 +685,12 @@ void CPU::CALL(Operand src, Operand dst) {
 		return;
 	}
 
-	SP()--;
-	write(SP(), (PC(),0xFF00) >> 8); // PC should already be incremented after readOperand
-	SP()--;
-	write(SP(), (PC(), 0xFF)); // PC should already be incremented after readOperand
+	sp--;
+	write(sp, (pc,0xFF00) >> 8); // PC should already be incremented after readOperand
+	sp--;
+	write(sp, (pc, 0xFF)); // PC should already be incremented after readOperand
 
-	PC() = call_addr;
+	pc = call_addr;
 }
 
 void CPU::JP(Operand src, Operand dst) {
@@ -709,11 +699,17 @@ void CPU::JP(Operand src, Operand dst) {
 		return;
 	}
 
-	PC() = jp_addr;
+	pc = jp_addr;
 }
 
 void CPU::JR(Operand src, Operand dst) {
+	uint16_t jr_offset = readOperand(src);
+	if (dst.type == OperandType::COND && !readOperand(dst)) {
+		return;
+	}
 
+	// TODO: signed addition
+	//PC() = PC() + 
 }
 
 void CPU::RET(Operand src, Operand dst) {
@@ -721,20 +717,33 @@ void CPU::RET(Operand src, Operand dst) {
 		return;
 	}
 
-	uint16_t low = read(SP());
-	SP()++;
-	uint16_t high = read(SP());
-	SP()++;
+	uint16_t low = read(sp);
+	sp++;
+	uint16_t high = read(sp);
+	sp++;
 
-	PC() = (high << 8) | low;
+	pc = (high << 8) | low;
 }
 
 void CPU::RETI(Operand src, Operand dst) {
+	uint16_t low = read(sp);
+	sp++;
+	uint16_t high = read(sp);
+	sp++;
 
+	ime = true;
+	pc = (high << 8) | low;
 }
 
 void CPU::RST(Operand src, Operand dst) {
+	uint16_t rst_addr = readOperand(src);
 
+	sp--;
+	write(sp, (pc, 0xFF00) >> 8);
+	sp--;
+	write(sp, (pc, 0xFF));
+
+	pc = call_addr;
 }
 
 // Carry Flag
@@ -757,11 +766,11 @@ void CPU::PUSH(Operand src, Operand dst) {
 
 // Interrupt-related
 void CPU::DI(Operand src, Operand dst) {
-
+	ime = false;
 }
 
 void CPU::EI(Operand src, Operand dst) {
-
+	ime = true;
 }
 
 void CPU::HALT(Operand src, Operand dst) {
