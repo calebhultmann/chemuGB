@@ -285,8 +285,6 @@ void CPU::decode(uint8_t opcode) {
 	
 }
 
-
-
 uint16_t CPU::readOperand(Operand op) {
 	switch (op.type) {
 	case OperandType::R8:     return read_r8(op.index);
@@ -318,6 +316,19 @@ void CPU::writeOperand(Operand op, uint16_t value) {
 	throw std::runtime_error("writeOperand: Invalid operand type");
 }
 
+bool checkOverflow(int bit, uint16_t num1, uint16_t num2, bool carry) {
+	num1 >> bit;
+	num2 >> bit;
+
+	num1 << bit;
+	num2 << bit;
+
+	uint32_t low1 = (uint32_t)(num1 & (~num1));
+	uint32_t low2 = (uint32_t)(num2 & (~num2));
+	
+	uint32_t sum = low1 + low2 + carry;
+	return sum >> bit;
+}
 
 // Check all instructions for flag changes
 // Implement flag functions
@@ -484,30 +495,37 @@ void CPU::ADC(Operand src, Operand dst) {
 	uint16_t dst_v = readOperand(dst);
 	uint16_t sum = src_v + dst_v + getFlag(FLAG_C);
 	writeOperand(dst, sum);
-
-	/*
-	R8:
-	Z if 0
-	N 0
-	H if overflow from bit 3
-	C if overflow from bit 7
-
-	R16:
-	*/
-
-
-	// Flags change depending on 16 bit vs 8 bit arithmetic
-	/*putFlag(FLAG_Z, (sum == 0));
+	
+	putFlag(FLAG_Z, (sum == 0));
 	clearFlag(FLAG_N);
-	putFlag(FLAG_H, 0);
-	putFlag(FLAG_C, (sum & 0xFF00))*/
+	putFlag(FLAG_H, checkOverflow(3, src_v, dst_v, getFlag(FLAG_C)));
+	putFlag(FLAG_C, checkOverflow(7, src_v, dst_v, getFlag(FLAG_C)));
 }
 
 void CPU::ADD(Operand src, Operand dst) {
+	bool is16bit = false;
+	bool isSP = false;
+	if ((src.type == OperandType::R16) || (src.type == OperandType::R16STK)) {
+		is16bit = true;
+	}
+	// TODO: CHECK FOR SP, e8 ADDITION
+
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	uint16_t sum = src_v + dst_v;
 	writeOperand(dst, sum);
+
+	if (is16bit) {
+		clearFlag(FLAG_N);
+		putFlag(FLAG_H, checkOverflow(11, src_v, dst_v, false));
+		putFlag(FLAG_C, checkOverflow(15, src_v, dst_v, false));
+	}
+	else {
+		putFlag(FLAG_Z, !isSP && (sum == 0));
+		clearFlag(FLAG_N);
+		putFlag(FLAG_H, checkOverflow(3, src_v, dst_v, false));
+		putFlag(FLAG_C, checkOverflow(7, src_v, dst_v, false));
+	}
 }
 
 void CPU::SBC(Operand src, Operand dst) {
@@ -515,6 +533,11 @@ void CPU::SBC(Operand src, Operand dst) {
 	uint16_t dst_v = readOperand(dst);
 	uint16_t sum = dst_v - src_v - getFlag(FLAG_C);
 	writeOperand(dst, sum);
+
+	putFlag(FLAG_Z, sum == 0);
+	setFlag(FLAG_N);
+	putFlag(FLAG_H, (src & 0xF) > ((dst + getFlag(FLAG_C)) & 0xF));
+	putFlag(FLAG_C, src > (dst + getFlag(FLAG_C));
 }
 
 void CPU::SUB(Operand src, Operand dst) {
@@ -522,6 +545,11 @@ void CPU::SUB(Operand src, Operand dst) {
 	uint16_t dst_v = readOperand(dst);
 	uint16_t sum = dst_v - src_v;
 	writeOperand(dst, sum);
+
+	putFlag(FLAG_Z, sum == 0);
+	setFlag(FLAG_N);
+	putFlag(FLAG_H, (src & 0xF) > (dst & 0xF));
+	putFlag(FLAG_C, src > dst);
 }
 
 void CPU::INC(Operand src, Operand dst) {
