@@ -30,3 +30,16 @@
 |$FF51|$FF55|CGB|VRAM DMA
 |$FF68|$FF6B|CGB|BG / OBJ Palettes
 |$FF70||CGB|WRAM Bank Select
+
+
+Helpful Documentation:
+
+
+https://ia803208.us.archive.org/9/items/GameBoyProgManVer1.1/GameBoyProgManVer1.1.pdf
+	Official Nintendo programming manual
+
+https://gekkio.fi/files/gb-docs/gbctr.pdf
+	Complete Technical Reference
+
+https://www.copetti.org/writings/consoles/game-boy/
+	Architecure overview
