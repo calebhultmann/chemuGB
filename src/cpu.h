@@ -70,6 +70,7 @@ private:
 	Reg16 hl;
 	uint16_t sp;
 	uint16_t pc;
+	bool ime;
 
 public:
 	uint8_t  A()  { return af.high; }
@@ -142,7 +143,9 @@ public:
 
 	struct Instruction {
 		std::string mnemonic;
-		int cycles;
+		int bytes;
+		// int cycles;
+		//	Only reimplement if cycles are needed, such as timing the GPU?
 		void (CPU::*execute)(Operand, Operand);
 		Operand src;
 		Operand dst;
