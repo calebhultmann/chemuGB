@@ -119,8 +119,6 @@ namespace cpe
 	}
 
 	void pixelEngine::DrawString(int x, int y, std::string text, Pixel color) {
-		//x += 161 * SCALE; // DEBUG_X
-		//y += 1 * SCALE;
 		SDL_SetTextureColorMod(fontTexture, color.r, color.g, color.b);
 		int init_x = x;
 		for (size_t i = 0; i < text.length(); i++) {
