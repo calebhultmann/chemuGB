@@ -70,6 +70,7 @@ private:
 	Reg16 hl;
 	uint16_t sp;
 	uint16_t pc;
+	bool ime;
 
 public:
 	uint8_t  A()  { return af.high; }
@@ -106,10 +107,15 @@ private:
 	uint8_t read_r8(uint8_t selector);
 	void    write_r8(uint8_t selector, uint8_t data);
 
-	uint8_t&  select_r8(uint8_t selector);
-	uint16_t& select_r16(uint8_t selector);
-	uint16_t& select_r16stk(uint8_t selector);
-	uint8_t select_r16mem(uint8_t selector);
+	uint8_t read_r16(uint8_t selector);
+	void write_r16(uint8_t selector, uint16_t data);
+	
+	uint16_t read_r16stk(uint8_t selector);
+	void write_r16stk(uint8_t selector, uint16_t data);
+	
+	uint8_t read_r16mem(uint8_t selector);
+	void write_r16mem(uint8_t selector, uint8_t data);
+	
 	bool check_cond(uint8_t selector);
 
 public:
@@ -137,7 +143,9 @@ public:
 
 	struct Instruction {
 		std::string mnemonic;
-		int cycles;
+		int bytes;
+		// int cycles;
+		//	Only reimplement if cycles are needed, such as timing the GPU?
 		void (CPU::*execute)(Operand, Operand);
 		Operand src;
 		Operand dst;

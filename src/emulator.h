@@ -4,6 +4,10 @@
 
 
 class chemuGB : public cpe::pixelEngine {
+// Add options for:
+//  - Optional debug mode
+//  - Gray/greenscale
+
 public:
 	chemuGB();
 	chemuGB(int s);
