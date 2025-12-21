@@ -62,9 +62,9 @@ public:
 	Bus* bus = nullptr;
 	void connectBus(Bus* b) { bus = b; }
 
+// Internal Registers
 private:
-	Reg16 af;
-		// Flag bits 7: z, 6: n, 5: h, 4:c, 3210: unused
+	Reg16 af; // 0bZNHC0000	
 	Reg16 bc;
 	Reg16 de;
 	Reg16 hl;
@@ -72,6 +72,7 @@ private:
 	uint16_t pc;
 	bool ime;
 
+// External Registers
 public:
 	uint8_t  A()  { return af.high; }
 	uint16_t AF() { return af.reg; }
@@ -91,34 +92,14 @@ public:
 	uint16_t SP() { return sp; }
 	uint16_t PC() { return pc; }
 
+// External Flag Functions
 	bool getFlag(uint8_t flag);
 	void setFlag(uint8_t flag);
 	void clearFlag(uint8_t flag);
 	void putFlag(uint8_t flag, bool value);
 
-public:
-	uint8_t read(uint16_t addr);
-	void write(uint16_t addr, uint8_t data);
-	uint8_t fetchByte();
-	uint16_t fetchWord();
-
+// Internal Operand/Instruction Structures
 private:
-	void decode(uint8_t opcode);
-	uint8_t read_r8(uint8_t selector);
-	void    write_r8(uint8_t selector, uint8_t data);
-
-	uint8_t read_r16(uint8_t selector);
-	void write_r16(uint8_t selector, uint16_t data);
-	
-	uint16_t read_r16stk(uint8_t selector);
-	void write_r16stk(uint8_t selector, uint16_t data);
-	
-	uint8_t read_r16mem(uint8_t selector);
-	void write_r16mem(uint8_t selector, uint8_t data);
-	
-	bool check_cond(uint8_t selector);
-
-public:
 	enum class OperandType {
 		R8,
 		R16,
@@ -151,21 +132,39 @@ public:
 		Operand dst;
 	};
 
+// Public R/W Interfaces
+public:
+	uint8_t  read(uint16_t addr);
+	void     write(uint16_t addr, uint8_t data);
+	uint8_t  fetchByte();
+	uint16_t fetchWord();
 
+// Internal R/W Functions
+private:
+	void decode(uint8_t opcode);
+	uint8_t read_r8(uint8_t selector);
+	void    write_r8(uint8_t selector, uint8_t data);
 
+	uint8_t read_r16(uint8_t selector);
+	void	write_r16(uint8_t selector, uint16_t data);
+	
+	uint16_t read_r16stk(uint8_t selector);
+	void	 write_r16stk(uint8_t selector, uint16_t data);
+		
+	uint8_t read_r16mem(uint8_t selector);
+	void	write_r16mem(uint8_t selector, uint8_t data);
+	
+	uint16_t readOperand(Operand op);
+	void	 writeOperand(Operand op, uint16_t value);
 
+	bool check_cond(uint8_t selector);
 
+// Instructions
+private:
+
+	// Lookup Tables
 	std::vector<Instruction> opcode_lookup;
 	std::vector<Instruction> cb_lookup;
-
-	// cond
-	// b3?
-	// tgt3??
-	// imm8?
-	// imm16?
-
-	uint16_t readOperand(Operand op);
-	void writeOperand(Operand op, uint16_t value);
 
 	// Loads
 	void LD(Operand src, Operand dst);
