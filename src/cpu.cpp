@@ -156,30 +156,32 @@ uint8_t CPU::read_r8(uint8_t selector) {
 		return read(hl.reg);
 	case REG_A:
 		return af.high;
+	default:
+		throw std::runtime_error("Invalid r8 selection");
 	}
-	throw std::runtime_error("Invalid r8 selection");
 }
 
 void CPU::write_r8(uint8_t selector, uint8_t data) {
 	switch (selector) {
 	case REG_B:
-		bc.high = data;
+		bc.high = data; return;
 	case REG_C:
-		bc.low = data;
+		bc.low = data; return;
 	case REG_D:
-		de.high = data;
+		de.high = data; return;
 	case REG_E:
-		de.low = data;
+		de.low = data; return;
 	case REG_H:
-		hl.high = data;
+		hl.high = data; return;
 	case REG_L:
-		hl.low = data;
+		hl.low = data; return;
 	case REG_HL_DATA:
-		write(hl.reg, data);
+		write(hl.reg, data); return;
 	case REG_A:
-		af.high = data;
+		af.high = data; return;
+	default:
+		throw std::runtime_error("Invalid r8 selection");
 	}
-	throw std::runtime_error("Invalid r8 selection");
 }
 
 uint16_t CPU::read_r16(uint8_t selector) {
@@ -192,22 +194,24 @@ uint16_t CPU::read_r16(uint8_t selector) {
 		return hl.reg;
 	case REG_SP:
 		return sp;
+	default:
+		throw std::runtime_error("Invalid r16 selection");
 	}
-	throw std::runtime_error("Invalid r16 selection");
 }
 
 void CPU::write_r16(uint8_t selector, uint16_t data) {
 	switch (selector) {
 	case REG_BC:
-		bc.reg = data;
+		bc.reg = data; return;
 	case REG_DE:
-		de.reg = data;
+		de.reg = data; return;
 	case REG_HL:
-		hl.reg = data;
+		hl.reg = data; return;
 	case REG_SP:
-		sp = data;
+		sp = data; return;
+	default:
+		throw std::runtime_error("Invalid r16 selection");
 	}
-	throw std::runtime_error("Invalid r16 selection");
 }
 
 uint16_t CPU::read_r16stk(uint8_t selector) {
@@ -220,22 +224,24 @@ uint16_t CPU::read_r16stk(uint8_t selector) {
 		return hl.reg;
 	case REG_AF:
 		return af.reg;
+	default:
+		throw std::runtime_error("Invalid r16stk selection");
 	}
-	throw std::runtime_error("Invalid r16stk selection");
 }
 
 void CPU::write_r16stk(uint8_t selector, uint16_t data) {
 	switch (selector) {
 	case REG_BC:
-		bc.reg = data;
+		bc.reg = data; return;
 	case REG_DE:
-		de.reg = data;
+		de.reg = data; return;
 	case REG_HL:
-		hl.reg = data;
+		hl.reg = data; return;
 	case REG_AF:
-		af.reg = data;
+		af.reg = data; return;
+	default:
+		throw std::runtime_error("Invalid r16stk selection");
 	}
-	throw std::runtime_error("Invalid r16stk selection");
 }
 
 uint8_t CPU::read_r16mem(uint8_t selector) {
@@ -248,22 +254,24 @@ uint8_t CPU::read_r16mem(uint8_t selector) {
 		return read(hl.reg++);
 	case REG_HLD:
 		return read(hl.reg--);
+	default:
+		throw std::runtime_error("Invalid r16mem selection");
 	}
-	throw std::runtime_error("Invalid r16mem selection");
 }
 
 void CPU::write_r16mem(uint8_t selector, uint8_t data) {
 	switch (selector) {
 	case REG_BC:
-		write(bc.reg, data);
+		write(bc.reg, data); return;
 	case REG_DE:
-		write(de.reg, data);
+		write(de.reg, data); return;
 	case REG_HLI:
-		write(hl.reg++, data);
+		write(hl.reg++, data); return;
 	case REG_HLD:
-		write(hl.reg--, data);
+		write(hl.reg--, data); return;
+	default:
+		throw std::runtime_error("Invalid r16mem selection");
 	}
-	throw std::runtime_error("Invalid r16mem selection");
 }
 
 bool CPU::check_cond(uint8_t selector) {
@@ -276,8 +284,9 @@ bool CPU::check_cond(uint8_t selector) {
 		return (AF() & 0b00010000) == 0;
 	case COND_C:
 		return (AF() & 0b00010000);
+	default:
+		throw std::runtime_error("Invalid cond selection");
 	}
-	throw std::runtime_error("Invalid cond selection");
 }
 
 
@@ -298,28 +307,30 @@ uint16_t CPU::readOperand(Operand op) {
 	case OperandType::n16:    return fetchWord();
 	case OperandType::a8:     return read(0xFF00 | fetchByte());
 	case OperandType::a16:    return read(fetchWord());
+	
+	default: throw std::runtime_error("readOperand: Invalid operand type");
 	}
-	throw std::runtime_error("readOperand: Invalid operand type");
 }
 
 void CPU::writeOperand(Operand op, uint16_t value) {
 	switch (op.type) {
-	case OperandType::R8: write_r8(op.index, value & 0xFF); break;
-	case OperandType::R16: write_r16(op.index, value); break;
-	case OperandType::R16STK: write_r16stk(op.index, value); break;
-	case OperandType::R16MEM: write_r16mem(op.index, value & 0xFF); break;
-	case OperandType::a8: write(0xFF00 | fetchByte(), value & 0xFF);
+	case OperandType::R8: write_r8(op.index, value & 0xFF); return;
+	case OperandType::R16: write_r16(op.index, value); return;
+	case OperandType::R16STK: write_r16stk(op.index, value); return;
+	case OperandType::R16MEM: write_r16mem(op.index, value & 0xFF); return;
+	case OperandType::a8: write(0xFF00 | fetchByte(), value & 0xFF); return;
 	//case OperandType::a16
+	
+	default: throw std::runtime_error("writeOperand: Invalid operand type");
 	}
-	throw std::runtime_error("writeOperand: Invalid operand type");
 }
 
 bool checkOverflow(int bit, uint16_t num1, uint16_t num2, bool carry) {
-	num1 >> bit;
-	num2 >> bit;
+	num1 >>= bit;
+	num2 >>= bit;
 
-	num1 << bit;
-	num2 << bit;
+	num1 <<= bit;
+	num2 <<= bit;
 
 	uint32_t low1 = (uint32_t)(num1 & (~num1));
 	uint32_t low2 = (uint32_t)(num2 & (~num2));
@@ -413,8 +424,8 @@ void CPU::SBC(Operand src, Operand dst) {
 
 	putFlag(FLAG_Z, sum == 0);
 	setFlag(FLAG_N);
-	putFlag(FLAG_H, (src & 0xF) > ((dst + getFlag(FLAG_C)) & 0xF));
-	putFlag(FLAG_C, src > (dst + getFlag(FLAG_C));
+	putFlag(FLAG_H, (src_v & 0xF) > ((dst_v + getFlag(FLAG_C)) & 0xF));
+	putFlag(FLAG_C, src_v > (dst_v + getFlag(FLAG_C)));
 }
 
 void CPU::SUB(Operand src, Operand dst) {
@@ -425,16 +436,16 @@ void CPU::SUB(Operand src, Operand dst) {
 
 	putFlag(FLAG_Z, sum == 0);
 	setFlag(FLAG_N);
-	putFlag(FLAG_H, (src & 0xF) > (dst & 0xF));
-	putFlag(FLAG_C, src > dst);
+	putFlag(FLAG_H, (src_v & 0xF) > (dst_v & 0xF));
+	putFlag(FLAG_C, src_v > dst_v);
 }
 
 void CPU::INC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	writeOperand(dst, src_v++);
+	writeOperand(dst, ++src_v);
 
 	if (src.type == OperandType::R8) {
-		putFlag(FLAG_Z, sum == 0);
+		putFlag(FLAG_Z, src_v == 0);
 		clearFlag(FLAG_N);
 		putFlag(FLAG_H, checkOverflow(3, src_v, 1, false));
 	}
@@ -442,10 +453,10 @@ void CPU::INC(Operand src, Operand dst) {
 
 void CPU::DEC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	writeOperand(dst, src_v--);
+	writeOperand(dst, --src_v);
 
 	if (src.type == OperandType::R8) {
-		putFlag(FLAG_Z, sum == 0);
+		putFlag(FLAG_Z, src_v == 0);
 		setFlag(FLAG_N);
 		putFlag(FLAG_H, 1 > (src_v & 0xF));
 	}
@@ -458,8 +469,8 @@ void CPU::CP(Operand src, Operand dst) {
 
 	putFlag(FLAG_Z, sum == 0);
 	setFlag(FLAG_N);
-	putFlag(FLAG_H, (src & 0xF) > (dst & 0xF));
-	putFlag(FLAG_C, src > dst);
+	putFlag(FLAG_H, (src_v & 0xF) > (dst_v & 0xF));
+	putFlag(FLAG_C, src_v > dst_v);
 }
 
 // Bitwise Logic
@@ -736,7 +747,7 @@ void CPU::RST(Operand src, Operand dst) {
 	sp--;
 	write(sp, (pc, 0xFF));
 
-	pc = call_addr;
+	pc = rst_addr;
 }
 
 // Carry Flag

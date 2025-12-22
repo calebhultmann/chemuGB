@@ -99,7 +99,7 @@ public:
 	void putFlag(uint8_t flag, bool value);
 
 // Internal Operand/Instruction Structures
-private:
+public:
 	enum class OperandType {
 		R8,
 		R16,
@@ -145,8 +145,8 @@ private:
 	uint8_t read_r8(uint8_t selector);
 	void    write_r8(uint8_t selector, uint8_t data);
 
-	uint8_t read_r16(uint8_t selector);
-	void	write_r16(uint8_t selector, uint16_t data);
+	uint16_t read_r16(uint8_t selector);
+	void	 write_r16(uint8_t selector, uint16_t data);
 	
 	uint16_t read_r16stk(uint8_t selector);
 	void	 write_r16stk(uint8_t selector, uint16_t data);
