@@ -27,6 +27,11 @@ int main(int argc, char** argv) {
 	filePath /= "..\\roms";
 	filePath /= rom;
 	
+	if (!std::filesystem::exists(filePath)) {
+		std::cerr << "ROM not found in roms/\n";
+		return Error::FileNotFound;
+	}
+
 	chemuGB gb;
 	int init_status = gb.initialize(filePath, 0);
 	if (init_status != Error::None) {

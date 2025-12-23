@@ -2,6 +2,7 @@
 
 Bus::Bus() {
 	cpu.connectBus(this);
+	cart = std::make_shared<Cartridge>();
 }
 
 Bus::~Bus() {
@@ -9,7 +10,7 @@ Bus::~Bus() {
 }
 
 int Bus::insertCartridge(const std::filesystem::path romPath) {
-	cart->loadCartridge(romPath);
+	return cart->loadCartridge(romPath);
 }
 
 uint8_t Bus::read(uint16_t addr) {

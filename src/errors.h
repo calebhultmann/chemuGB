@@ -1,5 +1,9 @@
+#pragma once
+
 enum Error {
 	None,
+	FileNotFound,
+
 	// Cartridge Errors
 	BadFile,
 	InvalidROMSize,

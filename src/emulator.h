@@ -18,6 +18,6 @@ public:
 	int initialize(std::filesystem::path romPath, uint8_t flags);
 	void start();
 
-	void drawDebug();
+	//void drawDebug();
 
 };

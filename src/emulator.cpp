@@ -14,8 +14,11 @@ chemuGB::~chemuGB() {
 }
 
 int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
-	engine.initialize();
-	system.insertCartridge(romPath);
+	int status = engine.initialize();
+	if (status != Error::None) {
+		return status;
+	}
+	return system.insertCartridge(romPath);
 }
 
 //void chemuGB::drawDebug() {
@@ -67,7 +70,7 @@ int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
 //}
 
 void chemuGB::start() {
-	drawDebug();
+	//drawDebug();
 	SDL_RenderPresent(engine.renderer);
 
 	bool done = false;
