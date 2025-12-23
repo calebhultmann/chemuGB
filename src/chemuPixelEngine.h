@@ -6,6 +6,7 @@
 #include <vector>
 #include <stdint.h>
 #include <string>
+#include "errors.h"
 
 namespace cpe
 {
@@ -47,6 +48,7 @@ namespace cpe
 		SDL_Texture* fontTexture = nullptr;
 
 		void constructFontSheet();
+		int initialize();
 		void DrawString(int x, int y, std::string text, Pixel color);
 	};
 }

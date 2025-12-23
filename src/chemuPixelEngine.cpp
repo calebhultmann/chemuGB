@@ -118,6 +118,45 @@ namespace cpe
 		}
 	}
 
+	int pixelEngine::initialize() {
+		if (!SDL_Init(SDL_INIT_VIDEO)) {
+			SDL_Log("SDL_VIDEO could not be initialized. Error: %s", SDL_GetError());
+			SDL_Quit();
+			return Error::NoSDLInit;
+		}
+
+		window = SDL_CreateWindow("Test SDL Window", (160 + 48) * SCALE, 144 * SCALE, 0);
+		if (window == NULL) {
+			SDL_Log("Window could not be created! %s", SDL_GetError());
+			SDL_Quit();
+			return Error::NoSDLWindow;
+		}
+
+		renderer = SDL_CreateRenderer(window, NULL);
+		if (renderer == NULL) {
+			SDL_Log("Renderer could not be created. Error %s", SDL_GetError());
+			SDL_Quit();
+			return Error::NoSDLRenderer;
+		}
+		font.toTexture(renderer, fontTexture);
+		SDL_SetTextureScaleMode(fontTexture, SDL_SCALEMODE_NEAREST);
+
+		// Checkerboard pattern for debugging
+		for (int i = 0; i < 160; i++) {
+			for (int j = 0; j < 144; j++) {
+				if ((j + i) % 2) {
+					SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+				}
+				else {
+					SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+				}
+				SDL_FRect rect = { float(i * 8), float(j * 8), float(8), float(8) };
+				SDL_RenderFillRect(renderer, &rect);
+			}
+		}
+		return 0;
+	}
+
 	void pixelEngine::DrawString(int x, int y, std::string text, Pixel color) {
 		SDL_SetTextureColorMod(fontTexture, color.r, color.g, color.b);
 		int init_x = x;

@@ -6,5 +6,10 @@ enum Error {
 	InvalidRAMSize,
 	UnsupportedMapper,
 	InvalidMapper,
-	ROMNotFound
+	ROMNotFound,
+
+	// Pixel Engine Errors
+	NoSDLInit,
+	NoSDLWindow,
+	NoSDLRenderer
 };
