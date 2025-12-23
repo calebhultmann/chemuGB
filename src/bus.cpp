@@ -8,6 +8,10 @@ Bus::~Bus() {
 
 }
 
+int Bus::insertCartridge(const std::filesystem::path romPath) {
+	cart->loadCartridge(romPath);
+}
+
 uint8_t Bus::read(uint16_t addr) {
 	if (addr >= 0x0000 && addr <= 0x7FFF) {
 		// rom  -  cartridge, mapper

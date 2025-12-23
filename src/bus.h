@@ -16,6 +16,7 @@
 #include <memory>
 #include "cartridge.h"
 #include "cpu.h"
+#include <filesystem>
 
 class Bus {
 public:
@@ -35,7 +36,7 @@ public:
 	void	write(uint16_t addr, uint8_t data);
 
 public: // system functions
-	// insert cartridge
+	int insertCartridge(const std::filesystem::path romPath);
 	// reset
 	// clock (probably?)
 };
