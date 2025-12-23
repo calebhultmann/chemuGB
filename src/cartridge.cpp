@@ -1,37 +1,22 @@
 #include "cartridge.h"
-#include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <vector>
 
 #include "mapper_MBC1.h"
 
-Cartridge::Cartridge(const std::string& filename) {
-	struct gbHeader {
-		uint8_t	entry_point[4];
-		uint8_t	logo[48];
-		uint8_t	title[16]; // May also be title, manufacturer code, and cgb flag
-		uint8_t	licensee_code[2];
-		uint8_t	sgb_flag;
-		uint8_t	cartridge_type;
-		uint8_t	rom_size;
-		uint8_t	ram_size;
-		uint8_t	destination;
-		uint8_t	old_licensee_code;
-		uint8_t	version;
-		uint8_t	header_checksum;
-		uint8_t	global_checksum[2];
-	} header;
+Cartridge::Cartridge() {
 
+}
+
+Cartridge::~Cartridge() {
+
+}
+
+int Cartridge::loadCartridge(const std::filesystem::path romPath) {
 	std::ifstream ifs;
-	std::filesystem::path filePath = std::filesystem::path(__FILE__).parent_path();
-	filePath /= "..\\roms";
-	filePath /= filename;
-	ifs.open(filePath, std::ifstream::binary);
+	ifs.open(romPath, std::ifstream::binary);
 	if (!ifs.is_open()) {
-		// file not found
-		std::cout << "uh oh\n";
-		return;
+		return Error::BadFile;
 	}
 
 	ifs.seekg(0x100);
@@ -39,16 +24,16 @@ Cartridge::Cartridge(const std::string& filename) {
 
 	// Set up ROM banks
 	if (header.rom_size > 8) {
-		std::cout << "uh oh rom\n";
-		return;
+		std::cerr << "Invalid ROM size detected\n";
+		return Error::InvalidROMSize;
 	}
 	int nROMbanks = (1 << header.rom_size) * 2;
 	romBanks.resize(nROMbanks, std::vector<uint8_t>(ROM_BANK_SIZE));
 
 	// Set up RAM banks
 	if (header.ram_size == 1 || header.ram_size > 5) {
-		std::cout << "uh oh ram\n";
-		return;
+		std::cerr << "Invalid RAM size detected\n";
+		return Error::InvalidRAMSize;
 	}
 
 	int nRAMbanks = 0;
@@ -63,11 +48,29 @@ Cartridge::Cartridge(const std::string& filename) {
 
 	// Set up Mapper
 	switch (header.cartridge_type) {
+	case 0x00: break;
 	case 0x01:
 	case 0x02:
 	case 0x03: mapper = std::make_shared<Mapper_MBC1>(nROMbanks, nRAMbanks); break;
-	//case 0x05:
-	//case 0x06: mapper = std::make_shared<Mapper_MBC2>(nROMbanks, nRAMbanks); break;
+	case 0x05:
+	case 0x06:
+	case 0x0B:
+	case 0x0C:
+	case 0x0D:
+	case 0x0F:
+	case 0x10:
+	case 0x11:
+	case 0x12:
+	case 0x13:
+	case 0x19:
+	case 0x1A:
+	case 0x1B:
+	case 0x1C:
+	case 0x1D:
+	case 0x1E:
+	case 0x20:
+	case 0x22: std::cerr << "Unsupported mapper detected\n"; return Error::UnsupportedMapper;
+	default: std::cerr << "Invalid mapper detected\n"; return Error::InvalidMapper;
 	}
 
 	// Read ROM data
@@ -75,8 +78,6 @@ Cartridge::Cartridge(const std::string& filename) {
 	for (int i = 0; i < nROMbanks; i++) {
 		ifs.read((char*)romBanks[i].data(), ROM_BANK_SIZE);
 	}
-
-
 
 
 	// Debugging info:
@@ -114,8 +115,6 @@ Cartridge::Cartridge(const std::string& filename) {
 	for (int i = 0; i < 2; i++) {
 		std::cout << std::hex << int(header.global_checksum[i]) << " ";
 	} std::cout << '\n';
-}
 
-Cartridge::~Cartridge() {
-
+	return 0;
 }

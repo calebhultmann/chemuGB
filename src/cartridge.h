@@ -3,6 +3,8 @@
 #include <vector>
 #include <memory>
 #include "mapper.h"
+#include "errors.h"
+#include <filesystem>
 
 constexpr size_t ROM_BANK_SIZE = 0x4000; // 16 KiB
 constexpr size_t RAM_BANK_SIZE = 0x2000; // 8 KiB
@@ -10,8 +12,26 @@ constexpr size_t RAM_BANK_SIZE = 0x2000; // 8 KiB
 class Cartridge
 {
 public:
-	Cartridge(const std::string& filename);
+	Cartridge();
 	~Cartridge();
+
+	int loadCartridge(const std::filesystem::path romPath);
+
+	struct gbHeader {
+		uint8_t	entry_point[4];
+		uint8_t	logo[48];
+		uint8_t	title[16]; // May also be title, manufacturer code, and cgb flag
+		uint8_t	licensee_code[2];
+		uint8_t	sgb_flag;
+		uint8_t	cartridge_type;
+		uint8_t	rom_size;
+		uint8_t	ram_size;
+		uint8_t	destination;
+		uint8_t	old_licensee_code;
+		uint8_t	version;
+		uint8_t	header_checksum;
+		uint8_t	global_checksum[2];
+	} header;
 
 	std::vector<std::vector<uint8_t>> romBanks; // 0x4000 per bank
 	std::vector<std::vector<uint8_t>> ramBanks; // 0x2000 per bank
