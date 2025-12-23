@@ -1,13 +1,38 @@
 #include "cartridge.h"
 #include <iostream>
 #include "emulator.h"
+#include <filesystem>
 
 int main(int argc, char** argv) {
-	Cartridge cart("Pokemon Red JPN.gb");
-	chemuGB gb;
-	if (!gb.initialize()) {
-		return 0;
+/*
+	arg checks
+	 - proper usage
+	 - get flags (OR'd bits in a byte to stay efficient)
+	 - get rom
+
+	construct emulator
+	 - use flags
+	 - use rom
+*/
+	if (argc < 2) {
+		std::cout << "Usage: ./chemuGB.exe \"<ROM TITLE.gb>\"";
+		return 1;
 	}
+
+	char* rom = argv[argc - 1];
+	std::cout << rom << "\n";
+
+
+	std::filesystem::path filePath = std::filesystem::path(__FILE__).parent_path();
+	filePath /= "..\\roms";
+	filePath /= rom;
+	
+	chemuGB gb;
+	int init_status = gb.initialize(filePath, 0);
+	if (init_status != Error::None) {
+		return init_status;
+	}
+
 	gb.start();
 	return 0;
 }
