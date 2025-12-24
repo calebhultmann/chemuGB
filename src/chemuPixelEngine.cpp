@@ -118,14 +118,19 @@ namespace cpe
 		}
 	}
 
-	int pixelEngine::initialize() {
+	int pixelEngine::initialize(bool debug) {
+		int SCREEN_HEIGHT = 144;
+		int SCREEN_WIDTH = 160;
+		int DEBUG_WIDTH = 48;
+		SCALE = 8;
+
 		if (!SDL_Init(SDL_INIT_VIDEO)) {
 			SDL_Log("SDL_VIDEO could not be initialized. Error: %s", SDL_GetError());
 			SDL_Quit();
 			return Error::NoSDLInit;
 		}
-
-		window = SDL_CreateWindow("Test SDL Window", (160 + 48) * SCALE, 144 * SCALE, 0);
+		int total_width = SCREEN_WIDTH + (debug ? DEBUG_WIDTH : 0);
+		window = SDL_CreateWindow("Test SDL Window", total_width * SCALE, SCREEN_HEIGHT * SCALE, 0);
 		if (window == NULL) {
 			SDL_Log("Window could not be created! %s", SDL_GetError());
 			SDL_Quit();

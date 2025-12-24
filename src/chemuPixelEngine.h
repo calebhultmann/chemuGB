@@ -48,7 +48,7 @@ namespace cpe
 		SDL_Texture* fontTexture = nullptr;
 
 		void constructFontSheet();
-		int initialize();
+		int initialize(bool debug);
 		void DrawString(int x, int y, std::string text, Pixel color);
 	};
 }
