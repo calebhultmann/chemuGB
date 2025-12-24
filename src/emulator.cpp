@@ -6,11 +6,11 @@
 #include <SDL3/SDL.h>
 
 chemuGB::chemuGB() {
-
+	DEBUG = true;
 }
 
 chemuGB::~chemuGB() {
-
+	delete disassembler;
 }
 
 int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
@@ -18,7 +18,18 @@ int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
 	if (status != Error::None) {
 		return status;
 	}
-	return system.insertCartridge(romPath);
+	
+	status = system.insertCartridge(romPath);
+	if (status != Error::None) {
+		return status;
+	}
+
+	if (DEBUG) {
+		disassembler = new Disassembler(&system.cpu);
+		disassembler->disassembleROM(system.cart->romBanks);
+	}
+
+	return 0;
 }
 
 void chemuGB::drawDebugRegs() {
@@ -101,7 +112,11 @@ void chemuGB::drawDebug() {
 }
 
 void chemuGB::start() {
-	drawDebug();
+	if (DEBUG) {
+		drawDebug();
+	}
+
+
 	SDL_RenderPresent(engine.renderer);
 
 	//print rom dump

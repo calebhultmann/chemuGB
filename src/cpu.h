@@ -160,12 +160,12 @@ private:
 	bool check_cond(uint8_t selector);
 
 // Instructions
-private:
-
+public:
 	// Lookup Tables
 	std::vector<Instruction> opcode_lookup;
 	std::vector<Instruction> cb_lookup;
 
+private:
 	// Loads
 	void LD(Operand src, Operand dst);
 	void LDH(Operand src, Operand dst);

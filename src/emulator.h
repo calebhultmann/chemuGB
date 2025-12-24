@@ -3,12 +3,15 @@
 #include "chemuPixelEngine.h"
 #include "bus.h"
 #include <filesystem>
+#include "disassembler.h"
 
 class chemuGB {
 
 public:
 	cpe::pixelEngine engine;
 	Bus system;
+
+	Disassembler* disassembler = nullptr;
 
 	chemuGB();
 	~chemuGB();
@@ -23,8 +26,7 @@ public:
 	int initialize(std::filesystem::path romPath, uint8_t flags);
 	void start();
 
-public:	
-
+private:	
 	void drawDebugRegs();
 	void drawDebug();
 
