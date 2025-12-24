@@ -14,64 +14,97 @@ chemuGB::~chemuGB() {
 }
 
 int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
-	int status = engine.initialize();
+	int status = engine.initialize(true);
 	if (status != Error::None) {
 		return status;
 	}
 	return system.insertCartridge(romPath);
 }
 
-//void chemuGB::drawDebug() {
-//// THIS FUNCTION IS CURRENTLY JUST SCAFFOLDING
-//
-//	cpe::Pixel white = cpe::Pixel{ 255,255,255 };
-//	int debug_x = 161 * SCALE;
-//
-//	DrawString(debug_x, 1 * SCALE, "Registers", white);
-//	DrawString(debug_x, (2 + 1) * SCALE, "A: $FF [255]  AF: $FFFF\nF: Z N H C      [65535]", white);
-//	DrawString(debug_x, (8 + 1) * SCALE, "B: $FF [255]  BC: $FFFF\nC: $FF [255]    [65535]", white);
-//	DrawString(debug_x, (14 + 1) * SCALE, "D: $FF [255]  DE: $FFFF\nE: $FF [255]    [65535]", white);
-//	DrawString(debug_x, (20 + 1) * SCALE, "H: $FF [255]  HL: $FFFF\nL: $FF [255]    [65535]", white);
-//	DrawString(debug_x, (26 + 1) * SCALE, "SP: $FFFF       [65535]", white);
-//	DrawString(debug_x, (28 + 1) * SCALE, "PC: $FFFF       [65535]", white);
-//	DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
-//	DrawString(debug_x, (34 + 1) * SCALE, " $4FA1: ADD A, R16", white);
-//	DrawString(debug_x, (36 + 1) * SCALE, " $4FA3: XOR A, IMM8", white);
-//	DrawString(debug_x, (38 + 1) * SCALE, " $04A5: RLCA", white);
-//	DrawString(debug_x, (40 + 1) * SCALE, " $04A6: INC B", white);
-//	DrawString(debug_x, (42 + 1) * SCALE, " $04A7: LD [BC], A", white);
-//	DrawString(debug_x, (44 + 1) * SCALE, " $04A9: CB: SWAP E", white);
-//	DrawString(debug_x, (46 + 1) * SCALE, " $04AB: LDH: A, [C]", white);
-//	DrawString(debug_x, (48 + 1) * SCALE, " $0000:       etc. ", white);
-//	DrawString(debug_x, (50 + 1) * SCALE, " $0000:       etc. ", white);
-//	DrawString(debug_x, (52 + 1) * SCALE, " $0000:       etc. ", white);
-//	DrawString(debug_x, (54 + 1) * SCALE, " $0000:       etc. ", white);
-//	DrawString(debug_x, (56 + 1) * SCALE, " $0000:       etc. ", white);
-//	DrawString(debug_x, (58 + 1) * SCALE, " $0000:       etc. ", white);
-//	DrawString(debug_x, (60 + 1) * SCALE, " $0000:       etc. ", white);
-//	DrawString(debug_x, (62 + 1) * SCALE, " $0000:       etc. ", white);
-//	DrawString(debug_x, (64 + 1) * SCALE, ">$0000:       etc. ", white);
-//	DrawString(debug_x, (66 + 1) * SCALE, " $4FA3: XOR A, IMM8", white);
-//	DrawString(debug_x, (68 + 1) * SCALE, " $04A5: RLCA", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (70 + 1) * SCALE, " $04A6: INC B", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (72 + 1) * SCALE, " $04A7: LD [BC], A", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (74 + 1) * SCALE, " $04A9: CB: SWAP E", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (76 + 1) * SCALE, " $04AB: LDH: A, [C]", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (78 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (80 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (82 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (84 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (86 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (88 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (90 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (92 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (94 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-//	DrawString(debug_x, (96 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-//}
+void chemuGB::drawDebugRegs() {
+	cpe::Pixel white = cpe::Pixel{ 255,255,255 };
+	cpe::Pixel green = cpe::Pixel{   0,255,100 };
+	cpe::Pixel red =   cpe::Pixel{ 255,  0,  50 };
+
+	int DEBUG_OFFSET = 161 * SCALE;
+	int Z_OFFSET = 6 * SCALE;
+	int N_OFFSET = 10 * SCALE;
+	int H_OFFSET = 14 * SCALE;
+	int C_OFFSET = 18 * SCALE;
+
+	engine.DrawString(DEBUG_OFFSET, 1 * SCALE, "Registers", white);
+	
+	// AF Regs
+	engine.DrawString(DEBUG_OFFSET, (2 + 1) * SCALE, std::format("A: ${:02X} [{:3}]  AF: ${:04X}\nF:              [{:5}]",
+																	system.cpu.A(), system.cpu.A(), system.cpu.AF(),
+																									system.cpu.AF()), white);
+	// Overlay flags with color
+	engine.DrawString(DEBUG_OFFSET + Z_OFFSET, ( 4 + 1) * SCALE, "Z", (system.cpu.getFlag(FLAG_Z) ? green : red));
+	engine.DrawString(DEBUG_OFFSET + N_OFFSET, ( 4 + 1) * SCALE, "N", (system.cpu.getFlag(FLAG_N) ? green : red));
+	engine.DrawString(DEBUG_OFFSET + H_OFFSET, ( 4 + 1) * SCALE, "H", (system.cpu.getFlag(FLAG_H) ? green : red));
+	engine.DrawString(DEBUG_OFFSET + C_OFFSET, ( 4 + 1) * SCALE, "C", (system.cpu.getFlag(FLAG_C) ? green : red));
+
+	// BC Regs
+	engine.DrawString(DEBUG_OFFSET, (8 + 1) * SCALE, std::format("B: ${:02X} [{:3}]  BC: ${:04X}\nC: ${:02X} [{:3}]    [{:5}]",
+																	system.cpu.B(), system.cpu.B(), system.cpu.BC(),
+																	system.cpu.C(), system.cpu.C(), system.cpu.BC()), white);
+	// DE Regs
+	engine.DrawString(DEBUG_OFFSET, (14 + 1) * SCALE, std::format("D: ${:02X} [{:3}]  DE: ${:04X}\nE: ${:02X} [{:3}]    [{:5}]",
+																	system.cpu.D(), system.cpu.D(), system.cpu.DE(),
+																	system.cpu.E(), system.cpu.E(), system.cpu.DE()), white);
+	// HL Regs
+	engine.DrawString(DEBUG_OFFSET, (20 + 1) * SCALE, std::format("H: ${:02X} [{:3}]  HL: ${:04X}\nL: ${:02X} [{:3}]    [{:5}]",
+																	system.cpu.H(), system.cpu.H(), system.cpu.HL(),
+																	system.cpu.L(), system.cpu.L(), system.cpu.HL()), white);
+}
+
+void chemuGB::drawDebug() {
+	cpe::Pixel white = cpe::Pixel{ 255,255,255 };
+	int debug_x = 161 * SCALE;
+	drawDebugRegs();
+
+	/*DrawString(debug_x, (26 + 1) * SCALE, "SP: $FFFF       [65535]", white);
+	DrawString(debug_x, (28 + 1) * SCALE, "PC: $FFFF       [65535]", white);
+	DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
+	DrawString(debug_x, (34 + 1) * SCALE, " $4FA1: ADD A, R16", white);
+	DrawString(debug_x, (36 + 1) * SCALE, " $4FA3: XOR A, IMM8", white);
+	DrawString(debug_x, (38 + 1) * SCALE, " $04A5: RLCA", white);
+	DrawString(debug_x, (40 + 1) * SCALE, " $04A6: INC B", white);
+	DrawString(debug_x, (42 + 1) * SCALE, " $04A7: LD [BC], A", white);
+	DrawString(debug_x, (44 + 1) * SCALE, " $04A9: CB: SWAP E", white);
+	DrawString(debug_x, (46 + 1) * SCALE, " $04AB: LDH: A, [C]", white);
+	DrawString(debug_x, (48 + 1) * SCALE, " $0000:       etc. ", white);
+	DrawString(debug_x, (50 + 1) * SCALE, " $0000:       etc. ", white);
+	DrawString(debug_x, (52 + 1) * SCALE, " $0000:       etc. ", white);
+	DrawString(debug_x, (54 + 1) * SCALE, " $0000:       etc. ", white);
+	DrawString(debug_x, (56 + 1) * SCALE, " $0000:       etc. ", white);
+	DrawString(debug_x, (58 + 1) * SCALE, " $0000:       etc. ", white);
+	DrawString(debug_x, (60 + 1) * SCALE, " $0000:       etc. ", white);
+	DrawString(debug_x, (62 + 1) * SCALE, " $0000:       etc. ", white);
+	DrawString(debug_x, (64 + 1) * SCALE, ">$0000:       etc. ", white);
+	DrawString(debug_x, (66 + 1) * SCALE, " $4FA3: XOR A, IMM8", white);
+	DrawString(debug_x, (68 + 1) * SCALE, " $04A5: RLCA", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (70 + 1) * SCALE, " $04A6: INC B", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (72 + 1) * SCALE, " $04A7: LD [BC], A", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (74 + 1) * SCALE, " $04A9: CB: SWAP E", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (76 + 1) * SCALE, " $04AB: LDH: A, [C]", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (78 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (80 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (82 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (84 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (86 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (88 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (90 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (92 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (94 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
+	DrawString(debug_x, (96 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });*/
+}
 
 void chemuGB::start() {
-	//drawDebug();
+	drawDebug();
 	SDL_RenderPresent(engine.renderer);
+
+	//print rom dump
 
 	bool done = false;
 	while (!done) {
