@@ -26,7 +26,7 @@ int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
 
 	if (DEBUG) {
 		disassembler = new Disassembler(&system.cpu);
-		disassembler->disassembleROM(system.cart->romBanks);
+		//disassembler->disassembleROM(system.cart->romBanks);
 	}
 
 	return 0;
