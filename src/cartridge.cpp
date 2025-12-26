@@ -27,7 +27,7 @@ int Cartridge::loadCartridge(const std::filesystem::path romPath) {
 		std::cerr << "Invalid ROM size detected\n";
 		return Error::InvalidROMSize;
 	}
-	int nROMbanks = (1 << header.rom_size) * 2;
+	nROMbanks = (1 << header.rom_size) * 2;
 	romBanks.resize(nROMbanks, std::vector<uint8_t>(ROM_BANK_SIZE));
 
 	// Set up RAM banks
@@ -36,7 +36,7 @@ int Cartridge::loadCartridge(const std::filesystem::path romPath) {
 		return Error::InvalidRAMSize;
 	}
 
-	int nRAMbanks = 0;
+	nRAMbanks = 0;
 	switch (header.ram_size) {
 	case 0: nRAMbanks = 0; break;
 	case 2: nRAMbanks = 1; break;
@@ -117,4 +117,17 @@ int Cartridge::loadCartridge(const std::filesystem::path romPath) {
 	} std::cout << '\n';
 
 	return 0;
+}
+
+uint8_t Cartridge::read(uint16_t addr) {
+	uint16_t mapped_addr;
+	uint8_t bank = mapper->mapRead(addr, mapped_addr);
+	
+	if (addr >= 0x0000 && addr <= 0x7FFF) {
+		bank = bank & (nROMbanks - 1);
+		return romBanks[bank][mapped_addr];
+	}
+
+	bank = bank & (nRAMbanks - 1);
+	return ramBanks[bank][mapped_addr];
 }

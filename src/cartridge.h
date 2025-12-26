@@ -33,10 +33,15 @@ public:
 		uint8_t	global_checksum[2];
 	} header;
 
+	int nROMbanks;
+	int nRAMbanks;
+
 	std::vector<std::vector<uint8_t>> romBanks; // 0x4000 per bank
 	std::vector<std::vector<uint8_t>> ramBanks; // 0x2000 per bank
 
 	std::shared_ptr<Mapper> mapper;
+
+	uint8_t read(uint16_t addr);
 
 	// Cartridge Types
 	//$00	ROM ONLY
