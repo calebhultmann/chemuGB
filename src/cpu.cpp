@@ -22,10 +22,10 @@ CPU::CPU() {
 	opcode_lookup = 
 	{
 	//   MNEMONIC              B  FUNC      SRC            DST                MNEMONIC          B  FUNC      SRC             DST                MNEMONIC            B  FUNC     SRC              DST                MNEMONIC        B  FUNC     SRC          DST                MNEMONIC              B  FUNC      SRC              DST                MNEMONIC          B  FUNC      SRC             DST                MNEMONIC            B  FUNC      SRC              DST                MNEMONIC      B  FUNC      SRC        DST
-		{"NOP",                1, &c::NOP,  empt,          empt},            {"LD BC, ${:04X}", 3, &c::LD,   n16,            R16(REG_BC)},     {"LD [BC], A",       1, &c::LD,  R8(REG_A),       R16MEM(REG_BC)},  {"INC BC",       1, &c::INC, R16(REG_BC), empt},            {"INC B",              1, &c::INC,  R8(REG_B),       empt},            {"DEC B",          1, &c::DEC,  R8(REG_B),      empt},            {"LD B, ${:02X}",    2, &c::LD,   n8,              R8(REG_B)},       {"RLCA",       1, &c::RLCA, empt,      empt},
-		{"LD [${:04X}], SP",   3, &c::LD,   R16(REG_SP),   a16},             {"ADD HL, BC",     1, &c::ADD,  R16(REG_BC),    R16(REG_HL)},     {"LD A, [BC]",       1, &c::LD,  R16MEM(REG_BC),  R8(REG_A)},       {"DEC BC",       1, &c::DEC, R16(REG_BC), empt},            {"INC C",              1, &c::INC,  R8(REG_C),       empt},            {"DEC C",          1, &c::DEC,  R8(REG_C),      empt},            {"LD C, ${:02X}",    2, &c::LD,   n8,              R8(REG_C)},       {"RRCA",       1, &c::RRCA, empt,      empt},
-		{"STOP ${:02X}",	   2, &c::STOP, n8,            empt},            {"LD DE, ${:04X}", 3, &c::LD,   n16,            R16(REG_DE)},     {"LD [DE], A",       1, &c::LD,  R8(REG_A),       R16MEM(REG_DE)},  {"INC DE",       1, &c::INC, R16(REG_DE), empt},            {"INC D",              1, &c::INC,  R8(REG_D),       empt},            {"DEC D",          1, &c::DEC,  R8(REG_D),      empt},            {"LD D, ${:02X}",    2, &c::LD,   n8,              R8(REG_D)},       {"RLA",        1, &c::RLA,  empt,      empt},
-		{"JR ${:04X}",         2, &c::JR,   n8,            empt},            {"ADD HL, DE",     1, &c::ADD,  R16(REG_DE),    R16(REG_HL)},     {"LD A, [DE]",       1, &c::LD,  R16MEM(REG_DE),  R8(REG_A)},       {"DEC DE",       1, &c::DEC, R16(REG_DE), empt},            {"INC E",              1, &c::INC,  R8(REG_E),       empt},            {"DEC E",          1, &c::DEC,  R8(REG_E),      empt},            {"LD E, ${:02X}",    2, &c::LD,   n8,              R8(REG_E)},       {"RRA",        1, &c::RRA,  empt,      empt},
+		{"NOP",                1, &c::NOP,  empt,          empt},            {"LD BC, ${:04X}", 3, &c::LD,   n16,            R16(REG_BC)},     {"LD [BC], A",       1, &c::LD,  R8(REG_A),       R16MEM(REG_BC)},  {"INC BC",       1, &c::INC, R16(REG_BC), empt},            {"INC B",              1, &c::INC,  R8(REG_B),       empt},            {"DEC B",          1, &c::DEC,  R8(REG_B),      empt},            {"LD B, ${:02X}",    2, &c::LD,   n8,              R8(REG_B)},       {"RLCA",       1, &c::RLCA, R8(REG_A), empt},
+		{"LD [${:04X}], SP",   3, &c::LD,   R16(REG_SP),   a16},             {"ADD HL, BC",     1, &c::ADD,  R16(REG_BC),    R16(REG_HL)},     {"LD A, [BC]",       1, &c::LD,  R16MEM(REG_BC),  R8(REG_A)},       {"DEC BC",       1, &c::DEC, R16(REG_BC), empt},            {"INC C",              1, &c::INC,  R8(REG_C),       empt},            {"DEC C",          1, &c::DEC,  R8(REG_C),      empt},            {"LD C, ${:02X}",    2, &c::LD,   n8,              R8(REG_C)},       {"RRCA",       1, &c::RRCA, R8(REG_A), empt},
+		{"STOP ${:02X}",	   2, &c::STOP, n8,            empt},            {"LD DE, ${:04X}", 3, &c::LD,   n16,            R16(REG_DE)},     {"LD [DE], A",       1, &c::LD,  R8(REG_A),       R16MEM(REG_DE)},  {"INC DE",       1, &c::INC, R16(REG_DE), empt},            {"INC D",              1, &c::INC,  R8(REG_D),       empt},            {"DEC D",          1, &c::DEC,  R8(REG_D),      empt},            {"LD D, ${:02X}",    2, &c::LD,   n8,              R8(REG_D)},       {"RLA",        1, &c::RLA,  R8(REG_A), empt},
+		{"JR ${:04X}",         2, &c::JR,   n8,            empt},            {"ADD HL, DE",     1, &c::ADD,  R16(REG_DE),    R16(REG_HL)},     {"LD A, [DE]",       1, &c::LD,  R16MEM(REG_DE),  R8(REG_A)},       {"DEC DE",       1, &c::DEC, R16(REG_DE), empt},            {"INC E",              1, &c::INC,  R8(REG_E),       empt},            {"DEC E",          1, &c::DEC,  R8(REG_E),      empt},            {"LD E, ${:02X}",    2, &c::LD,   n8,              R8(REG_E)},       {"RRA",        1, &c::RRA,  R8(REG_A), empt},
 		{"JR NZ, ${:04X}",     2, &c::JR,   n8,            COND(COND_NZ)},   {"LD HL, ${:04X}", 3, &c::LD,   n16,            R16(REG_HL)},     {"LD [HL+], A",      1, &c::LD,  R8(REG_A),       R16MEM(REG_HLI)}, {"INC HL",       1, &c::INC, R16(REG_HL), empt},            {"INC H",              1, &c::INC,  R8(REG_H),       empt},            {"DEC H",          1, &c::DEC,  R8(REG_H),      empt},            {"LD H, ${:02X}",    2, &c::LD,   n8,              R8(REG_H)},       {"DAA",        1, &c::DAA,  empt,      empt},
 		{"JR Z, ${:04X}",      2, &c::JR,   n8,            COND(COND_Z)},    {"ADD HL, HL",     1, &c::ADD,  R16(REG_HL),    R16(REG_HL)},     {"LD A, [HL+]",      1, &c::LD,  R16MEM(REG_HLI), R8(REG_A)},       {"DEC HL",       1, &c::DEC, R16(REG_HL), empt},            {"INC L",              1, &c::INC,  R8(REG_L),       empt},            {"DEC L",          1, &c::DEC,  R8(REG_L),      empt},            {"LD L, ${:02X}",    2, &c::LD,   n8,              R8(REG_L)},       {"CPL",        1, &c::CPL,  empt,      empt},
 		{"JR NC, ${:04X}",     2, &c::JR,   n8,            COND(COND_NC)},   {"LD SP, ${:04X}", 3, &c::LD,   n16,            R16(REG_SP)},     {"LD [HL-], A",      1, &c::LD,  R8(REG_A),       R16MEM(REG_HLD)}, {"INC SP",       1, &c::INC, R16(REG_SP), empt},            {"INC [HL]",           1, &c::INC,  R8(REG_HL_DATA), empt},            {"DEC [HL]",       1, &c::DEC,  R8(REG_H),      empt},            {"LD [HL], ${:02X}", 2, &c::LD,   n8,              R8(REG_HL_DATA)}, {"SCF",        1, &c::SCF,  empt,      empt},
@@ -49,10 +49,10 @@ CPU::CPU() {
 		{"OR A, B",            1, &c::OR,   R8(REG_B),     R8(REG_A)},       {"OR A, C",        1, &c::OR,   R8(REG_C),      R8(REG_A)},       {"OR A, D",          1, &c::OR,  R8(REG_D),       R8(REG_A)},       {"OR A, E",      1, &c::OR,  R8(REG_E),   R8(REG_A)},       {"OR A, H",            1, &c::OR,   R8(REG_H),       R8(REG_A)},       {"OR A, L",        1, &c::OR,   R8(REG_L),      R8(REG_A)},       {"OR A, [HL]",       1, &c::OR,   R8(REG_HL_DATA), R8(REG_A)},       {"OR A, A",    1, &c::OR,   R8(REG_A), R8(REG_A)},
 		{"CP A, B",            1, &c::CP,   R8(REG_B),     R8(REG_A)},       {"CP A, C",        1, &c::CP,   R8(REG_C),      R8(REG_A)},       {"CP A, D",          1, &c::CP,  R8(REG_D),       R8(REG_A)},       {"CP A, E",      1, &c::CP,  R8(REG_E),   R8(REG_A)},       {"CP A, H",            1, &c::CP,   R8(REG_H),       R8(REG_A)},       {"CP A, L",        1, &c::CP,   R8(REG_L),      R8(REG_A)},       {"CP A, [HL]",       1, &c::CP,   R8(REG_HL_DATA), R8(REG_A)},       {"CP A, A",    1, &c::CP,   R8(REG_A), R8(REG_A)},
 
-		{"RET NZ",             1, &c::RET,  COND(COND_NZ), empt},            {"POP BC",         1, &c::POP,  R16STK(REG_BC), empt},            {"JP NZ, [${:04X}]", 3, &c::JP,  a16,             COND(COND_NZ)},   {"JP [${:04X}]", 3, &c::JP,  a16,         empt},            {"CALL NZ, [${:04X}]", 3, &c::CALL, a16,             COND(COND_NZ)},   {"PUSH BC",        1, &c::PUSH, R16STK(REG_BC), empt},            {"ADD A, ${:02X}",   2, &c::ADD,  n8,              R8(REG_A)},       {"RST $00",    1, &c::RST,  VEC(0x00), empt},
-		{"RET Z",              1, &c::RET,  COND(COND_Z),  empt},            {"RET",            1, &c::RET,  empt,           empt},            {"JP Z, [${:04X}]",  3, &c::JP,  a16,             COND(COND_Z)},    {"PREFIX",       1, &c::CB,  empt,        empt},            {"CALL Z, [${:04X}]",  3, &c::CALL, a16,             COND(COND_Z)},    {"CALL [${:04X}]", 3, &c::CALL, a16,            empt},            {"ADC A, ${:02X}",   2, &c::ADC,  n8,              R8(REG_A)},       {"RST $08",    1, &c::RST,  VEC(0x08), empt},
-		{"RET NC",             1, &c::RET,  COND(COND_NC), empt},            {"POP DE",         1, &c::POP,  R16STK(REG_DE), empt},            {"JP NC, [${:04X}]", 3, &c::JP,  a16,             COND(COND_NC)},   {"INVALID",      1, &c::INV, empt,        empt},            {"CALL NC, [${:04X}]", 3, &c::CALL, a16,             COND(COND_NC)},   {"PUSH DE",        1, &c::PUSH, R16STK(REG_DE), empt},            {"SUB A, ${:02X}",   2, &c::SUB,  n8,              R8(REG_A)},       {"RST $10",    1, &c::RST,  VEC(0x10), empt},
-		{"RET C",              1, &c::RET,  COND(COND_C),  empt},            {"RETI",           1, &c::RETI, empt,           empt},            {"JP C, [${:04X}]",  3, &c::JP,  a16,             COND(COND_C)},    {"INVALID",      1, &c::INV, empt,        empt},            {"CALL C, [${:04X}]",  3, &c::CALL, a16,             COND(COND_C)},    {"INVALID",        1, &c::INV,  empt,           empt},            {"SBC A, ${:02X}",   2, &c::SBC,  n8,              R8(REG_A)},       {"RST $18",    1, &c::RST,  VEC(0x18), empt},
+		{"RET NZ",             1, &c::RET,  COND(COND_NZ), empt},            {"POP BC",         1, &c::POP,  R16STK(REG_BC), empt},            {"JP NZ, [${:04X}]", 3, &c::JP,  a16,             COND(COND_NZ)},   {"JP [${:04X}]", 3, &c::JP,  a16,         empt},            {"CALL NZ, [${:04X}]", 3, &c::CALL, n16,             COND(COND_NZ)},   {"PUSH BC",        1, &c::PUSH, R16STK(REG_BC), empt},            {"ADD A, ${:02X}",   2, &c::ADD,  n8,              R8(REG_A)},       {"RST $00",    1, &c::RST,  VEC(0x00), empt},
+		{"RET Z",              1, &c::RET,  COND(COND_Z),  empt},            {"RET",            1, &c::RET,  empt,           empt},            {"JP Z, [${:04X}]",  3, &c::JP,  a16,             COND(COND_Z)},    {"PREFIX",       1, &c::CB,  empt,        empt},            {"CALL Z, [${:04X}]",  3, &c::CALL, n16,             COND(COND_Z)},    {"CALL [${:04X}]", 3, &c::CALL, n16,            empt},            {"ADC A, ${:02X}",   2, &c::ADC,  n8,              R8(REG_A)},       {"RST $08",    1, &c::RST,  VEC(0x08), empt},
+		{"RET NC",             1, &c::RET,  COND(COND_NC), empt},            {"POP DE",         1, &c::POP,  R16STK(REG_DE), empt},            {"JP NC, [${:04X}]", 3, &c::JP,  a16,             COND(COND_NC)},   {"INVALID",      1, &c::INV, empt,        empt},            {"CALL NC, [${:04X}]", 3, &c::CALL, n16,             COND(COND_NC)},   {"PUSH DE",        1, &c::PUSH, R16STK(REG_DE), empt},            {"SUB A, ${:02X}",   2, &c::SUB,  n8,              R8(REG_A)},       {"RST $10",    1, &c::RST,  VEC(0x10), empt},
+		{"RET C",              1, &c::RET,  COND(COND_C),  empt},            {"RETI",           1, &c::RETI, empt,           empt},            {"JP C, [${:04X}]",  3, &c::JP,  a16,             COND(COND_C)},    {"INVALID",      1, &c::INV, empt,        empt},            {"CALL C, [${:04X}]",  3, &c::CALL, n16,             COND(COND_C)},    {"INVALID",        1, &c::INV,  empt,           empt},            {"SBC A, ${:02X}",   2, &c::SBC,  n8,              R8(REG_A)},       {"RST $18",    1, &c::RST,  VEC(0x18), empt},
 		{"LDH [$FF{:02X}], A", 2, &c::LDH,  a8,            R8(REG_A)},       {"POP HL",         1, &c::POP,  R16STK(REG_HL), empt},            {"LDH [C], A",       1, &c::LDH, R8(REG_C),       R8(REG_A)},       {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH HL",        1, &c::PUSH, R16STK(REG_HL), empt},            {"AND A, ${:02X}",   2, &c::AND,  n8,              R8(REG_A)},       {"RST $20",    1, &c::RST,  VEC(0x20), empt},
 		{"ADD SP, ${:02X}",    2, &c::ADD,  n8,            R16(REG_SP)},     {"JP HL",          1, &c::JP,   R16(REG_HL),    empt},            {"LD [${:04X}], A",  3, &c::LD,  a16,             R8(REG_A)},       {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,           empt},            {"XOR A, ${:02X}",   2, &c::XOR,  n8,              R8(REG_A)},       {"RST $28",    1, &c::RST,  VEC(0x28), empt},
 		{"LDH A, [$FF{:02X}]", 2, &c::LDH,  R8(REG_A),     a8},              {"POP AF",         1, &c::POP,  R16STK(REG_AF), empt},            {"LDH A, [C]",       1, &c::LDH, R8(REG_A),       R8(REG_C)},       {"DI",           1, &c::DI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH AF",        1, &c::PUSH, R16STK(REG_AF), empt},            {"OR A, ${:02X}",    2, &c::OR,   n8,              R8(REG_A)},       {"RST $30",    1, &c::RST,  VEC(0x30), empt},
@@ -289,11 +289,6 @@ bool CPU::check_cond(uint8_t selector) {
 	}
 }
 
-
-void CPU::decode(uint8_t opcode) {
-	
-}
-
 uint16_t CPU::readOperand(Operand op) {
 	switch (op.type) {
 	case OperandType::R8:     return read_r8(op.index);
@@ -363,6 +358,16 @@ NOP
 STOP
 
 */
+
+void CPU::step() {
+	int opcode = fetchByte();
+	Instruction curr = opcode_lookup[opcode];
+	executeInstruction(curr);
+}
+
+void CPU::executeInstruction(Instruction& curr) {
+	(this->*curr.execute)(curr.src, curr.dst);
+}
 
 // Loads
 void CPU::LD(Operand src, Operand dst) {
@@ -442,7 +447,7 @@ void CPU::SUB(Operand src, Operand dst) {
 
 void CPU::INC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	writeOperand(dst, ++src_v);
+	writeOperand(src, ++src_v);
 
 	if (src.type == OperandType::R8) {
 		putFlag(FLAG_Z, src_v == 0);
@@ -453,7 +458,7 @@ void CPU::INC(Operand src, Operand dst) {
 
 void CPU::DEC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	writeOperand(dst, --src_v);
+	writeOperand(src, --src_v);
 
 	if (src.type == OperandType::R8) {
 		putFlag(FLAG_Z, src_v == 0);
@@ -713,7 +718,9 @@ void CPU::JR(Operand src, Operand dst) {
 	}
 
 	// TODO: signed addition
-	//PC() = PC() + 
+	//PC() = PC() +
+
+	pc = pc + static_cast<int8_t>(jr_offset);
 }
 
 void CPU::RET(Operand src, Operand dst) {
@@ -803,7 +810,9 @@ void CPU::STOP(Operand src, Operand dst) {
 }
 
 void CPU::CB(Operand src, Operand dst) {
-
+	int opcode = fetchByte();
+	Instruction curr = cb_lookup[opcode];
+	executeInstruction(curr);
 }
 
 void CPU::INV(Operand src, Operand dst) {

@@ -67,6 +67,9 @@ void chemuGB::drawDebugRegs() {
 	engine.DrawString(DEBUG_OFFSET, (20 + 1) * SCALE, std::format("H: ${:02X} [{:3}]  HL: ${:04X}\nL: ${:02X} [{:3}]    [{:5}]",
 																	system.cpu.H(), system.cpu.H(), system.cpu.HL(),
 																	system.cpu.L(), system.cpu.L(), system.cpu.HL()), white);
+	engine.DrawString(DEBUG_OFFSET, (26 + 1) * SCALE, std::format("SP: ${:04X}       [{:5}]", system.cpu.SP(), system.cpu.SP()), white);
+	engine.DrawString(DEBUG_OFFSET, (28 + 1) * SCALE, std::format("PC: ${:04X}       [{:5}]", system.cpu.PC(), system.cpu.PC()), white);
+
 }
 
 void chemuGB::drawDebug() {
@@ -74,9 +77,9 @@ void chemuGB::drawDebug() {
 	int debug_x = 161 * SCALE;
 	drawDebugRegs();
 
-	/*DrawString(debug_x, (26 + 1) * SCALE, "SP: $FFFF       [65535]", white);
-	DrawString(debug_x, (28 + 1) * SCALE, "PC: $FFFF       [65535]", white);
-	DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
+	engine.DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
+	engine.DrawString(debug_x, (34 + 1) * SCALE, std::format("${:04X}: ", system.cpu.PC()), white);
+	/*
 	DrawString(debug_x, (34 + 1) * SCALE, " $4FA1: ADD A, R16", white);
 	DrawString(debug_x, (36 + 1) * SCALE, " $4FA3: XOR A, IMM8", white);
 	DrawString(debug_x, (38 + 1) * SCALE, " $04A5: RLCA", white);
@@ -109,19 +112,19 @@ void chemuGB::drawDebug() {
 	DrawString(debug_x, (92 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
 	DrawString(debug_x, (94 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
 	DrawString(debug_x, (96 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });*/
+
 }
 
 void chemuGB::start() {
-	if (DEBUG) {
-		drawDebug();
-	}
 
 
-	SDL_RenderPresent(engine.renderer);
+
 
 	//print rom dump
 
 	bool done = false;
+	int frame = 0;
+		bool display = false;
 	while (!done) {
 		SDL_Event event;
 
@@ -130,6 +133,22 @@ void chemuGB::start() {
 				done = true;
 			}
 		}
+
+		if (!display && system.cpu.HL() == 0x7FFF) {
+			display = true;
+		}
+		if (display) {
+			if (DEBUG) {
+				drawDebug();
+			}
+			SDL_RenderPresent(engine.renderer);
+		}
+		system.cpu.step();
+
+		// Step CPU
+		// Draw frame
+
+
 	}
 
 	SDL_DestroyWindow(engine.window);
