@@ -131,3 +131,13 @@ uint8_t Cartridge::read(uint16_t addr) {
 	bank = bank & (nRAMbanks - 1);
 	return ramBanks[bank][mapped_addr];
 }
+
+void Cartridge::write(uint16_t addr, uint8_t data) {
+	uint16_t mapped_addr;
+	uint8_t bank = mapper->mapWrite(addr, mapped_addr, data);
+
+	if (addr >= 0xA000 && addr <= 0xBFFF) {
+		bank = bank & (nRAMbanks - 1);
+		ramBanks[bank][mapped_addr] = data;
+	}
+}

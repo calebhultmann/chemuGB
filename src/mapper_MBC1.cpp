@@ -56,6 +56,10 @@ int Mapper_MBC1::mapWrite(uint16_t addr, uint16_t& mapped_addr, uint8_t data) {
 	else if (addr >= 0x6000 && addr <= 0x7FFF) {
 		Banking_Mode = data & 0b00000001;
 	}
+	else if (addr >= 0xA000 && addr <= 0xBFFF) {
+		mapped_addr = addr & 0x1FFF;
+		return Bank_Number_Upper_Bits;
+	}
 	
 	return 0;
 }

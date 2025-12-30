@@ -28,7 +28,8 @@ public: // Bus devices
 	// ppu
 	std::shared_ptr<Cartridge> cart;
 	// vram
-	// WRAM
+	uint8_t WRAM[0x2000];
+	uint8_t HRAM[0x7F];
 	// internal RAM
 
 public:
