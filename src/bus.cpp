@@ -125,7 +125,7 @@ uint8_t Bus::read(uint16_t addr) {
 		return cart->read(addr);
 	}
 	else if (addr >= 0x8000 && addr <= 0x9FFF) {
-		// vram  -  ppu? or bus
+		return ppu.read(addr);
 	}
 	else if (addr >= 0xA000 && addr <= 0xBFFF) {
 		return cart->read(addr);
@@ -137,7 +137,7 @@ uint8_t Bus::read(uint16_t addr) {
 		// mirror of C000 - DDFF (prohibited)
 	}
 	else if (addr >= 0xFE00 && addr <= 0xFE9F) {
-		//OAM
+		return ppu.read(addr);
 	}
 	else if (addr >= 0xFEA0 && addr <= 0xFEFF) {
 		// not usable
@@ -160,7 +160,7 @@ void Bus::write(uint16_t addr, uint8_t data) {
 		cart->write(addr, data);
 	}
 	else if (addr >= 0x8000 && addr <= 0x9FFF) {
-		// vram  -  ppu? or bus
+		ppu.write(addr, data);
 	}
 	else if (addr >= 0xA000 && addr <= 0xBFFF) {
 		cart->write(addr, data);
@@ -172,7 +172,7 @@ void Bus::write(uint16_t addr, uint8_t data) {
 		// mirror of C000 - DDFF (prohibited)
 	}
 	else if (addr >= 0xFE00 && addr <= 0xFE9F) {
-		//OAM
+		ppu.write(addr, data);
 	}
 	else if (addr >= 0xFEA0 && addr <= 0xFEFF) {
 		 // not usable
