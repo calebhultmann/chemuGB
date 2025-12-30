@@ -13,8 +13,111 @@ int Bus::insertCartridge(const std::filesystem::path romPath) {
 	return cart->loadCartridge(romPath);
 }
 
+uint8_t Bus::readIOregs(uint16_t addr) {
+	switch (addr) {
+	case 0xFF00: return joyp;
+	case 0xFF01: return sb;
+	case 0xFF02: return sc;
+	case 0xFF04: return div;
+	case 0xFF05: return tima;
+	case 0xFF06: return tma;
+	case 0xFF07: return tac;
+	case 0xFF0F: return interrupts;
+	case 0xFF10: return audio_regs.nr10;
+	case 0xFF11: return audio_regs.nr11;
+	case 0xFF12: return audio_regs.nr12;
+	case 0xFF13: return audio_regs.nr13;
+	case 0xFF14: return audio_regs.nr14;
+	case 0xFF16: return audio_regs.nr21;
+	case 0xFF17: return audio_regs.nr22;
+	case 0xFF18: return audio_regs.nr23;
+	case 0xFF19: return audio_regs.nr24;
+	case 0xFF1A: return audio_regs.nr30;
+	case 0xFF1B: return audio_regs.nr31;
+	case 0xFF1C: return audio_regs.nr32;
+	case 0xFF1D: return audio_regs.nr33;
+	case 0xFF1E: return audio_regs.nr34;
+	case 0xFF1F: return audio_regs.nr35;
+	case 0xFF20: return audio_regs.nr41;
+	case 0xFF21: return audio_regs.nr42;
+	case 0xFF22: return audio_regs.nr43;
+	case 0xFF23: return audio_regs.nr44;
+	case 0xFF24: return audio_regs.nr50;
+	case 0xFF25: return audio_regs.nr51;
+	case 0xFF26: return audio_regs.nr52;
+	case 0xFF40: return lcdc;
+	case 0xFF41: return stat;
+	case 0xFF42: return lcx;
+	case 0xFF43: return lcy;
+	case 0xFF46: return dma;
+	case 0xFF47: return bgp;
+	case 0xFF48: return obp0;
+	case 0xFF49: return obp1;
+	case 0xFF4A: return wy;
+	case 0xFF4B: return wx;
+	case 0xFF50: return boot;
+
+	default:
+		if (addr >= 0xFF30 && addr <= 0xFF3F) {
+			return wave_ram[addr - 0xFF30];
+		}
+	}
+	return 0;
+}
+
+void Bus::writeIOregs(uint16_t addr, uint8_t data) {
+	switch (addr) {
+	case 0xFF00: joyp = data; break;
+	case 0xFF01: sb = data; break;
+	case 0xFF02: sc = data; break;
+	case 0xFF04: div = data; break;
+	case 0xFF05: tima = data; break;
+	case 0xFF06: tma = data; break;
+	case 0xFF07: tac = data; break;
+	case 0xFF0F: interrupts = data; break;
+	case 0xFF10: audio_regs.nr10 = data; break;
+	case 0xFF11: audio_regs.nr11 = data; break;
+	case 0xFF12: audio_regs.nr12 = data; break;
+	case 0xFF13: audio_regs.nr13 = data; break;
+	case 0xFF14: audio_regs.nr14 = data; break;
+	case 0xFF16: audio_regs.nr21 = data; break;
+	case 0xFF17: audio_regs.nr22 = data; break;
+	case 0xFF18: audio_regs.nr23 = data; break;
+	case 0xFF19: audio_regs.nr24 = data; break;
+	case 0xFF1A: audio_regs.nr30 = data; break;
+	case 0xFF1B: audio_regs.nr31 = data; break;
+	case 0xFF1C: audio_regs.nr32 = data; break;
+	case 0xFF1D: audio_regs.nr33 = data; break;
+	case 0xFF1E: audio_regs.nr34 = data; break;
+	case 0xFF1F: audio_regs.nr35 = data; break;
+	case 0xFF20: audio_regs.nr41 = data; break;
+	case 0xFF21: audio_regs.nr42 = data; break;
+	case 0xFF22: audio_regs.nr43 = data; break;
+	case 0xFF23: audio_regs.nr44 = data; break;
+	case 0xFF24: audio_regs.nr50 = data; break;
+	case 0xFF25: audio_regs.nr51 = data; break;
+	case 0xFF26: audio_regs.nr52 = data; break;
+	case 0xFF40: lcdc = data; break;
+	case 0xFF41: stat = data; break;
+	case 0xFF42: lcx = data; break;
+	case 0xFF43: lcy = data; break;
+	case 0xFF46: dma = data; break;
+	case 0xFF47: bgp = data; break;
+	case 0xFF48: obp0 = data; break;
+	case 0xFF49: obp1 = data; break;
+	case 0xFF4A: wy = data; break;
+	case 0xFF4B: wx = data; break;
+	case 0xFF50: boot = data; break;
+
+	default:
+		if (addr >= 0xFF30 && addr <= 0xFF3F) {
+			wave_ram[addr - 0xFF30] = data;
+		}
+	}
+}
+
 uint8_t Bus::read(uint16_t addr) {
-	if (boot && addr >= 0x0000 && addr <= 0x0100) {
+	if (boot == 0 && addr >= 0x0000 && addr <= 0x0100) {
 		return dmg_boot[addr];
 	}
 
@@ -40,13 +143,13 @@ uint8_t Bus::read(uint16_t addr) {
 		// not usable
 	}
 	else if (addr >= 0xFF00 && addr <= 0xFF7F) {
-		// I/O registers
+		return readIOregs(addr);
 	}
 	else if (addr >= 0xFF80 && addr <= 0xFFFE) {
 		return HRAM[addr - 0xFF80];
 	}
 	else if (addr == 0xFFFF) {
-		//IE Flag
+		return ie;
 	}
 	return 0;
 }
@@ -72,21 +175,15 @@ void Bus::write(uint16_t addr, uint8_t data) {
 		//OAM
 	}
 	else if (addr >= 0xFEA0 && addr <= 0xFEFF) {
-		// not usable
+		 // not usable
 	}
 	else if (addr >= 0xFF00 && addr <= 0xFF7F) {
-		// I/O registers
+		writeIOregs(addr, data);
 	}
 	else if (addr >= 0xFF80 && addr <= 0xFFFE) {
 		HRAM[addr - 0xFF80] = data;
 	}
 	else if (addr == 0xFFFF) {
-		//IE Flag
-	}
-	
-	
-	
-	if (addr == 0xFF50) {
-		boot = data;
+		ie = data;
 	}
 }

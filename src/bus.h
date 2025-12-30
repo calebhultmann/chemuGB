@@ -27,12 +27,67 @@ public: // Bus devices
 	CPU cpu;
 	// ppu
 	std::shared_ptr<Cartridge> cart;
-	// vram
 	uint8_t WRAM[0x2000];
 	uint8_t HRAM[0x7F];
-	// internal RAM
 
+	struct Audio {
+		uint8_t nr10;
+		uint8_t nr11;
+		uint8_t nr12;
+		uint8_t nr13;
+		uint8_t nr14;
+
+		uint8_t nr21;
+		uint8_t nr22;
+		uint8_t nr23;
+		uint8_t nr24;
+
+		uint8_t nr30;
+		uint8_t nr31;
+		uint8_t nr32;
+		uint8_t nr33;
+		uint8_t nr34;
+		uint8_t nr35;
+
+		uint8_t nr41;
+		uint8_t nr42;
+		uint8_t nr43;
+		uint8_t nr44;
+
+		uint8_t nr50;
+		uint8_t nr51;
+		uint8_t nr52;
+	};
+
+	// I/O registers
+	uint8_t joyp;
+	uint8_t sb;
+	uint8_t sc;
+	uint8_t div;
+	uint8_t tima;
+	uint8_t tma;
+	uint8_t tac;
+	uint8_t interrupts;
+	Audio audio_regs;
+	uint8_t wave_ram[16];
+	uint8_t lcdc;
+	uint8_t stat;
+	uint8_t lcx;
+	uint8_t lcy;
+	uint8_t dma;
+	uint8_t bgp;
+	uint8_t obp0;
+	uint8_t obp1;
+	uint8_t wy;
+	uint8_t wx;
+	uint8_t boot = 0;
+
+	uint8_t ie;
+	
 public:
+	uint8_t	readIOregs(uint16_t addr);
+	void	writeIOregs(uint16_t addr, uint8_t data);
+
 	uint8_t	read(uint16_t addr);
 	void	write(uint16_t addr, uint8_t data);
 
@@ -43,8 +98,6 @@ public: // system functions
 
 
 private:
-	bool boot = true;
-
 	// DMG Boot ROM:
 	uint8_t dmg_boot[0x100] = {
 	0x31, 0xFE, 0xFF, 0xAF, 0x21, 0xFF, 0x9F, 0x32, 0xCB, 0x7C, 0x20, 0xFB, 0x21, 0x26, 0xFF, 0x0E,
@@ -63,5 +116,5 @@ private:
 	0xDD, 0xDC, 0x99, 0x9F, 0xBB, 0xB9, 0x33, 0x3E, 0x3C, 0x42, 0xB9, 0xA5, 0xB9, 0xA5, 0x42, 0x3C,
 	0x21, 0x04, 0x01, 0x11, 0xA8, 0x00, 0x1A, 0x13, 0xBE, 0x20, 0xFE, 0x23, 0x7D, 0xFE, 0x34, 0x20,
 	0xF5, 0x06, 0x19, 0x78, 0x86, 0x23, 0x05, 0x20, 0xFB, 0x86, 0x20, 0xFE, 0x3E, 0x01, 0xE0, 0x50,
-};
+	};
 };
