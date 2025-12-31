@@ -63,8 +63,10 @@ public: // Bus devices
 	uint8_t wave_ram[16];
 	uint8_t lcdc;
 	uint8_t stat;
-	uint8_t lcx;
-	uint8_t lcy;
+	uint8_t scx;
+	uint8_t scy;
+	uint8_t ly;
+	uint8_t lyc;
 	uint8_t dma;
 	uint8_t bgp;
 	uint8_t obp0;

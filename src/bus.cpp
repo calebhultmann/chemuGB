@@ -2,6 +2,8 @@
 
 Bus::Bus() {
 	cpu.connectBus(this);
+	ppu.connectBus(this);
+	ppu.fifo.connectBus(this);
 	cart = std::make_shared<Cartridge>();
 }
 
@@ -47,8 +49,10 @@ uint8_t Bus::readIOregs(uint16_t addr) {
 	case 0xFF26: return audio_regs.nr52;
 	case 0xFF40: return lcdc;
 	case 0xFF41: return stat;
-	case 0xFF42: return lcx;
-	case 0xFF43: return lcy;
+	case 0xFF42: return scx;
+	case 0xFF43: return scy;
+	case 0xFF44: return ly;
+	case 0xFF45: return lyc;
 	case 0xFF46: return dma;
 	case 0xFF47: return bgp;
 	case 0xFF48: return obp0;
