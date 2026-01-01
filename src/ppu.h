@@ -28,6 +28,9 @@ public:
 	uint8_t tile_x;
 	uint8_t tile_index;
 
+	uint8_t tile_data_low;
+	uint8_t tile_data_high;
+
 	void func();
 };
 
