@@ -15,6 +15,13 @@ int Bus::insertCartridge(const std::filesystem::path romPath) {
 	return cart->loadCartridge(romPath);
 }
 
+void Bus::clock() {
+	div++;
+	ppu.clock();
+	cpu.clock();
+
+}
+
 uint8_t Bus::readIOregs(uint16_t addr) {
 	switch (addr) {
 	case 0xFF00: return joyp;
@@ -103,8 +110,10 @@ void Bus::writeIOregs(uint16_t addr, uint8_t data) {
 	case 0xFF26: audio_regs.nr52 = data; break;
 	case 0xFF40: lcdc = data; break;
 	case 0xFF41: stat = data; break;
-	case 0xFF42: lcx = data; break;
-	case 0xFF43: lcy = data; break;
+	case 0xFF42: scx = data; break;
+	case 0xFF43: scy = data; break;
+	case 0xFF44: ly = data; break;
+	case 0xFF45: lyc = data; break;
 	case 0xFF46: dma = data; break;
 	case 0xFF47: bgp = data; break;
 	case 0xFF48: obp0 = data; break;

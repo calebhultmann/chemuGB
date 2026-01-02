@@ -125,17 +125,17 @@ public:
 	struct Instruction {
 		std::string mnemonic;
 		int bytes;
-		// int cycles;
-		//	Only reimplement if cycles are needed, such as timing the GPU?
-		void (CPU::*execute)(Operand, Operand);
+		int (CPU::*execute)(Operand, Operand);
 		Operand src;
 		Operand dst;
 	};
 
 //
 public:
+	int remaining_cycles = 0;
 	void step();
-	void executeInstruction(Instruction& curr);
+	void clock();
+	int executeInstruction(Instruction& curr);
 
 // Public R/W Interfaces
 public:
@@ -171,68 +171,68 @@ public:
 
 private:
 	// Loads
-	void LD(Operand src, Operand dst);
-	void LDH(Operand src, Operand dst);
+	int LD(Operand src, Operand dst);
+	int LDH(Operand src, Operand dst);
 	
 	// Arithmetic
-	void ADC(Operand src, Operand dst);
-	void ADD(Operand src, Operand dst);
-	void SBC(Operand src, Operand dst);
-	void SUB(Operand src, Operand dst);
-	void INC(Operand src, Operand dst);
-	void DEC(Operand src, Operand dst);
-	void CP(Operand src, Operand dst);
+	int ADC(Operand src, Operand dst);
+	int ADD(Operand src, Operand dst);
+	int SBC(Operand src, Operand dst);
+	int SUB(Operand src, Operand dst);
+	int INC(Operand src, Operand dst);
+	int DEC(Operand src, Operand dst);
+	int CP(Operand src, Operand dst);
 
 	// Bitwise Logic
-	void AND(Operand src, Operand dst);
-	void CPL(Operand src, Operand dst);
-	void OR(Operand src, Operand dst);
-	void XOR(Operand src, Operand dst); 
+	int AND(Operand src, Operand dst);
+	int CPL(Operand src, Operand dst);
+	int OR(Operand src, Operand dst);
+	int XOR(Operand src, Operand dst); 
 
 	// Bit flag
-	void BIT(Operand src, Operand dst);
-	void SET(Operand src, Operand dst);
-	void RES(Operand src, Operand dst);
+	int BIT(Operand src, Operand dst);
+	int SET(Operand src, Operand dst);
+	int RES(Operand src, Operand dst);
 	
 	// Bit Shift
-	void RL(Operand src, Operand dst);
-	void RLA(Operand src, Operand dst);
-	void RLC(Operand src, Operand dst);
-	void RLCA(Operand src, Operand dst);
-	void RR(Operand src, Operand dst);
-	void RRA(Operand src, Operand dst);
-	void RRC(Operand src, Operand dst);
-	void RRCA(Operand src, Operand dst);
-	void SLA(Operand src, Operand dst);
-	void SRA(Operand src, Operand dst);
-	void SRL(Operand src, Operand dst);
-	void SWAP(Operand src, Operand dst);
+	int RL(Operand src, Operand dst);
+	int RLA(Operand src, Operand dst);
+	int RLC(Operand src, Operand dst);
+	int RLCA(Operand src, Operand dst);
+	int RR(Operand src, Operand dst);
+	int RRA(Operand src, Operand dst);
+	int RRC(Operand src, Operand dst);
+	int RRCA(Operand src, Operand dst);
+	int SLA(Operand src, Operand dst);
+	int SRA(Operand src, Operand dst);
+	int SRL(Operand src, Operand dst);
+	int SWAP(Operand src, Operand dst);
 
 	// Jumps and Subroutines
-	void CALL(Operand src, Operand dst);
-	void JP(Operand src, Operand dst);
-	void JR(Operand src, Operand dst);
-	void RET(Operand src, Operand dst);
-	void RETI(Operand src, Operand dst);
-	void RST(Operand src, Operand dst);
+	int CALL(Operand src, Operand dst);
+	int JP(Operand src, Operand dst);
+	int JR(Operand src, Operand dst);
+	int RET(Operand src, Operand dst);
+	int RETI(Operand src, Operand dst);
+	int RST(Operand src, Operand dst);
 
 	// Carry Flag
-	void CCF(Operand src, Operand dst);
-	void SCF(Operand src, Operand dst);
+	int CCF(Operand src, Operand dst);
+	int SCF(Operand src, Operand dst);
 
 	// Stack
-	void POP(Operand src, Operand dst);
-	void PUSH(Operand src, Operand dst);
+	int POP(Operand src, Operand dst);
+	int PUSH(Operand src, Operand dst);
 
 	// Interrupt-related
-	void DI(Operand src, Operand dst);
-	void EI(Operand src, Operand dst);
-	void HALT(Operand src, Operand dst);
+	int DI(Operand src, Operand dst);
+	int EI(Operand src, Operand dst);
+	int HALT(Operand src, Operand dst);
 
 	// Miscellaneous
-	void DAA(Operand src, Operand dst);
-	void NOP(Operand src, Operand dst);
-	void STOP(Operand src, Operand dst);
-	void CB(Operand src, Operand dst); // Should I construct this function? Yes right?
-	void INV(Operand src, Operand dst);
+	int DAA(Operand src, Operand dst);
+	int NOP(Operand src, Operand dst);
+	int STOP(Operand src, Operand dst);
+	int CB(Operand src, Operand dst);
+	int INV(Operand src, Operand dst);
 };

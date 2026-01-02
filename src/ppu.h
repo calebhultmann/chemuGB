@@ -1,7 +1,9 @@
+#pragma once
 #include <cstdint>
 #include <queue>
 
 class Bus;
+class PPU;
 
 class PixelFetcher
 {
@@ -25,7 +27,7 @@ public:
 	uint8_t y;
 
 	uint8_t tile_x;
-	uint8_t tile_x;
+	uint8_t tile_y;
 	uint8_t tile_index;
 
 	uint8_t tile_data_low;
@@ -38,7 +40,7 @@ class PPU
 {
 public:
 	PPU();
-	~PPU();
+	//~PPU();
 
 	Bus* bus = nullptr;
 	void connectBus(Bus* b) { bus = b; }
@@ -48,7 +50,11 @@ public:
 
 	uint8_t read(uint16_t addr);
 	void write(uint16_t addr, uint8_t data);
-	uint8_t getVRAMtile(uint8_t tilemap,  uint8_t tile_x, uint8_t tile_y);
 
-	PixelFetcher fifo(this);
+	uint8_t getVRAMtile(uint8_t tilemap,  uint8_t tile_x, uint8_t tile_y);
+	uint16_t getTileAddress(uint8_t tile_index);
+	
+	PixelFetcher fifo;
+
+	void clock();
 };

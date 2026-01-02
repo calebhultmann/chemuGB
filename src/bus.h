@@ -54,10 +54,10 @@ public: // Bus devices
 	uint8_t joyp;
 	uint8_t sb;
 	uint8_t sc;
-	uint8_t div;
-	uint8_t tima;
-	uint8_t tma;
-	uint8_t tac;
+	uint8_t div = 0;
+	uint8_t tima = 0;
+	uint8_t tma = 0;
+	uint8_t tac = 0;
 	uint8_t interrupts;
 	Audio audio_regs;
 	uint8_t wave_ram[16];
@@ -86,8 +86,7 @@ public:
 
 public: // system functions
 	int insertCartridge(const std::filesystem::path romPath);
-	// reset
-	// clock (probably?)
+	void clock();
 
 
 private:

@@ -56,7 +56,7 @@ CPU::CPU() {
 		{"LDH [$FF{:02X}], A", 2, &c::LDH,  a8,            R8(REG_A)},       {"POP HL",         1, &c::POP,  R16STK(REG_HL), empt},            {"LDH [C], A",       1, &c::LDH, R8(REG_C),       R8(REG_A)},       {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH HL",        1, &c::PUSH, R16STK(REG_HL), empt},            {"AND A, ${:02X}",   2, &c::AND,  n8,              R8(REG_A)},       {"RST $20",    1, &c::RST,  VEC(0x20), empt},
 		{"ADD SP, ${:02X}",    2, &c::ADD,  n8,            R16(REG_SP)},     {"JP HL",          1, &c::JP,   R16(REG_HL),    empt},            {"LD [${:04X}], A",  3, &c::LD,  a16,             R8(REG_A)},       {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,           empt},            {"XOR A, ${:02X}",   2, &c::XOR,  n8,              R8(REG_A)},       {"RST $28",    1, &c::RST,  VEC(0x28), empt},
 		{"LDH A, [$FF{:02X}]", 2, &c::LDH,  R8(REG_A),     a8},              {"POP AF",         1, &c::POP,  R16STK(REG_AF), empt},            {"LDH A, [C]",       1, &c::LDH, R8(REG_A),       R8(REG_C)},       {"DI",           1, &c::DI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH AF",        1, &c::PUSH, R16STK(REG_AF), empt},            {"OR A, ${:02X}",    2, &c::OR,   n8,              R8(REG_A)},       {"RST $30",    1, &c::RST,  VEC(0x30), empt},
-		{"LD HL, SP+${:02X}",  2, &c::LD,   empt, /*fix*/  empt},            {"LD SP, HL",      1, &c::LD,   R16(REG_HL),    R16(REG_SP)},     {"LD A, [${:04X}]",  3, &c::LD,  a16,             R8(REG_A)},       {"EI",           1, &c::EI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,           empt},            {"CP A, ${:02X}",    2, &c::CP,   n8,              R8(REG_A)},       {"RST $38",    1, &c::RST,  VEC(0x38), empt},
+		{"LD HL, SP+${:02X}",  2, &c::LD,   n8,            R16(REG_HL)},     {"LD SP, HL",      1, &c::LD,   R16(REG_HL),    R16(REG_SP)},     {"LD A, [${:04X}]",  3, &c::LD,  a16,             R8(REG_A)},       {"EI",           1, &c::EI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,           empt},            {"CP A, ${:02X}",    2, &c::CP,   n8,              R8(REG_A)},       {"RST $38",    1, &c::RST,  VEC(0x38), empt},
 	};
 
 	cb_lookup =
@@ -334,19 +334,10 @@ bool checkOverflow(int bit, uint16_t num1, uint16_t num2, bool carry) {
 	return sum >> bit;
 }
 
-// Check all instructions for flag changes
-// Implement flag functions
-
 /*
-
 Check off the following instructions to make sure all are working properly:
 
-Jumps and subroutine instructions
-JR n16
-JR cc,n16
-
 Stack manipulation instructions
-ADD SP,e8
 LD HL,SP+e8
 
 Interrupt-related instructions
@@ -356,34 +347,78 @@ Miscellaneous instructions
 DAA
 NOP
 STOP
-
 */
 
-void CPU::step() {
-	int opcode = fetchByte();
-	Instruction curr = opcode_lookup[opcode];
-	executeInstruction(curr);
+void CPU::clock() {
+	if (remaining_cycles == 0) {
+		int opcode = fetchByte();
+		Instruction curr = opcode_lookup[opcode];
+		remaining_cycles = executeInstruction(curr);
+	}
+
+	remaining_cycles--;
 }
 
-void CPU::executeInstruction(Instruction& curr) {
-	(this->*curr.execute)(curr.src, curr.dst);
+int CPU::executeInstruction(Instruction& curr) {
+	return (this->*curr.execute)(curr.src, curr.dst);
 }
 
 // Loads
-void CPU::LD(Operand src, Operand dst) {
-	// TODO: LD HL, SP+e8 Flags (and addition)
-
+int CPU::LD(Operand src, Operand dst) {
+	if (dst.type == OperandType::R16 && src.type == OperandType::n8) {
+		// TODO: LD HL, SP+e8 Flags (and addition)
+		return 12;
+	}
 	uint16_t src_v = readOperand(src);
 	writeOperand(dst, src_v);
+
+	if (src.type == OperandType::R16MEM || dst.type == OperandType::R16MEM) {
+		return 8;
+	}
+
+	if (src.type == OperandType::a16) {
+		return 16;
+	}
+
+	if (src.type == OperandType::n16) {
+		return 12;
+	}
+
+	if (dst.type == OperandType::a16) {
+		return 20;
+	}
+
+	if (dst.type == OperandType::R16) {
+		return 8;
+	}
+
+	if (src.type == OperandType::n8) {
+		if (dst.index == REG_HL_DATA) {
+			return 12;
+		}
+		return 8;
+	}
+
+	if (src.index == REG_HL_DATA || dst.index == REG_HL_DATA) {
+		return 8;
+	}
+
+	return 4;
 }
 
-void CPU::LDH(Operand src, Operand dst) {
+int CPU::LDH(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	writeOperand(dst, src_v);
+
+	if (src.type == OperandType::a8 || dst.type == OperandType::a8) {
+		return 12;
+	}
+
+	return 8;
 }
 
 // Arithmetic
-void CPU::ADC(Operand src, Operand dst) {
+int CPU::ADC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	uint16_t sum = src_v + dst_v + getFlag(FLAG_C);
@@ -393,9 +428,15 @@ void CPU::ADC(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	putFlag(FLAG_H, checkOverflow(3, src_v, dst_v, getFlag(FLAG_C)));
 	putFlag(FLAG_C, checkOverflow(7, src_v, dst_v, getFlag(FLAG_C)));
+
+	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
+		return 8;
+	}
+
+	return 4;
 }
 
-void CPU::ADD(Operand src, Operand dst) {
+int CPU::ADD(Operand src, Operand dst) {
 	bool is16bit = false;
 	bool isSP = false;
 	if ((src.type == OperandType::R16) || (src.type == OperandType::R16STK)) {
@@ -419,9 +460,23 @@ void CPU::ADD(Operand src, Operand dst) {
 		putFlag(FLAG_H, checkOverflow(3, src_v, dst_v, false));
 		putFlag(FLAG_C, checkOverflow(7, src_v, dst_v, false));
 	}
+
+	if (src.type == OperandType::R16) {
+		return 8;
+	}
+
+	if (dst.type == OperandType::R16) {
+		return 16;
+	}
+
+	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
+		return 8;
+	}
+
+	return 4;
 }
 
-void CPU::SBC(Operand src, Operand dst) {
+int CPU::SBC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	uint16_t sum = dst_v - src_v - getFlag(FLAG_C);
@@ -431,9 +486,15 @@ void CPU::SBC(Operand src, Operand dst) {
 	setFlag(FLAG_N);
 	putFlag(FLAG_H, (src_v & 0xF) > ((dst_v + getFlag(FLAG_C)) & 0xF));
 	putFlag(FLAG_C, src_v > (dst_v + getFlag(FLAG_C)));
+
+	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
+		return 8;
+	}
+
+	return 4;
 }
 
-void CPU::SUB(Operand src, Operand dst) {
+int CPU::SUB(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	uint16_t sum = dst_v - src_v;
@@ -443,9 +504,15 @@ void CPU::SUB(Operand src, Operand dst) {
 	setFlag(FLAG_N);
 	putFlag(FLAG_H, (src_v & 0xF) > (dst_v & 0xF));
 	putFlag(FLAG_C, src_v > dst_v);
+
+	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
+		return 8;
+	}
+
+	return 4;
 }
 
-void CPU::INC(Operand src, Operand dst) {
+int CPU::INC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	writeOperand(src, ++src_v);
 
@@ -454,9 +521,19 @@ void CPU::INC(Operand src, Operand dst) {
 		clearFlag(FLAG_N);
 		putFlag(FLAG_H, checkOverflow(3, src_v, 1, false));
 	}
+
+	if (src.type == OperandType::R16) {
+		return 8;
+	}
+
+	if (src.index == REG_HL_DATA) {
+		return 12;
+	}
+
+	return 4;
 }
 
-void CPU::DEC(Operand src, Operand dst) {
+int CPU::DEC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	writeOperand(src, --src_v);
 
@@ -465,9 +542,19 @@ void CPU::DEC(Operand src, Operand dst) {
 		setFlag(FLAG_N);
 		putFlag(FLAG_H, 1 > (src_v & 0xF));
 	}
+
+	if (src.type == OperandType::R16) {
+		return 8;
+	}
+
+	if (src.index == REG_HL_DATA) {
+		return 12;
+	}
+
+	return 4;
 }
 
-void CPU::CP(Operand src, Operand dst) {
+int CPU::CP(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	uint16_t sum = dst_v - src_v;
@@ -476,10 +563,16 @@ void CPU::CP(Operand src, Operand dst) {
 	setFlag(FLAG_N);
 	putFlag(FLAG_H, (src_v & 0xF) > (dst_v & 0xF));
 	putFlag(FLAG_C, src_v > dst_v);
+
+	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
+		return 8;
+	}
+
+	return 4;
 }
 
 // Bitwise Logic
-void CPU::AND(Operand src, Operand dst) {
+int CPU::AND(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	uint16_t result = src_v & dst_v;
@@ -489,17 +582,25 @@ void CPU::AND(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	setFlag(FLAG_H);
 	clearFlag(FLAG_C);
+
+	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
+		return 8;
+	}
+
+	return 4;
 }
 
-void CPU::CPL(Operand src, Operand dst) {
+int CPU::CPL(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	writeOperand(dst, ~src_v);
 
 	setFlag(FLAG_N);
 	setFlag(FLAG_H);
+
+	return 4;
 }
 
-void CPU::OR(Operand src, Operand dst) {
+int CPU::OR(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	uint16_t result = src_v | dst_v;
@@ -509,9 +610,15 @@ void CPU::OR(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	clearFlag(FLAG_C);
+
+	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
+		return 8;
+	}
+
+	return 4;
 }
 
-void CPU::XOR(Operand src, Operand dst) {
+int CPU::XOR(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	uint16_t result = src_v ^ dst_v;
@@ -521,10 +628,16 @@ void CPU::XOR(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	clearFlag(FLAG_C);
+
+	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
+		return 8;
+	}
+
+	return 4;
 }
 
 // Bit Flag
-void CPU::BIT(Operand src, Operand dst) {
+int CPU::BIT(Operand src, Operand dst) {
 	uint16_t bit = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	uint16_t value = dst_v & (1 << bit);
@@ -532,25 +645,43 @@ void CPU::BIT(Operand src, Operand dst) {
 	putFlag(FLAG_Z, (value == 0));
 	clearFlag(FLAG_N);
 	setFlag(FLAG_H);
+
+	if (src.index == REG_HL_DATA) {
+		return 12;
+	}
+
+	return 8;
 }
 
-void CPU::SET(Operand src, Operand dst) {
+int CPU::SET(Operand src, Operand dst) {
 	uint16_t bit = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	dst_v |= (1 << bit);
 	writeOperand(dst, dst_v);
+
+	if (src.index == REG_HL_DATA) {
+		return 16;
+	}
+
+	return 8;
 }
 
-void CPU::RES(Operand src, Operand dst) {
+int CPU::RES(Operand src, Operand dst) {
 	uint16_t bit = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
 	dst_v &= ~(1 << bit);
 	writeOperand(dst, dst_v);
+
+	if (src.index == REG_HL_DATA) {
+		return 16;
+	}
+
+	return 8;
 }
 
 // Bit Shift
 
-void CPU::RL(Operand src, Operand dst) {
+int CPU::RL(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	src_v = (src_v << 1) | (uint8_t)getFlag(FLAG_C);
 	writeOperand(src, src_v);
@@ -559,9 +690,15 @@ void CPU::RL(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	putFlag(FLAG_C, src_v & 0xFF00);
+
+	if (src.index == REG_HL_DATA) {
+		return 16;
+	}
+
+	return 8;
 }
 
-void CPU::RLA(Operand src, Operand dst) {
+int CPU::RLA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	src_v = (src_v << 1) | (uint8_t)getFlag(FLAG_C);
 	writeOperand(src, src_v);
@@ -570,9 +707,11 @@ void CPU::RLA(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	putFlag(FLAG_C, src_v & 0xFF00);
+
+	return 4;
 }
 
-void CPU::RLC(Operand src, Operand dst) {
+int CPU::RLC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	src_v = src_v << 1;
 	writeOperand(src, src_v);
@@ -581,9 +720,15 @@ void CPU::RLC(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	putFlag(FLAG_C, src_v & 0xFF00);
+
+	if (src.index == REG_HL_DATA) {
+		return 16;
+	}
+
+	return 8;
 }
 
-void CPU::RLCA(Operand src, Operand dst) {
+int CPU::RLCA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	src_v = src_v << 1;
 	writeOperand(src, src_v);
@@ -592,9 +737,11 @@ void CPU::RLCA(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	putFlag(FLAG_C, src_v & 0xFF00);
+
+	return 4;
 }
 
-void CPU::RR(Operand src, Operand dst) {
+int CPU::RR(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t wrap = 0x80 * getFlag(FLAG_C);
 	putFlag(FLAG_C, src_v & 1);
@@ -604,9 +751,15 @@ void CPU::RR(Operand src, Operand dst) {
 	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+
+	if (src.index == REG_HL_DATA) {
+		return 16;
+	}
+
+	return 8;
 }
 
-void CPU::RRA(Operand src, Operand dst) {
+int CPU::RRA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t wrap = 0x80 * getFlag(FLAG_C);
 	putFlag(FLAG_C, src_v & 1);
@@ -616,9 +769,11 @@ void CPU::RRA(Operand src, Operand dst) {
 	clearFlag(FLAG_Z);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+
+	return 4;
 }
 
-void CPU::RRC(Operand src, Operand dst) {
+int CPU::RRC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t wrap = 0x80 * (src_v & 1);
 	putFlag(FLAG_C, wrap);
@@ -628,9 +783,15 @@ void CPU::RRC(Operand src, Operand dst) {
 	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+
+	if (src.index == REG_HL_DATA) {
+		return 16;
+	}
+
+	return 8;
 }
 
-void CPU::RRCA(Operand src, Operand dst) {
+int CPU::RRCA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t wrap = 0x80 * (src_v & 1);
 	putFlag(FLAG_C, wrap);
@@ -640,9 +801,11 @@ void CPU::RRCA(Operand src, Operand dst) {
 	clearFlag(FLAG_Z);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+
+	return 4;
 }
 
-void CPU::SLA(Operand src, Operand dst) {
+int CPU::SLA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	src_v = (src_v << 1);
 	writeOperand(src, src_v);
@@ -651,9 +814,15 @@ void CPU::SLA(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	putFlag(FLAG_C, src_v & 0xFF00);
+
+	if (src.index == REG_HL_DATA) {
+		return 16;
+	}
+
+	return 8;
 }
 
-void CPU::SRA(Operand src, Operand dst) {
+int CPU::SRA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t hold = src_v & 0x80;
 	putFlag(FLAG_C, src_v & 1);
@@ -663,9 +832,15 @@ void CPU::SRA(Operand src, Operand dst) {
 	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+
+	if (src.index == REG_HL_DATA) {
+		return 16;
+	}
+
+	return 8;
 }
 
-void CPU::SRL(Operand src, Operand dst) {
+int CPU::SRL(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	putFlag(FLAG_C, src_v & 1);
 	src_v = (src_v >> 1);
@@ -674,9 +849,15 @@ void CPU::SRL(Operand src, Operand dst) {
 	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+
+	if (src.index == REG_HL_DATA) {
+		return 16;
+	}
+
+	return 8;
 }
 
-void CPU::SWAP(Operand src, Operand dst) {
+int CPU::SWAP(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint8_t low = src_v & 0x0F;
 	src_v = (src_v >> 4) | (low << 4);
@@ -685,13 +866,19 @@ void CPU::SWAP(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	clearFlag(FLAG_C);
+
+	if (src.index == REG_HL_DATA) {
+		return 16;
+	}
+
+	return 8;
 }
 
 // Jumps and Subroutines
-void CPU::CALL(Operand src, Operand dst) {
+int CPU::CALL(Operand src, Operand dst) {
 	uint16_t call_addr = readOperand(src);
 	if (dst.type == OperandType::COND && !readOperand(dst)) {
-		return;
+		return 12;
 	}
 
 	sp--;
@@ -700,32 +887,35 @@ void CPU::CALL(Operand src, Operand dst) {
 	write(sp, (pc & 0xFF));
 
 	pc = call_addr;
+	return 24;
 }
 
-void CPU::JP(Operand src, Operand dst) {
+int CPU::JP(Operand src, Operand dst) {
 	uint16_t jp_addr = readOperand(src);
 	if (dst.type == OperandType::COND && !readOperand(dst)) {
-		return;
+		return 12;
 	}
 
 	pc = jp_addr;
+	if (src.type == OperandType::a16) {
+		return 16;
+	}
+	return 4;
 }
 
-void CPU::JR(Operand src, Operand dst) {
+int CPU::JR(Operand src, Operand dst) {
 	uint16_t jr_offset = readOperand(src);
 	if (dst.type == OperandType::COND && !readOperand(dst)) {
-		return;
+		return 8;
 	}
 
-	// TODO: signed addition
-	//PC() = PC() +
-
 	pc = pc + static_cast<int8_t>(jr_offset);
+	return 12;
 }
 
-void CPU::RET(Operand src, Operand dst) {
+int CPU::RET(Operand src, Operand dst) {
 	if (src.type == OperandType::COND && !readOperand(src)) {
-		return;
+		return 8;
 	}
 
 	uint16_t low = read(sp);
@@ -734,9 +924,14 @@ void CPU::RET(Operand src, Operand dst) {
 	sp++;
 
 	pc = (high << 8) | low;
+	if (src.type == OperandType::COND) {
+		return 20;
+	}
+
+	return 16;
 }
 
-void CPU::RETI(Operand src, Operand dst) {
+int CPU::RETI(Operand src, Operand dst) {
 	uint16_t low = read(sp);
 	sp++;
 	uint16_t high = read(sp);
@@ -744,9 +939,10 @@ void CPU::RETI(Operand src, Operand dst) {
 
 	ime = true;
 	pc = (high << 8) | low;
+	return 16;
 }
 
-void CPU::RST(Operand src, Operand dst) {
+int CPU::RST(Operand src, Operand dst) {
 	uint16_t rst_addr = readOperand(src);
 
 	sp--;
@@ -755,69 +951,78 @@ void CPU::RST(Operand src, Operand dst) {
 	write(sp, (pc, 0xFF));
 
 	pc = rst_addr;
+
+	return 16;
 }
 
 // Carry Flag
-void CPU::CCF(Operand src, Operand dst) {
+int CPU::CCF(Operand src, Operand dst) {
 	putFlag(FLAG_C, !getFlag(FLAG_C));
+	return 4;
 }
 
-void CPU::SCF(Operand src, Operand dst) {
+int CPU::SCF(Operand src, Operand dst) {
 	setFlag(FLAG_C);
+	return 4;
 }
 
 // Stack
-void CPU::POP(Operand src, Operand dst) {
+int CPU::POP(Operand src, Operand dst) {
 	uint16_t low = read(sp);
 	sp++;
 	uint16_t high = read(sp);
 	sp++;
 	writeOperand(src, (high << 8) | low);
+	return 12;
 }
 
-void CPU::PUSH(Operand src, Operand dst) {
+int CPU::PUSH(Operand src, Operand dst) {
 	uint16_t reg = readOperand(src);
 	sp--;
 	write(sp, (reg & 0xFF00) >> 8);
 	sp--;
 	write(sp, reg & 0xFF);
+	return 16;
 }
 
 // Interrupt-related
-void CPU::DI(Operand src, Operand dst) {
+int CPU::DI(Operand src, Operand dst) {
 	ime = false;
+	return 4;
 }
 
-void CPU::EI(Operand src, Operand dst) {
+int CPU::EI(Operand src, Operand dst) {
 	ime = true;
+	return 4;
 }
 
-void CPU::HALT(Operand src, Operand dst) {
-
+int CPU::HALT(Operand src, Operand dst) {
+	return 4;
 }
 
 // Miscellaneous
-void CPU::DAA(Operand src, Operand dst) {
-
+int CPU::DAA(Operand src, Operand dst) {
+	return 4;
 }
 
-void CPU::NOP(Operand src, Operand dst) {
-	// do nothing!
+int CPU::NOP(Operand src, Operand dst) {
+	return 4;
 }
 
-void CPU::STOP(Operand src, Operand dst) {
-
+int CPU::STOP(Operand src, Operand dst) {
+	return 4;
 }
 
-void CPU::CB(Operand src, Operand dst) {
+int CPU::CB(Operand src, Operand dst) {
 	int opcode = fetchByte();
 	Instruction curr = cb_lookup[opcode];
-	executeInstruction(curr);
+	return executeInstruction(curr) + 4;
 }
 
-void CPU::INV(Operand src, Operand dst) {
+int CPU::INV(Operand src, Operand dst) {
 	// Brick the console
 	while (true) {
 
 	}
+	return 0;
 }

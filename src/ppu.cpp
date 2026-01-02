@@ -1,7 +1,12 @@
 #include "ppu.h"
+#include "bus.h"
 
 PixelFetcher::PixelFetcher(PPU* p) {
 	ppu = p;
+}
+
+PPU::PPU() : fifo(this) {
+	
 }
 
 void PixelFetcher::func() {
@@ -13,23 +18,23 @@ void PixelFetcher::func() {
 		tile_index = ppu->getVRAMtile(0, tile_x, tile_y);
 		mode = 1;
 		break;
-	case 1:
+	case 1: {
 		uint16_t tile_address = ppu->getTileAddress(tile_index);
 		tile_data_low = ppu->read(tile_address);
 		mode = 2;
-		break;
-	case 2:
+		break; }
+	case 2: {
 		uint16_t tile_address = ppu->getTileAddress(tile_index);
 		tile_data_low = ppu->read(tile_address + 1);
 		mode = 3;
 
-		for (uint8_t bit = 0; bit < 8; bit + 1) {
-			
+		for (uint8_t bit = 0; bit < 8; bit++) {
+
 		}
 
-		break;
-	case 3:
-	case 4:
+		break; }
+	case 3: break;
+	case 4: break;
 	}
 }
 
@@ -41,6 +46,7 @@ uint8_t PPU::read(uint16_t addr) {
 	else if (addr >= 0xFE00 && addr <= 0xFE9F) {
 		return oam[addr - 0xFE00];
 	}
+	return 0;
 }
 
 void PPU::write(uint16_t addr, uint8_t data) {
