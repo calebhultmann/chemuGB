@@ -22,60 +22,59 @@ public: // Bus devices
 	uint8_t HRAM[0x7F];
 
 	struct Audio {
-		uint8_t nr10;
-		uint8_t nr11;
-		uint8_t nr12;
-		uint8_t nr13;
-		uint8_t nr14;
+		// Channel 1 - Pulse with period sweep
+		uint8_t nr10; // Sweep
+		uint8_t nr11; // Length Timer & Duty Cycle
+		uint8_t nr12; // Volume & Envelope
+		uint8_t nr13; // Period Low
+		uint8_t nr14; // Period High & Control
+		// Channel 2 - Pulse
+		uint8_t nr21; // Length Timer & Duty Cycle
+		uint8_t nr22; // Volume & Envelope
+		uint8_t nr23; // Period Low
+		uint8_t nr24; // Period High & Control
+		// Channel 3 - Wave output
+		uint8_t nr30; // DAC Enable
+		uint8_t nr31; // Length Timer
+		uint8_t nr32; // Output Level
+		uint8_t nr33; // Period Low
+		uint8_t nr34; // Period High & Control
+		// Channel 4 - Noise
+		uint8_t nr41; // Length Timer
+		uint8_t nr42; // Volume & Envelope
+		uint8_t nr43; // Frequency & Randomness
+		uint8_t nr44; // Control
 
-		uint8_t nr21;
-		uint8_t nr22;
-		uint8_t nr23;
-		uint8_t nr24;
-
-		uint8_t nr30;
-		uint8_t nr31;
-		uint8_t nr32;
-		uint8_t nr33;
-		uint8_t nr34;
-		uint8_t nr35;
-
-		uint8_t nr41;
-		uint8_t nr42;
-		uint8_t nr43;
-		uint8_t nr44;
-
-		uint8_t nr50;
-		uint8_t nr51;
-		uint8_t nr52;
+		uint8_t nr50; // Master Volume & VIN Panning
+		uint8_t nr51; // Sound Panning
+		uint8_t nr52; // Audio Master Control
 	};
 
 	// I/O registers
-	uint8_t joyp;
-	uint8_t sb;
-	uint8_t sc;
-	uint8_t div = 0;
-	uint8_t tima = 0;
-	uint8_t tma = 0;
-	uint8_t tac = 0;
-	uint8_t interrupts = 0;
+	uint8_t joyp; // Joypad
+	uint8_t sb; // Serial Transfer Data
+	uint8_t sc; // Serial Transfer Control
+	uint8_t div = 0; // Divider Register
+	uint8_t tima = 0; // Timer Counter
+	uint8_t tma = 0; // Timer Modulo
+	uint8_t tac = 0; // Timer Control
+	uint8_t interrupts = 0; // Interrupt Flag
 	Audio audio_regs;
 	uint8_t wave_ram[16];
-	uint8_t lcdc;
-	uint8_t stat;
-	uint8_t scx;
-	uint8_t scy;
-	uint8_t ly;
-	uint8_t lyc;
-	uint8_t dma;
-	uint8_t bgp;
-	uint8_t obp0;
-	uint8_t obp1;
-	uint8_t wy;
-	uint8_t wx;
-	uint8_t boot = 0;
-
-	uint8_t ie;
+	uint8_t lcdc; // LCD Control
+	uint8_t stat; // LCD Status
+	uint8_t scy; // Viewport Y Position
+	uint8_t scx; // Viewport X Position
+	uint8_t ly; // LCD Y Coordinate
+	uint8_t lyc; // LY Compare
+	uint8_t dma; // OAM DMA Source Address & Start
+	uint8_t bgp; // BG Palette Data
+	uint8_t obp0; // OBJ Palette 0 Data
+	uint8_t obp1; // OBJ Palette 1 Data
+	uint8_t wy; // Window Y Position
+	uint8_t wx; // Window X Position
+	uint8_t bank = 0; // Boot ROM Mapping Control
+	uint8_t ie; // Interrupt Enable
 	
 public:
 	uint8_t	readIOregs(uint16_t addr);

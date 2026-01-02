@@ -44,9 +44,10 @@ void Bus::clock() {
 			}
 		}
 	}
-	ppu.clock();
 	cpu.clock();
-
+	if (lcdc & 0b10000000) {
+		ppu.clock();
+	}
 }
 
 uint8_t Bus::readIOregs(uint16_t addr) {
@@ -73,7 +74,6 @@ uint8_t Bus::readIOregs(uint16_t addr) {
 	case 0xFF1C: return audio_regs.nr32;
 	case 0xFF1D: return audio_regs.nr33;
 	case 0xFF1E: return audio_regs.nr34;
-	case 0xFF1F: return audio_regs.nr35;
 	case 0xFF20: return audio_regs.nr41;
 	case 0xFF21: return audio_regs.nr42;
 	case 0xFF22: return audio_regs.nr43;
@@ -83,8 +83,8 @@ uint8_t Bus::readIOregs(uint16_t addr) {
 	case 0xFF26: return audio_regs.nr52;
 	case 0xFF40: return lcdc;
 	case 0xFF41: return stat;
-	case 0xFF42: return scx;
-	case 0xFF43: return scy;
+	case 0xFF42: return scy;
+	case 0xFF43: return scx;
 	case 0xFF44: return ly;
 	case 0xFF45: return lyc;
 	case 0xFF46: return dma;
@@ -93,7 +93,7 @@ uint8_t Bus::readIOregs(uint16_t addr) {
 	case 0xFF49: return obp1;
 	case 0xFF4A: return wy;
 	case 0xFF4B: return wx;
-	case 0xFF50: return boot;
+	case 0xFF50: return bank;
 
 	default:
 		if (addr >= 0xFF30 && addr <= 0xFF3F) {
@@ -127,7 +127,6 @@ void Bus::writeIOregs(uint16_t addr, uint8_t data) {
 	case 0xFF1C: audio_regs.nr32 = data; break;
 	case 0xFF1D: audio_regs.nr33 = data; break;
 	case 0xFF1E: audio_regs.nr34 = data; break;
-	case 0xFF1F: audio_regs.nr35 = data; break;
 	case 0xFF20: audio_regs.nr41 = data; break;
 	case 0xFF21: audio_regs.nr42 = data; break;
 	case 0xFF22: audio_regs.nr43 = data; break;
@@ -137,8 +136,8 @@ void Bus::writeIOregs(uint16_t addr, uint8_t data) {
 	case 0xFF26: audio_regs.nr52 = data; break;
 	case 0xFF40: lcdc = data; break;
 	case 0xFF41: stat = data; break;
-	case 0xFF42: scx = data; break;
-	case 0xFF43: scy = data; break;
+	case 0xFF42: scy = data; break;
+	case 0xFF43: scx = data; break;
 	case 0xFF44: ly = data; break;
 	case 0xFF45: lyc = data; break;
 	case 0xFF46: dma = data; break;
@@ -147,7 +146,7 @@ void Bus::writeIOregs(uint16_t addr, uint8_t data) {
 	case 0xFF49: obp1 = data; break;
 	case 0xFF4A: wy = data; break;
 	case 0xFF4B: wx = data; break;
-	case 0xFF50: boot = data; break;
+	case 0xFF50: bank = data; break;
 
 	default:
 		if (addr >= 0xFF30 && addr <= 0xFF3F) {
@@ -157,7 +156,7 @@ void Bus::writeIOregs(uint16_t addr, uint8_t data) {
 }
 
 uint8_t Bus::read(uint16_t addr) {
-	if (boot == 0 && addr >= 0x0000 && addr <= 0x0100) {
+	if (bank == 0 && addr >= 0x0000 && addr <= 0x0100) {
 		return dmg_boot[addr];
 	}
 
