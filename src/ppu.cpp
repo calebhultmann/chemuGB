@@ -38,6 +38,10 @@ void PixelFetcher::func() {
 	}
 }
 
+void PPU::clock() {
+
+}
+
 // These will eventually require checking that vram/oam can be accessed
 uint8_t PPU::read(uint16_t addr) {
 	if (addr >= 0x8000 && addr <= 0x9FFF) {

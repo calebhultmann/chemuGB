@@ -4,6 +4,7 @@
 #include <iostream>
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL.h>
+#include <chrono>
 
 chemuGB::chemuGB() {
 	DEBUG = true;
@@ -124,8 +125,13 @@ void chemuGB::start() {
 
 	bool done = false;
 	int frame = 0;
-		bool display = false;
+	bool display = false;
+	std::chrono::steady_clock::time_point start;
+	
 	while (!done) {
+		if (frame == 0) {
+			start = std::chrono::steady_clock::now();
+		}
 		SDL_Event event;
 
 		while (SDL_PollEvent(&event)) {
@@ -134,17 +140,27 @@ void chemuGB::start() {
 			}
 		}
 
-		if (!display && system.cpu.HL() == 0x7FFF) {
-			display = true;
-		}
-		if (display) {
-			if (DEBUG) {
-				drawDebug();
-			}
-			SDL_RenderPresent(engine.renderer);
-		}
-		system.cpu.step();
+		//if (!display && system.cpu.HL() == 0x7FFF) {
+		//	display = true;
+		//}
+		//if (display) {
+		//	if (DEBUG) {
+		//		drawDebug();
+		//	}
+		//	SDL_RenderPresent(engine.renderer);
+		//}
 
+
+
+		system.clock();
+
+		if (++frame == 16384) {
+			auto end = std::chrono::steady_clock::now();
+			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+			std::cout << "Time: " << duration.count() << "ms" << std::endl;
+			frame = 0;
+		}
 		// Step CPU
 		// Draw frame
 

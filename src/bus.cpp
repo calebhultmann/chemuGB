@@ -17,6 +17,33 @@ int Bus::insertCartridge(const std::filesystem::path romPath) {
 
 void Bus::clock() {
 	div++;
+
+	if (tac & 0b00000100) {
+		bool inc = false;
+		switch (tac & 0b00000011) {
+		case 0b00:
+			inc = ((div & 0x3FF) == 0);
+			break;
+		case 0b01:
+			inc = ((div & 0xF) == 0);
+			break;
+		case 0b10:
+			inc = ((div & 0x3F) == 0);
+			break;
+		case 0b11:
+			inc = ((div & 0xFF) == 0);
+			break;
+		}
+		if (inc) {
+			if (tima == 0xFF) {
+				tima = tma;
+				interrupts |= 0b00000100;
+			}
+			else {
+				tima++;
+			}
+		}
+	}
 	ppu.clock();
 	cpu.clock();
 

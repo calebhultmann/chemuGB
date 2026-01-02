@@ -58,7 +58,7 @@ public: // Bus devices
 	uint8_t tima = 0;
 	uint8_t tma = 0;
 	uint8_t tac = 0;
-	uint8_t interrupts;
+	uint8_t interrupts = 0;
 	Audio audio_regs;
 	uint8_t wave_ram[16];
 	uint8_t lcdc;
