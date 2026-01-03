@@ -121,7 +121,7 @@ namespace cpe
 	int pixelEngine::initialize(bool debug) {
 		int SCREEN_HEIGHT = 144;
 		int SCREEN_WIDTH = 160;
-		int DEBUG_WIDTH = 48;
+		int DEBUG_WIDTH = 96;
 		SCALE = 8;
 
 		if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -147,18 +147,18 @@ namespace cpe
 		SDL_SetTextureScaleMode(fontTexture, SDL_SCALEMODE_NEAREST);
 
 		// Checkerboard pattern for debugging
-		for (int i = 0; i < 160; i++) {
-			for (int j = 0; j < 144; j++) {
-				if ((j + i) % 2) {
-					SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-				}
-				else {
-					SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-				}
-				SDL_FRect rect = { float(i * 8), float(j * 8), float(8), float(8) };
-				SDL_RenderFillRect(renderer, &rect);
-			}
-		}
+		//for (int i = 0; i < 160; i++) {
+		//	for (int j = 0; j < 144; j++) {
+		//		if ((j + i) % 2) {
+		//			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+		//		}
+		//		else {
+		//			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+		//		}
+		//		SDL_FRect rect = { float(i * 8), float(j * 8), float(8), float(8) };
+		//		SDL_RenderFillRect(renderer, &rect);
+		//	}
+		//}
 		return 0;
 	}
 

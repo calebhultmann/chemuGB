@@ -29,7 +29,7 @@ int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
 		disassembler = new Disassembler(&system.cpu);
 		//disassembler->disassembleROM(system.cart->romBanks);
 	}
-
+	system.ppu.eng = &engine;
 	return 0;
 }
 
@@ -84,7 +84,7 @@ void chemuGB::drawDebug() {
 	//draw tile
 
 
-
+	// Draw Tileblocks
 	// For each tileblock
 	for (int tileblock = 0; tileblock < 3; tileblock++) {
 		uint16_t block_start_addr = 0x800 * tileblock;
@@ -120,6 +120,52 @@ void chemuGB::drawDebug() {
 		}
 	}
 	
+
+	// Draw Tilemaps
+	// For each tilemap
+	for (int tilemap = 0; tilemap < 2; tilemap++) {
+		int tilemap_x = 194;
+		int tilemap_y = 78 + 33 * tilemap;
+		uint16_t tilemap_start_addr = 0x1800 + 0x400 * tilemap;
+		// For each tile
+		for (int tile_x = 0; tile_x < 32; tile_x++) {
+			for (int tile_y = 0; tile_y < 32; tile_y++) {
+				int tile_pixel_x = tilemap_x + tile_x;
+				int tile_pixel_y = tilemap_y + tile_y;
+				uint16_t tile_start_addr = tilemap_start_addr + 32 * tile_y + tile_x;
+				uint8_t tile_id = system.ppu.vram[tile_start_addr];
+				tile_start_addr = tile_id * 16;
+
+				// For each pixel
+				for (int line_y = 0; line_y < 8; line_y++) {
+					uint8_t data_low = system.ppu.vram[tile_start_addr + line_y * 2];
+					uint8_t	data_high = system.ppu.vram[tile_start_addr + line_y * 2 + 1];
+
+					// For each pixel in that line
+					for (int bit = 0; bit < 8; bit++) {
+						int high_bit = ((data_high & (0b10000000 >> bit)) >> (7 - bit)) << 1;
+						int low_bit = (data_low & (0b10000000 >> bit)) >> (7 - bit);
+						int pixel_color_id = high_bit | low_bit;
+						int pixel_color = (system.bgp & (0b11 << (2 * pixel_color_id))) >> (2 * pixel_color_id);
+						cpe::Pixel color = engine.greenscale[pixel_color];
+						SDL_SetRenderDrawColor(engine.renderer, color.r, color.g, color.b, 255);
+						int pixel_x = tile_pixel_x * 8 + bit;
+						int pixel_y = tile_pixel_y * 8 + line_y;
+
+						SDL_FRect rect = { float(pixel_x), float(pixel_y), float(1), float(1) };
+						SDL_RenderFillRect(engine.renderer, &rect);
+					}
+				}
+			}
+		}
+	}
+
+
+	SDL_SetRenderDrawColor(engine.renderer, 255, 100, 100, 255);
+	SDL_FRect outline = { float(194 * 8 + system.scx), float(78 * 8 + system.scy), float(160), float(144) };
+	SDL_RenderRect(engine.renderer, &outline);
+
+
 	/*
 	DrawString(debug_x, (34 + 1) * SCALE, " $4FA1: ADD A, R16", white);
 	DrawString(debug_x, (36 + 1) * SCALE, " $4FA3: XOR A, IMM8", white);
