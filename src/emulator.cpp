@@ -80,91 +80,95 @@ void chemuGB::drawDebug() {
 
 	engine.DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
 	engine.DrawString(debug_x, (34 + 1) * SCALE, std::format("${:04X}: ", system.cpu.PC()), white);
+	
+	//draw tile
+
+
+
+	// For each tileblock
+	for (int tileblock = 0; tileblock < 3; tileblock++) {
+		uint16_t block_start_addr = 0x800 * tileblock;
+		int tileblock_x = 161;
+		int tileblock_y = 93 + 17 * tileblock;
+
+		// For each tile
+		for (int tile_id = 0; tile_id < 16 * 8; tile_id += 1) {
+			uint16_t tile_start_addr = block_start_addr + tile_id * 16;
+			int tile_x = (tileblock_x + ((tile_id % 16) * 2)) * 8;
+			int tile_y = (tileblock_y + ((tile_id / 16) * 2)) * 8;
+
+			// For each horizontal line
+			for (int line_y = 0; line_y < 8; line_y++) {
+				uint8_t data_low = system.ppu.vram[tile_start_addr + line_y * 2];
+				uint8_t	data_high = system.ppu.vram[tile_start_addr + line_y * 2 + 1];
+
+				// For each pixel in that line
+				for (int bit = 0; bit < 8; bit++) {
+					int high_bit = ((data_high & (0b10000000 >> bit)) >> (7 - bit)) << 1;
+					int low_bit = (data_low & (0b10000000 >> bit)) >> (7 - bit);
+					int pixel_color_id = high_bit | low_bit;
+					int pixel_color = (system.bgp & (0b11 << (2 * pixel_color_id))) >> (2 * pixel_color_id);
+					cpe::Pixel color = engine.greenscale[pixel_color];
+					SDL_SetRenderDrawColor(engine.renderer, color.r, color.g, color.b, 255);
+					int pixel_x = tile_x + bit * 2;
+					int pixel_y = tile_y + line_y * 2;
+
+					SDL_FRect rect = { float(pixel_x), float(pixel_y), float(2), float(2) };
+					SDL_RenderFillRect(engine.renderer, &rect);
+				}
+			}
+		}
+	}
+	
 	/*
 	DrawString(debug_x, (34 + 1) * SCALE, " $4FA1: ADD A, R16", white);
 	DrawString(debug_x, (36 + 1) * SCALE, " $4FA3: XOR A, IMM8", white);
-	DrawString(debug_x, (38 + 1) * SCALE, " $04A5: RLCA", white);
-	DrawString(debug_x, (40 + 1) * SCALE, " $04A6: INC B", white);
-	DrawString(debug_x, (42 + 1) * SCALE, " $04A7: LD [BC], A", white);
-	DrawString(debug_x, (44 + 1) * SCALE, " $04A9: CB: SWAP E", white);
-	DrawString(debug_x, (46 + 1) * SCALE, " $04AB: LDH: A, [C]", white);
-	DrawString(debug_x, (48 + 1) * SCALE, " $0000:       etc. ", white);
-	DrawString(debug_x, (50 + 1) * SCALE, " $0000:       etc. ", white);
-	DrawString(debug_x, (52 + 1) * SCALE, " $0000:       etc. ", white);
-	DrawString(debug_x, (54 + 1) * SCALE, " $0000:       etc. ", white);
-	DrawString(debug_x, (56 + 1) * SCALE, " $0000:       etc. ", white);
-	DrawString(debug_x, (58 + 1) * SCALE, " $0000:       etc. ", white);
-	DrawString(debug_x, (60 + 1) * SCALE, " $0000:       etc. ", white);
+	...
 	DrawString(debug_x, (62 + 1) * SCALE, " $0000:       etc. ", white);
 	DrawString(debug_x, (64 + 1) * SCALE, ">$0000:       etc. ", white);
 	DrawString(debug_x, (66 + 1) * SCALE, " $4FA3: XOR A, IMM8", white);
-	DrawString(debug_x, (68 + 1) * SCALE, " $04A5: RLCA", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (70 + 1) * SCALE, " $04A6: INC B", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (72 + 1) * SCALE, " $04A7: LD [BC], A", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (74 + 1) * SCALE, " $04A9: CB: SWAP E", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (76 + 1) * SCALE, " $04AB: LDH: A, [C]", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (78 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (80 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (82 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (84 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (86 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (88 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (90 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (92 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
+	...
 	DrawString(debug_x, (94 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
 	DrawString(debug_x, (96 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });*/
 
 }
 
 void chemuGB::start() {
-
-
-
-
-	//print rom dump
-
 	bool done = false;
-	int frame = 0;
-	bool display = false;
-	std::chrono::steady_clock::time_point start;
-	
+	bool pause = true;
+
 	while (!done) {
-		if (frame == 0) {
-			start = std::chrono::steady_clock::now();
-		}
 		SDL_Event event;
 
 		while (SDL_PollEvent(&event)) {
+			switch (event.type) {
+			case SDL_EVENT_QUIT:
+				done = true;
+				break;
+			case SDL_EVENT_KEY_DOWN:
+				switch (event.key.scancode) {
+				case SDL_SCANCODE_P:
+					pause = !pause;
+					break;
+				case SDL_SCANCODE_Q:
+					done = true;
+					break;
+				case SDL_SCANCODE_F:
+					// draw debug frame
+					drawDebug();
+					SDL_RenderPresent(engine.renderer);
+					break;
+				}
+				break;
+			}
 			if (event.type == SDL_EVENT_QUIT) {
 				done = true;
 			}
 		}
 
-		//if (!display && system.cpu.HL() == 0x7FFF) {
-		//	display = true;
-		//}
-		//if (display) {
-		//	if (DEBUG) {
-		//		drawDebug();
-		//	}
-		//	SDL_RenderPresent(engine.renderer);
-		//}
-
-
-
-		system.clock();
-
-		if (++frame == 16384) {
-			auto end = std::chrono::steady_clock::now();
-			auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-
-			std::cout << "Time: " << duration.count() << "ms" << std::endl;
-			frame = 0;
+		if (!pause) {
+			system.clock();
 		}
-		// Step CPU
-		// Draw frame
-
-
 	}
 
 	SDL_DestroyWindow(engine.window);

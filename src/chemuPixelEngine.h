@@ -38,6 +38,9 @@ namespace cpe
 	class pixelEngine {
 	public:
 		int SCALE = 0;
+		                     //    White       Light Gray    Dark Gray   Black
+		Pixel grayscale[4] = { {255,255,255}, {169,169,169},{84,84,84}, {0,0,0} };
+		Pixel greenscale[4] = { {155,188,15}, {139,172,15}, {48,98,48}, {15,56,15} };
 
 		pixelEngine();
 
@@ -49,6 +52,7 @@ namespace cpe
 
 		void constructFontSheet();
 		int initialize(bool debug);
+		void drawLine();
 		void DrawString(int x, int y, std::string text, Pixel color);
 	};
 }

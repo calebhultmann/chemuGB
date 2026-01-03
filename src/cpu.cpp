@@ -314,7 +314,7 @@ void CPU::writeOperand(Operand op, uint16_t value) {
 	case OperandType::R16STK: write_r16stk(op.index, value); return;
 	case OperandType::R16MEM: write_r16mem(op.index, value & 0xFF); return;
 	case OperandType::a8: write(0xFF00 | fetchByte(), value & 0xFF); return;
-	//case OperandType::a16
+	case OperandType::a16: write(fetchWord(), value & 0xFF); return;
 	
 	default: throw std::runtime_error("writeOperand: Invalid operand type");
 	}
