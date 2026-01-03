@@ -51,30 +51,30 @@ public: // Bus devices
 	};
 
 	// I/O registers
-	uint8_t joyp; // Joypad
-	uint8_t sb; // Serial Transfer Data
-	uint8_t sc; // Serial Transfer Control
+	uint8_t joyp = 0; // Joypad
+	uint8_t sb = 0; // Serial Transfer Data
+	uint8_t sc = 0; // Serial Transfer Control
 	uint8_t div = 0; // Divider Register
 	uint8_t tima = 0; // Timer Counter
 	uint8_t tma = 0; // Timer Modulo
 	uint8_t tac = 0; // Timer Control
 	uint8_t interrupts = 0; // Interrupt Flag
-	Audio audio_regs;
-	uint8_t wave_ram[16];
-	uint8_t lcdc; // LCD Control
-	uint8_t stat; // LCD Status
-	uint8_t scy; // Viewport Y Position
-	uint8_t scx; // Viewport X Position
-	uint8_t ly; // LCD Y Coordinate
-	uint8_t lyc; // LY Compare
-	uint8_t dma; // OAM DMA Source Address & Start
-	uint8_t bgp; // BG Palette Data
-	uint8_t obp0; // OBJ Palette 0 Data
-	uint8_t obp1; // OBJ Palette 1 Data
-	uint8_t wy; // Window Y Position
-	uint8_t wx; // Window X Position
+	Audio audio_regs {0};
+	uint8_t wave_ram[16] { 0 };
+	uint8_t lcdc = 0; // LCD Control
+	uint8_t stat = 0; // LCD Status
+	uint8_t scy = 0; // Viewport Y Position
+	uint8_t scx = 0; // Viewport X Position
+	uint8_t ly = 0; // LCD Y Coordinate
+	uint8_t lyc = 0; // LY Compare
+	uint8_t dma = 0; // OAM DMA Source Address & Start
+	uint8_t bgp = 0; // BG Palette Data
+	uint8_t obp0 = 0; // OBJ Palette 0 Data
+	uint8_t obp1 = 0; // OBJ Palette 1 Data
+	uint8_t wy = 0; // Window Y Position
+	uint8_t wx = 0; // Window X Position
 	uint8_t bank = 0; // Boot ROM Mapping Control
-	uint8_t ie; // Interrupt Enable
+	uint8_t ie = 0; // Interrupt Enable
 	
 public:
 	uint8_t	readIOregs(uint16_t addr);

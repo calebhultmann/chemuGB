@@ -50,6 +50,7 @@ void Bus::clock() {
 	}
 }
 
+// TODO: Ensure correct R/W permissions for EVERY register
 uint8_t Bus::readIOregs(uint16_t addr) {
 	switch (addr) {
 	case 0xFF00: return joyp;
