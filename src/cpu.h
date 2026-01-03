@@ -133,7 +133,6 @@ public:
 //
 public:
 	int remaining_cycles = 0;
-	void step();
 	void clock();
 	int executeInstruction(Instruction& curr);
 

@@ -53,9 +53,9 @@ CPU::CPU() {
 		{"RET Z",              1, &c::RET,  COND(COND_Z),  empt},            {"RET",            1, &c::RET,  empt,           empt},            {"JP Z, [${:04X}]",  3, &c::JP,  a16,             COND(COND_Z)},    {"PREFIX",       1, &c::CB,  empt,        empt},            {"CALL Z, [${:04X}]",  3, &c::CALL, n16,             COND(COND_Z)},    {"CALL [${:04X}]", 3, &c::CALL, n16,            empt},            {"ADC A, ${:02X}",   2, &c::ADC,  n8,              R8(REG_A)},       {"RST $08",    1, &c::RST,  VEC(0x08), empt},
 		{"RET NC",             1, &c::RET,  COND(COND_NC), empt},            {"POP DE",         1, &c::POP,  R16STK(REG_DE), empt},            {"JP NC, [${:04X}]", 3, &c::JP,  a16,             COND(COND_NC)},   {"INVALID",      1, &c::INV, empt,        empt},            {"CALL NC, [${:04X}]", 3, &c::CALL, n16,             COND(COND_NC)},   {"PUSH DE",        1, &c::PUSH, R16STK(REG_DE), empt},            {"SUB A, ${:02X}",   2, &c::SUB,  n8,              R8(REG_A)},       {"RST $10",    1, &c::RST,  VEC(0x10), empt},
 		{"RET C",              1, &c::RET,  COND(COND_C),  empt},            {"RETI",           1, &c::RETI, empt,           empt},            {"JP C, [${:04X}]",  3, &c::JP,  a16,             COND(COND_C)},    {"INVALID",      1, &c::INV, empt,        empt},            {"CALL C, [${:04X}]",  3, &c::CALL, n16,             COND(COND_C)},    {"INVALID",        1, &c::INV,  empt,           empt},            {"SBC A, ${:02X}",   2, &c::SBC,  n8,              R8(REG_A)},       {"RST $18",    1, &c::RST,  VEC(0x18), empt},
-		{"LDH [$FF{:02X}], A", 2, &c::LDH,  a8,            R8(REG_A)},       {"POP HL",         1, &c::POP,  R16STK(REG_HL), empt},            {"LDH [C], A",       1, &c::LDH, R8(REG_C),       R8(REG_A)},       {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH HL",        1, &c::PUSH, R16STK(REG_HL), empt},            {"AND A, ${:02X}",   2, &c::AND,  n8,              R8(REG_A)},       {"RST $20",    1, &c::RST,  VEC(0x20), empt},
-		{"ADD SP, ${:02X}",    2, &c::ADD,  n8,            R16(REG_SP)},     {"JP HL",          1, &c::JP,   R16(REG_HL),    empt},            {"LD [${:04X}], A",  3, &c::LD,  a16,             R8(REG_A)},       {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,           empt},            {"XOR A, ${:02X}",   2, &c::XOR,  n8,              R8(REG_A)},       {"RST $28",    1, &c::RST,  VEC(0x28), empt},
-		{"LDH A, [$FF{:02X}]", 2, &c::LDH,  R8(REG_A),     a8},              {"POP AF",         1, &c::POP,  R16STK(REG_AF), empt},            {"LDH A, [C]",       1, &c::LDH, R8(REG_A),       R8(REG_C)},       {"DI",           1, &c::DI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH AF",        1, &c::PUSH, R16STK(REG_AF), empt},            {"OR A, ${:02X}",    2, &c::OR,   n8,              R8(REG_A)},       {"RST $30",    1, &c::RST,  VEC(0x30), empt},
+		{"LDH [$FF{:02X}], A", 2, &c::LDH,  R8(REG_A),     a8},              {"POP HL",         1, &c::POP,  R16STK(REG_HL), empt},            {"LDH [C], A",       1, &c::LDH, R8(REG_A),       R8(REG_C)},       {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH HL",        1, &c::PUSH, R16STK(REG_HL), empt},            {"AND A, ${:02X}",   2, &c::AND,  n8,              R8(REG_A)},       {"RST $20",    1, &c::RST,  VEC(0x20), empt},
+		{"ADD SP, ${:02X}",    2, &c::ADD,  n8,            R16(REG_SP)},     {"JP HL",          1, &c::JP,   R16(REG_HL),    empt},            {"LD [${:04X}], A",  3, &c::LD,  R8(REG_A),       a16},             {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,           empt},            {"XOR A, ${:02X}",   2, &c::XOR,  n8,              R8(REG_A)},       {"RST $28",    1, &c::RST,  VEC(0x28), empt},
+		{"LDH A, [$FF{:02X}]", 2, &c::LDH,  R8(REG_A),     a8},              {"POP AF",         1, &c::POP,  R16STK(REG_AF), empt},            {"LDH A, [C]",       1, &c::LDH, R8(REG_C),       R8(REG_A)},       {"DI",           1, &c::DI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH AF",        1, &c::PUSH, R16STK(REG_AF), empt},            {"OR A, ${:02X}",    2, &c::OR,   n8,              R8(REG_A)},       {"RST $30",    1, &c::RST,  VEC(0x30), empt},
 		{"LD HL, SP+${:02X}",  2, &c::LD,   n8,            R16(REG_HL)},     {"LD SP, HL",      1, &c::LD,   R16(REG_HL),    R16(REG_SP)},     {"LD A, [${:04X}]",  3, &c::LD,  a16,             R8(REG_A)},       {"EI",           1, &c::EI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,           empt},            {"CP A, ${:02X}",    2, &c::CP,   n8,              R8(REG_A)},       {"RST $38",    1, &c::RST,  VEC(0x38), empt},
 	};
 
@@ -367,6 +367,9 @@ int CPU::executeInstruction(Instruction& curr) {
 int CPU::LD(Operand src, Operand dst) {
 	if (dst.type == OperandType::R16 && src.type == OperandType::n8) {
 		// TODO: LD HL, SP+e8 Flags (and addition)
+		uint16_t offset = readOperand(src);
+		uint16_t addr = sp + static_cast<int8_t>(offset);
+		writeOperand(dst, addr);
 		return 12;
 	}
 	uint16_t src_v = readOperand(src);
@@ -407,8 +410,23 @@ int CPU::LD(Operand src, Operand dst) {
 }
 
 int CPU::LDH(Operand src, Operand dst) {
-	uint16_t src_v = readOperand(src);
-	writeOperand(dst, src_v);
+	uint16_t src_v;
+
+	if (src.type == OperandType::R8 && src.index == REG_C) {
+		uint16_t c = readOperand(src);
+		src_v = read(0xFF00 | c);
+	}
+	else {
+		src_v = readOperand(src);
+	}
+
+	if (dst.type == OperandType::R8 && dst.index == REG_C) {
+		uint16_t c = readOperand(dst);
+		write(0xFF00 | c, (uint8_t)src_v);
+	}
+	else {
+		writeOperand(dst, src_v);
+	}
 
 	if (src.type == OperandType::a8 || dst.type == OperandType::a8) {
 		return 12;
