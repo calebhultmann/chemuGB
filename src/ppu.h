@@ -2,6 +2,7 @@
 #include <cstdint>
 #include <queue>
 #include "chemuPixelEngine.h"
+#include <array>
 
 class Bus;
 class PPU;
@@ -45,10 +46,15 @@ public:
 	Bus* bus = nullptr;
 	void connectBus(Bus* b) { bus = b; }
 
-	cpe::pixelEngine* eng = nullptr;
-
 	uint8_t vram[0x2000];
 	uint8_t oam[0xA0];
+
+	static constexpr int GB_W = 160;
+	static constexpr int GB_H = 144;
+
+	uint8_t current_frame[GB_W * GB_H];
+	bool frame_ready;
+	bool is_frame_ready();
 
 	int dot_count = 0;
 	
@@ -59,7 +65,7 @@ public:
 	uint16_t getTileAddress(uint8_t tile_index);
 	
 	void changeMode(uint8_t mode);
-	void drawScanline();
+	void prepareScanline();
 
 	PixelFetcher fifo;
 

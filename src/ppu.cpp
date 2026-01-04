@@ -36,23 +36,15 @@ void PPU::changeMode(uint8_t mode) {
 	bus->stat = (bus->stat & 0b11111100) | (mode & 0b00000011);
 }
 
-void PPU::drawScanline() {
+void PPU::prepareScanline() {
 	for (uint8_t x = 0; x < 20; x++) {
 		fifo.fetchBackground(x);
 		for (uint8_t i = 0; i < 8; i++) {
 			PixelFetcher::Pixel curr = fifo.FIFO.front();
 			fifo.FIFO.pop();
 
-			int pixel_color = (bus->bgp & (0b11 << (2 * curr.color))) >> (2 * curr.color);
-			cpe::Pixel color = eng->greenscale[pixel_color];
-			SDL_SetRenderDrawColor(eng->renderer, color.r, color.g, color.b, 255);
-
-			int pixel_x = ((x * 8) + i) * 8;
-			int pixel_y = bus->ly * 8;
-
-			SDL_FRect rect = { float(pixel_x), float(pixel_y), float(8), float(8) };
-			SDL_RenderFillRect(eng->renderer, &rect);
-
+			uint8_t pixel_color = (bus->bgp & (0b11 << (2 * curr.color))) >> (2 * curr.color);
+			current_frame[bus->ly * 160 + x * 8 + i] = pixel_color;
 		}
 	}
 }
@@ -62,7 +54,7 @@ void PPU::clock() {
 		switch (++dot_count) {
 		case 80:
 			changeMode(3);
-			drawScanline();
+			prepareScanline();
 			return;
 		case 252: changeMode(0); return;
 		case 456:
@@ -76,7 +68,7 @@ void PPU::clock() {
 		return;
 	}
 	if (bus->ly == 144 && dot_count == 0) {
-		SDL_RenderPresent(eng->renderer);
+		frame_ready = true;
 	}
 	if (++dot_count == 456) {
 		if (++bus->ly > 153) {
@@ -87,6 +79,14 @@ void PPU::clock() {
 	}
 }
 
+bool PPU::is_frame_ready() {
+	if (frame_ready) {
+		frame_ready = false;
+		return true;
+	}
+
+	return false;
+}
 
 uint8_t PPU::read(uint16_t addr) {
 	if (addr >= 0x8000 && addr <= 0x9FFF) {

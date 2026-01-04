@@ -15,7 +15,7 @@ chemuGB::~chemuGB() {
 }
 
 int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
-	int status = engine.initialize(true);
+	int status = engine.initialize(false);
 	if (status != Error::None) {
 		return status;
 	}
@@ -29,7 +29,6 @@ int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
 		disassembler = new Disassembler(&system.cpu);
 		//disassembler->disassembleROM(system.cart->romBanks);
 	}
-	system.ppu.eng = &engine;
 	return 0;
 }
 
@@ -80,9 +79,6 @@ void chemuGB::drawDebug() {
 
 	engine.DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
 	engine.DrawString(debug_x, (34 + 1) * SCALE, std::format("${:04X}: ", system.cpu.PC()), white);
-	
-	//draw tile
-
 
 	// Draw Tileblocks
 	// For each tileblock
@@ -108,8 +104,8 @@ void chemuGB::drawDebug() {
 					int low_bit = (data_low & (0b10000000 >> bit)) >> (7 - bit);
 					int pixel_color_id = high_bit | low_bit;
 					int pixel_color = (system.bgp & (0b11 << (2 * pixel_color_id))) >> (2 * pixel_color_id);
-					cpe::Pixel color = engine.greenscale[pixel_color];
-					SDL_SetRenderDrawColor(engine.renderer, color.r, color.g, color.b, 255);
+					//cpe::Pixel color = engine.gameboy_palette[engine.palette][pixel_color];
+					//SDL_SetRenderDrawColor(engine.renderer, color.r, color.g, color.b, 255);
 					int pixel_x = tile_x + bit * 2;
 					int pixel_y = tile_y + line_y * 2;
 
@@ -147,8 +143,8 @@ void chemuGB::drawDebug() {
 						int low_bit = (data_low & (0b10000000 >> bit)) >> (7 - bit);
 						int pixel_color_id = high_bit | low_bit;
 						int pixel_color = (system.bgp & (0b11 << (2 * pixel_color_id))) >> (2 * pixel_color_id);
-						cpe::Pixel color = engine.greenscale[pixel_color];
-						SDL_SetRenderDrawColor(engine.renderer, color.r, color.g, color.b, 255);
+						//cpe::Pixel color = engine.greenscale[pixel_color];
+						//SDL_SetRenderDrawColor(engine.renderer, color.r, color.g, color.b, 255);
 						int pixel_x = tile_pixel_x * 8 + bit;
 						int pixel_y = tile_pixel_y * 8 + line_y;
 
@@ -201,9 +197,11 @@ void chemuGB::start() {
 					break;
 				case SDL_SCANCODE_F:
 					// draw debug frame
-					drawDebug();
-					SDL_RenderPresent(engine.renderer);
+					//drawDebug();
+					//SDL_RenderPresent(engine.renderer);
 					break;
+				case SDL_SCANCODE_G:
+					engine.palette = 1 - engine.palette;
 				}
 				break;
 			}
@@ -214,6 +212,9 @@ void chemuGB::start() {
 
 		if (!pause) {
 			system.clock();
+			if (system.ppu.is_frame_ready()) {
+				engine.renderFrame(system.ppu.current_frame);
+			}
 		}
 	}
 

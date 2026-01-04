@@ -124,41 +124,41 @@ namespace cpe
 		int DEBUG_WIDTH = 96;
 		SCALE = 8;
 
+		// Initialize SDL3
 		if (!SDL_Init(SDL_INIT_VIDEO)) {
 			SDL_Log("SDL_VIDEO could not be initialized. Error: %s", SDL_GetError());
 			SDL_Quit();
 			return Error::NoSDLInit;
 		}
+
+		// Create the emulator window
 		int total_width = SCREEN_WIDTH + (debug ? DEBUG_WIDTH : 0);
-		window = SDL_CreateWindow("Test SDL Window", total_width * SCALE, SCREEN_HEIGHT * SCALE, 0);
+		window = SDL_CreateWindow("chemuGB - Gameboy Emulator", total_width * SCALE, SCREEN_HEIGHT * SCALE, SDL_WINDOW_RESIZABLE);
 		if (window == NULL) {
 			SDL_Log("Window could not be created! %s", SDL_GetError());
 			SDL_Quit();
 			return Error::NoSDLWindow;
 		}
 
+		// Create the renderer
 		renderer = SDL_CreateRenderer(window, NULL);
 		if (renderer == NULL) {
 			SDL_Log("Renderer could not be created. Error %s", SDL_GetError());
 			SDL_Quit();
 			return Error::NoSDLRenderer;
 		}
+
+		// Create screen texture
+		screen = SDL_CreateTexture(
+			renderer,
+			SDL_PIXELFORMAT_ARGB8888,
+			SDL_TEXTUREACCESS_STREAMING,
+			SCREEN_WIDTH,
+			SCREEN_HEIGHT);
+		SDL_SetTextureScaleMode(screen, SDL_SCALEMODE_NEAREST);
+
 		font.toTexture(renderer, fontTexture);
 		SDL_SetTextureScaleMode(fontTexture, SDL_SCALEMODE_NEAREST);
-
-		// Checkerboard pattern for debugging
-		//for (int i = 0; i < 160; i++) {
-		//	for (int j = 0; j < 144; j++) {
-		//		if ((j + i) % 2) {
-		//			SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-		//		}
-		//		else {
-		//			SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-		//		}
-		//		SDL_FRect rect = { float(i * 8), float(j * 8), float(8), float(8) };
-		//		SDL_RenderFillRect(renderer, &rect);
-		//	}
-		//}
 		return 0;
 	}
 
@@ -183,5 +183,27 @@ namespace cpe
 
 			SDL_RenderTexture(renderer, fontTexture, &srcRect, &dstRect);
 		}
+	}
+
+	void pixelEngine::renderFrame(uint8_t current_frame[]) {
+		// Turn frame info into frame buffer
+		for (int y = 0; y < 144; y++) {
+			for (int x = 0; x < 160; x++) {
+				int index = y * 160 + x;
+				frame_buffer[index] = gameboy_palette[palette][current_frame[index]];
+			}
+		}
+
+		// TODO: Can I change to lock texture and unlock?
+		//	 It is supposedly faster, and would take no overhead time as I have to format the pixels anyway
+		SDL_UpdateTexture(
+			screen,
+			NULL,
+			frame_buffer.data(),
+			GB_W * sizeof(uint32_t)
+		);
+
+		SDL_RenderTexture(renderer, screen, NULL, NULL);
+		SDL_RenderPresent(renderer);
 	}
 }
