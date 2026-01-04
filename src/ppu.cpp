@@ -19,10 +19,8 @@ void PixelFetcher::fetchBackground(uint8_t x) {
 	tile_index = ppu->getIdFromTilemap(0, tile_x, tile_y);
 	
 	uint16_t tile_address = ppu->getTileAddress(tile_index);
-	tile_data_low = ppu->vram[tile_address];
-	
-	tile_address = ppu->getTileAddress(tile_index);
-	tile_data_high = ppu->vram[tile_address + 1];
+	tile_data_low = ppu->vram[tile_address + (2 * (tile_y % 8))];
+	tile_data_high = ppu->vram[tile_address + (2 * (tile_y % 8)) + 1];
 
 	for (int bit = 7; bit >= 0; bit--) {
 		uint8_t high_bit = ((tile_data_high & (0b10000000 >> (7 - bit))) >> bit) << 1;
@@ -129,7 +127,7 @@ uint8_t PPU::getIdFromTilemap(uint8_t tilemap, uint8_t tile_x, uint8_t tile_y) {
 
 uint16_t PPU::getTileAddress(uint8_t tile_index) {
 	if (bus->lcdc & 0b00010000) {
-		return 0x0000 + 4 * tile_index;
+		return 0x0000 + 16 * tile_index;
 	}
-	return 0x0800 + 4 * static_cast<int8_t>(tile_index);
+	return 0x0800 + 16 * static_cast<int8_t>(tile_index);
 }
