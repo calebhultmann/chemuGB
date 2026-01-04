@@ -37,7 +37,7 @@ void chemuGB::drawDebugRegs() {
 	cpe::Pixel green = cpe::Pixel{   0,255,100 };
 	cpe::Pixel red =   cpe::Pixel{ 255,  0,  50 };
 
-	int DEBUG_OFFSET = 161 * SCALE;
+	int DEBUG_OFFSET = 0;
 	int Z_OFFSET = 6 * SCALE;
 	int N_OFFSET = 10 * SCALE;
 	int H_OFFSET = 14 * SCALE;
@@ -74,7 +74,7 @@ void chemuGB::drawDebugRegs() {
 
 void chemuGB::drawDebug() {
 	cpe::Pixel white = cpe::Pixel{ 255,255,255 };
-	int debug_x = 161 * SCALE;
+	int debug_x = 0;
 	drawDebugRegs();
 
 	engine.DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
@@ -84,7 +84,7 @@ void chemuGB::drawDebug() {
 	// For each tileblock
 	for (int tileblock = 0; tileblock < 3; tileblock++) {
 		uint16_t block_start_addr = 0x800 * tileblock;
-		int tileblock_x = 161;
+		int tileblock_x = 0;
 		int tileblock_y = 93 + 17 * tileblock;
 
 		// For each tile
@@ -104,13 +104,13 @@ void chemuGB::drawDebug() {
 					int low_bit = (data_low & (0b10000000 >> bit)) >> (7 - bit);
 					int pixel_color_id = high_bit | low_bit;
 					int pixel_color = (system.bgp & (0b11 << (2 * pixel_color_id))) >> (2 * pixel_color_id);
-					//cpe::Pixel color = engine.gameboy_palette[engine.palette][pixel_color];
-					//SDL_SetRenderDrawColor(engine.renderer, color.r, color.g, color.b, 255);
+					uint32_t color = engine.gameboy_palette[1][pixel_color];
+					SDL_SetRenderDrawColor(engine.dbg_renderer, (color >> 16) & 0xFF, (color >> 8) & 0xFF, (color >> 0) & 0xFF, (color >> 24) & 0xFF);
 					int pixel_x = tile_x + bit * 2;
 					int pixel_y = tile_y + line_y * 2;
 
 					SDL_FRect rect = { float(pixel_x), float(pixel_y), float(2), float(2) };
-					SDL_RenderFillRect(engine.renderer, &rect);
+					SDL_RenderFillRect(engine.dbg_renderer, &rect);
 				}
 			}
 		}
@@ -120,7 +120,7 @@ void chemuGB::drawDebug() {
 	// Draw Tilemaps
 	// For each tilemap
 	for (int tilemap = 0; tilemap < 2; tilemap++) {
-		int tilemap_x = 194;
+		int tilemap_x = 33;
 		int tilemap_y = 78 + 33 * tilemap;
 		uint16_t tilemap_start_addr = 0x1800 + 0x400 * tilemap;
 		// For each tile
@@ -143,13 +143,13 @@ void chemuGB::drawDebug() {
 						int low_bit = (data_low & (0b10000000 >> bit)) >> (7 - bit);
 						int pixel_color_id = high_bit | low_bit;
 						int pixel_color = (system.bgp & (0b11 << (2 * pixel_color_id))) >> (2 * pixel_color_id);
-						//cpe::Pixel color = engine.greenscale[pixel_color];
-						//SDL_SetRenderDrawColor(engine.renderer, color.r, color.g, color.b, 255);
+						uint32_t color = engine.gameboy_palette[1][pixel_color];
+						SDL_SetRenderDrawColor(engine.dbg_renderer, (color >> 16) & 0xFF, (color >> 8) & 0xFF, (color >> 0) & 0xFF, (color >> 24) & 0xFF);
 						int pixel_x = tile_pixel_x * 8 + bit;
 						int pixel_y = tile_pixel_y * 8 + line_y;
 
 						SDL_FRect rect = { float(pixel_x), float(pixel_y), float(1), float(1) };
-						SDL_RenderFillRect(engine.renderer, &rect);
+						SDL_RenderFillRect(engine.dbg_renderer, &rect);
 					}
 				}
 			}
@@ -157,9 +157,9 @@ void chemuGB::drawDebug() {
 	}
 
 
-	SDL_SetRenderDrawColor(engine.renderer, 255, 100, 100, 255);
-	SDL_FRect outline = { float(194 * 8 + system.scx), float(78 * 8 + system.scy), float(160), float(144) };
-	SDL_RenderRect(engine.renderer, &outline);
+	SDL_SetRenderDrawColor(engine.dbg_renderer, 255, 100, 100, 255);
+	SDL_FRect outline = { float(33 * 8 + system.scx), float(78 * 8 + system.scy), float(160), float(144) };
+	SDL_RenderRect(engine.dbg_renderer, &outline);
 
 
 	/*
@@ -197,8 +197,8 @@ void chemuGB::start() {
 					break;
 				case SDL_SCANCODE_F:
 					// draw debug frame
-					//drawDebug();
-					//SDL_RenderPresent(engine.renderer);
+					drawDebug();
+					SDL_RenderPresent(engine.dbg_renderer);
 					break;
 				case SDL_SCANCODE_G:
 					engine.palette = 1 - engine.palette;

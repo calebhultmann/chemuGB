@@ -140,6 +140,16 @@ namespace cpe
 			return Error::NoSDLWindow;
 		}
 
+		dbg_window = SDL_CreateWindow("chemuGB - Gameboy Emulator", DEBUG_WIDTH * SCALE, SCREEN_HEIGHT * SCALE, SDL_WINDOW_RESIZABLE);
+		dbg_renderer = SDL_CreateRenderer(dbg_window, NULL);
+		dbg_screen = SDL_CreateTexture(
+			dbg_renderer,
+			SDL_PIXELFORMAT_ARGB8888,
+			SDL_TEXTUREACCESS_STREAMING,
+			DEBUG_WIDTH,
+			SCREEN_HEIGHT);
+		SDL_SetTextureScaleMode(dbg_screen, SDL_SCALEMODE_NEAREST);
+
 		// Create the renderer
 		renderer = SDL_CreateRenderer(window, NULL);
 		if (renderer == NULL) {
@@ -181,7 +191,7 @@ namespace cpe
 			SDL_FRect dstRect = { static_cast<float>(x), static_cast<float>(y), 16, 16 };
 			x += (2 * SCALE);
 
-			SDL_RenderTexture(renderer, fontTexture, &srcRect, &dstRect);
+			SDL_RenderTexture(dbg_renderer, fontTexture, &srcRect, &dstRect);
 		}
 	}
 

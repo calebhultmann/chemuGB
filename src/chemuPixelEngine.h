@@ -47,8 +47,11 @@ namespace cpe
 		pixelEngine();
 
 		SDL_Window* window = nullptr;
+		SDL_Window* dbg_window = nullptr;
 		SDL_Renderer* renderer = nullptr;
+		SDL_Renderer* dbg_renderer = nullptr;
 		SDL_Texture* screen = nullptr;
+		SDL_Texture* dbg_screen = nullptr;
 
 		Sprite font;
 		SDL_Texture* fontTexture = nullptr;
