@@ -7,7 +7,7 @@ public:
 	~Mapper_MBC1();
 
 	uint8_t RAM_Enable = 0;
-	uint8_t ROM_Bank_Number = 0;
+	uint8_t ROM_Bank_Number = 1;
 	uint8_t Banking_Mode = 0;
 	uint8_t Bank_Number_Upper_Bits = 0;
 

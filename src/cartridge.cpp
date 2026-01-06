@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 
+#include "mapper_NO_MBC.h"
 #include "mapper_MBC1.h"
 
 Cartridge::Cartridge() {
@@ -48,7 +49,7 @@ int Cartridge::loadCartridge(const std::filesystem::path romPath) {
 
 	// Set up Mapper
 	switch (header.cartridge_type) {
-	case 0x00: break;
+	case 0x00: mapper = std::make_shared<Mapper_NO_MBC>(nROMbanks, nRAMbanks); break;
 	case 0x01:
 	case 0x02:
 	case 0x03: mapper = std::make_shared<Mapper_MBC1>(nROMbanks, nRAMbanks); break;
