@@ -1,6 +1,8 @@
 #include "cpu.h"
 #include "bus.h"
 #include <stdexcept>
+#include <format>
+#include <iostream>
 
 constexpr CPU::Operand R8(int r)		{ return { CPU::OperandType::R8, r }; };
 constexpr CPU::Operand R16(int r)		{ return { CPU::OperandType::R16, r }; };
@@ -351,9 +353,34 @@ STOP
 
 void CPU::clock() {
 	if (remaining_cycles == 0) {
+		uint16_t instruction_addr = pc; //
+		std::string instruction_str = "...";
+
 		int opcode = fetchByte();
 		Instruction curr = opcode_lookup[opcode];
-		remaining_cycles = executeInstruction(curr);
+
+		if (bus->bank == 1) {
+			std::string mnemonic = curr.mnemonic; //
+			int bytes = curr.bytes - 1;
+			uint16_t value = 0;
+
+			if (bytes > 0) {
+				uint16_t byte_addr = instruction_addr;
+				for (int i = bytes - 1; i >= 0; i--) {
+					byte_addr++;
+					uint16_t num = read(byte_addr);
+					value |= (num << (8 * ((bytes - 1) - i)));
+				}
+				instruction_str = std::vformat(mnemonic, std::make_format_args(value));
+			}
+			else {
+				instruction_str = mnemonic;
+			}
+			std::string output = std::format("{:04X}: {}", instruction_addr, instruction_str);
+			std::cout << output << "\n";
+		}
+
+ 		remaining_cycles = executeInstruction(curr);
 	}
 
 	remaining_cycles--;
@@ -535,7 +562,7 @@ int CPU::INC(Operand src, Operand dst) {
 	writeOperand(src, ++src_v);
 
 	if (src.type == OperandType::R8) {
-		putFlag(FLAG_Z, src_v == 0);
+		putFlag(FLAG_Z, (src_v & 0xFF) == 0);
 		clearFlag(FLAG_N);
 		putFlag(FLAG_H, checkOverflow(3, src_v, 1, false));
 	}
@@ -556,7 +583,7 @@ int CPU::DEC(Operand src, Operand dst) {
 	writeOperand(src, --src_v);
 
 	if (src.type == OperandType::R8) {
-		putFlag(FLAG_Z, src_v == 0);
+		putFlag(FLAG_Z, (src_v & 0xFF) == 0);
 		setFlag(FLAG_N);
 		putFlag(FLAG_H, 1 > (src_v & 0xF));
 	}

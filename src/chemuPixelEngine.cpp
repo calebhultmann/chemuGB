@@ -167,7 +167,7 @@ namespace cpe
 			SCREEN_HEIGHT);
 		SDL_SetTextureScaleMode(screen, SDL_SCALEMODE_NEAREST);
 
-		font.toTexture(renderer, fontTexture);
+		font.toTexture(dbg_renderer, fontTexture);
 		SDL_SetTextureScaleMode(fontTexture, SDL_SCALEMODE_NEAREST);
 		return 0;
 	}
