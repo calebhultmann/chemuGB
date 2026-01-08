@@ -23,42 +23,42 @@ CPU::CPU() {
 
 	opcode_lookup = 
 	{
-	//   MNEMONIC              B  FUNC      SRC            DST                MNEMONIC          B  FUNC      SRC             DST                MNEMONIC            B  FUNC     SRC              DST                MNEMONIC        B  FUNC     SRC          DST                MNEMONIC              B  FUNC      SRC              DST                MNEMONIC          B  FUNC      SRC             DST                MNEMONIC            B  FUNC      SRC              DST                MNEMONIC      B  FUNC      SRC        DST
-		{"NOP",                1, &c::NOP,  empt,          empt},            {"LD BC, ${:04X}", 3, &c::LD,   n16,            R16(REG_BC)},     {"LD [BC], A",       1, &c::LD,  R8(REG_A),       R16MEM(REG_BC)},  {"INC BC",       1, &c::INC, R16(REG_BC), empt},            {"INC B",              1, &c::INC,  R8(REG_B),       empt},            {"DEC B",          1, &c::DEC,  R8(REG_B),      empt},            {"LD B, ${:02X}",    2, &c::LD,   n8,              R8(REG_B)},       {"RLCA",       1, &c::RLCA, R8(REG_A), empt},
-		{"LD [${:04X}], SP",   3, &c::LD,   R16(REG_SP),   a16},             {"ADD HL, BC",     1, &c::ADD,  R16(REG_BC),    R16(REG_HL)},     {"LD A, [BC]",       1, &c::LD,  R16MEM(REG_BC),  R8(REG_A)},       {"DEC BC",       1, &c::DEC, R16(REG_BC), empt},            {"INC C",              1, &c::INC,  R8(REG_C),       empt},            {"DEC C",          1, &c::DEC,  R8(REG_C),      empt},            {"LD C, ${:02X}",    2, &c::LD,   n8,              R8(REG_C)},       {"RRCA",       1, &c::RRCA, R8(REG_A), empt},
-		{"STOP ${:02X}",	   2, &c::STOP, n8,            empt},            {"LD DE, ${:04X}", 3, &c::LD,   n16,            R16(REG_DE)},     {"LD [DE], A",       1, &c::LD,  R8(REG_A),       R16MEM(REG_DE)},  {"INC DE",       1, &c::INC, R16(REG_DE), empt},            {"INC D",              1, &c::INC,  R8(REG_D),       empt},            {"DEC D",          1, &c::DEC,  R8(REG_D),      empt},            {"LD D, ${:02X}",    2, &c::LD,   n8,              R8(REG_D)},       {"RLA",        1, &c::RLA,  R8(REG_A), empt},
-		{"JR ${:04X}",         2, &c::JR,   n8,            empt},            {"ADD HL, DE",     1, &c::ADD,  R16(REG_DE),    R16(REG_HL)},     {"LD A, [DE]",       1, &c::LD,  R16MEM(REG_DE),  R8(REG_A)},       {"DEC DE",       1, &c::DEC, R16(REG_DE), empt},            {"INC E",              1, &c::INC,  R8(REG_E),       empt},            {"DEC E",          1, &c::DEC,  R8(REG_E),      empt},            {"LD E, ${:02X}",    2, &c::LD,   n8,              R8(REG_E)},       {"RRA",        1, &c::RRA,  R8(REG_A), empt},
-		{"JR NZ, ${:04X}",     2, &c::JR,   n8,            COND(COND_NZ)},   {"LD HL, ${:04X}", 3, &c::LD,   n16,            R16(REG_HL)},     {"LD [HL+], A",      1, &c::LD,  R8(REG_A),       R16MEM(REG_HLI)}, {"INC HL",       1, &c::INC, R16(REG_HL), empt},            {"INC H",              1, &c::INC,  R8(REG_H),       empt},            {"DEC H",          1, &c::DEC,  R8(REG_H),      empt},            {"LD H, ${:02X}",    2, &c::LD,   n8,              R8(REG_H)},       {"DAA",        1, &c::DAA,  empt,      empt},
-		{"JR Z, ${:04X}",      2, &c::JR,   n8,            COND(COND_Z)},    {"ADD HL, HL",     1, &c::ADD,  R16(REG_HL),    R16(REG_HL)},     {"LD A, [HL+]",      1, &c::LD,  R16MEM(REG_HLI), R8(REG_A)},       {"DEC HL",       1, &c::DEC, R16(REG_HL), empt},            {"INC L",              1, &c::INC,  R8(REG_L),       empt},            {"DEC L",          1, &c::DEC,  R8(REG_L),      empt},            {"LD L, ${:02X}",    2, &c::LD,   n8,              R8(REG_L)},       {"CPL",        1, &c::CPL,  empt,      empt},
-		{"JR NC, ${:04X}",     2, &c::JR,   n8,            COND(COND_NC)},   {"LD SP, ${:04X}", 3, &c::LD,   n16,            R16(REG_SP)},     {"LD [HL-], A",      1, &c::LD,  R8(REG_A),       R16MEM(REG_HLD)}, {"INC SP",       1, &c::INC, R16(REG_SP), empt},            {"INC [HL]",           1, &c::INC,  R8(REG_HL_DATA), empt},            {"DEC [HL]",       1, &c::DEC,  R8(REG_H),      empt},            {"LD [HL], ${:02X}", 2, &c::LD,   n8,              R8(REG_HL_DATA)}, {"SCF",        1, &c::SCF,  empt,      empt},
-		{"JR C, ${:04X}",      2, &c::JR,   n8,            COND(COND_C)},    {"ADD HL, SP",     1, &c::ADD,  R16(REG_SP),    R16(REG_HL)},     {"LD A, [HL-]",      1, &c::LD,  R16MEM(REG_HLD), R8(REG_A)},       {"DEC SP",       1, &c::DEC, R16(REG_SP), empt},            {"INC A",              1, &c::INC,  R8(REG_A),       empt},            {"DEC A",          1, &c::DEC,  R8(REG_A),      empt},            {"LD A, ${:02X}",    2, &c::LD,   n8,              R8(REG_A)},       {"CCF",        1, &c::CCF,  empt,      empt},
+	//   MNEMONIC              B  FUNC      SRC            DST                MNEMONIC          B  FUNC      SRC             DST                MNEMONIC            B  FUNC     SRC              DST                MNEMONIC        B  FUNC     SRC          DST                MNEMONIC              B  FUNC      SRC              DST                MNEMONIC          B  FUNC      SRC              DST                MNEMONIC            B  FUNC      SRC              DST                MNEMONIC      B  FUNC      SRC        DST
+		{"NOP",                1, &c::NOP,  empt,          empt},            {"LD BC, ${:04X}", 3, &c::LD,   n16,            R16(REG_BC)},     {"LD [BC], A",       1, &c::LD,  R8(REG_A),       R16MEM(REG_BC)},  {"INC BC",       1, &c::INC, R16(REG_BC), empt},            {"INC B",              1, &c::INC,  R8(REG_B),       empt},            {"DEC B",          1, &c::DEC,  R8(REG_B),       empt},            {"LD B, ${:02X}",    2, &c::LD,   n8,              R8(REG_B)},       {"RLCA",       1, &c::RLCA, R8(REG_A), empt},
+		{"LD [${:04X}], SP",   3, &c::LD,   R16(REG_SP),   a16},             {"ADD HL, BC",     1, &c::ADD,  R16(REG_BC),    R16(REG_HL)},     {"LD A, [BC]",       1, &c::LD,  R16MEM(REG_BC),  R8(REG_A)},       {"DEC BC",       1, &c::DEC, R16(REG_BC), empt},            {"INC C",              1, &c::INC,  R8(REG_C),       empt},            {"DEC C",          1, &c::DEC,  R8(REG_C),       empt},            {"LD C, ${:02X}",    2, &c::LD,   n8,              R8(REG_C)},       {"RRCA",       1, &c::RRCA, R8(REG_A), empt},
+		{"STOP ${:02X}",	   2, &c::STOP, n8,            empt},            {"LD DE, ${:04X}", 3, &c::LD,   n16,            R16(REG_DE)},     {"LD [DE], A",       1, &c::LD,  R8(REG_A),       R16MEM(REG_DE)},  {"INC DE",       1, &c::INC, R16(REG_DE), empt},            {"INC D",              1, &c::INC,  R8(REG_D),       empt},            {"DEC D",          1, &c::DEC,  R8(REG_D),       empt},            {"LD D, ${:02X}",    2, &c::LD,   n8,              R8(REG_D)},       {"RLA",        1, &c::RLA,  R8(REG_A), empt},
+		{"JR ${:04X}",         2, &c::JR,   n8,            empt},            {"ADD HL, DE",     1, &c::ADD,  R16(REG_DE),    R16(REG_HL)},     {"LD A, [DE]",       1, &c::LD,  R16MEM(REG_DE),  R8(REG_A)},       {"DEC DE",       1, &c::DEC, R16(REG_DE), empt},            {"INC E",              1, &c::INC,  R8(REG_E),       empt},            {"DEC E",          1, &c::DEC,  R8(REG_E),       empt},            {"LD E, ${:02X}",    2, &c::LD,   n8,              R8(REG_E)},       {"RRA",        1, &c::RRA,  R8(REG_A), empt},
+		{"JR NZ, ${:04X}",     2, &c::JR,   n8,            COND(COND_NZ)},   {"LD HL, ${:04X}", 3, &c::LD,   n16,            R16(REG_HL)},     {"LD [HL+], A",      1, &c::LD,  R8(REG_A),       R16MEM(REG_HLI)}, {"INC HL",       1, &c::INC, R16(REG_HL), empt},            {"INC H",              1, &c::INC,  R8(REG_H),       empt},            {"DEC H",          1, &c::DEC,  R8(REG_H),       empt},            {"LD H, ${:02X}",    2, &c::LD,   n8,              R8(REG_H)},       {"DAA",        1, &c::DAA,  empt,      empt},
+		{"JR Z, ${:04X}",      2, &c::JR,   n8,            COND(COND_Z)},    {"ADD HL, HL",     1, &c::ADD,  R16(REG_HL),    R16(REG_HL)},     {"LD A, [HL+]",      1, &c::LD,  R16MEM(REG_HLI), R8(REG_A)},       {"DEC HL",       1, &c::DEC, R16(REG_HL), empt},            {"INC L",              1, &c::INC,  R8(REG_L),       empt},            {"DEC L",          1, &c::DEC,  R8(REG_L),       empt},            {"LD L, ${:02X}",    2, &c::LD,   n8,              R8(REG_L)},       {"CPL",        1, &c::CPL,  R8(REG_A), empt},
+		{"JR NC, ${:04X}",     2, &c::JR,   n8,            COND(COND_NC)},   {"LD SP, ${:04X}", 3, &c::LD,   n16,            R16(REG_SP)},     {"LD [HL-], A",      1, &c::LD,  R8(REG_A),       R16MEM(REG_HLD)}, {"INC SP",       1, &c::INC, R16(REG_SP), empt},            {"INC [HL]",           1, &c::INC,  R8(REG_HL_DATA), empt},            {"DEC [HL]",       1, &c::DEC,  R8(REG_HL_DATA), empt},            {"LD [HL], ${:02X}", 2, &c::LD,   n8,              R8(REG_HL_DATA)}, {"SCF",        1, &c::SCF,  empt,      empt},
+		{"JR C, ${:04X}",      2, &c::JR,   n8,            COND(COND_C)},    {"ADD HL, SP",     1, &c::ADD,  R16(REG_SP),    R16(REG_HL)},     {"LD A, [HL-]",      1, &c::LD,  R16MEM(REG_HLD), R8(REG_A)},       {"DEC SP",       1, &c::DEC, R16(REG_SP), empt},            {"INC A",              1, &c::INC,  R8(REG_A),       empt},            {"DEC A",          1, &c::DEC,  R8(REG_A),       empt},            {"LD A, ${:02X}",    2, &c::LD,   n8,              R8(REG_A)},       {"CCF",        1, &c::CCF,  empt,      empt},
 
-		{"LD B, B",            1, &c::LD,   R8(REG_B),     R8(REG_B)},       {"LD B, C",        1, &c::LD,   R8(REG_C),      R8(REG_B)},       {"LD B, D",          1, &c::LD,  R8(REG_D),       R8(REG_B)},       {"LD B, E",      1, &c::LD,  R8(REG_E),   R8(REG_B)},       {"LD B, H",            1, &c::LD,   R8(REG_H),       R8(REG_B)},       {"LD B, L",        1, &c::LD,   R8(REG_L),      R8(REG_B)},       {"LD B, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_B)},       {"LD B, A",    1, &c::LD,   R8(REG_A), R8(REG_B)},
-		{"LD C, B",            1, &c::LD,   R8(REG_B),     R8(REG_C)},       {"LD C, C",        1, &c::LD,   R8(REG_C),      R8(REG_C)},       {"LD C, D",          1, &c::LD,  R8(REG_D),       R8(REG_C)},       {"LD C, E",      1, &c::LD,  R8(REG_E),   R8(REG_C)},       {"LD C, H",            1, &c::LD,   R8(REG_H),       R8(REG_C)},       {"LD C, L",        1, &c::LD,   R8(REG_L),      R8(REG_C)},       {"LD C, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_C)},       {"LD C, A",    1, &c::LD,   R8(REG_A), R8(REG_C)},
-		{"LD D, B",            1, &c::LD,   R8(REG_B),     R8(REG_D)},       {"LD D, C",        1, &c::LD,   R8(REG_C),      R8(REG_D)},       {"LD D, D",          1, &c::LD,  R8(REG_D),       R8(REG_D)},       {"LD D, E",      1, &c::LD,  R8(REG_E),   R8(REG_D)},       {"LD D, H",            1, &c::LD,   R8(REG_H),       R8(REG_D)},       {"LD D, L",        1, &c::LD,   R8(REG_L),      R8(REG_D)},       {"LD D, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_D)},       {"LD D, A",    1, &c::LD,   R8(REG_A), R8(REG_D)},
-		{"LD E, B",            1, &c::LD,   R8(REG_B),     R8(REG_E)},       {"LD E, C",        1, &c::LD,   R8(REG_C),      R8(REG_E)},       {"LD E, D",          1, &c::LD,  R8(REG_D),       R8(REG_E)},       {"LD E, E",      1, &c::LD,  R8(REG_E),   R8(REG_E)},       {"LD E, H",            1, &c::LD,   R8(REG_H),       R8(REG_E)},       {"LD E, L",        1, &c::LD,   R8(REG_L),      R8(REG_E)},       {"LD E, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_E)},       {"LD E, A",    1, &c::LD,   R8(REG_A), R8(REG_E)},
-		{"LD H, B",            1, &c::LD,   R8(REG_B),     R8(REG_H)},       {"LD H, C",        1, &c::LD,   R8(REG_C),      R8(REG_H)},       {"LD H, D",          1, &c::LD,  R8(REG_D),       R8(REG_H)},       {"LD H, E",      1, &c::LD,  R8(REG_E),   R8(REG_H)},       {"LD H, H",            1, &c::LD,   R8(REG_H),       R8(REG_H)},       {"LD H, L",        1, &c::LD,   R8(REG_L),      R8(REG_H)},       {"LD H, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_H)},       {"LD H, A",    1, &c::LD,   R8(REG_A), R8(REG_H)},
-		{"LD L, B",            1, &c::LD,   R8(REG_B),     R8(REG_L)},       {"LD L, C",        1, &c::LD,   R8(REG_C),      R8(REG_L)},       {"LD L, D",          1, &c::LD,  R8(REG_D),       R8(REG_L)},       {"LD L, E",      1, &c::LD,  R8(REG_E),   R8(REG_L)},       {"LD L, H",            1, &c::LD,   R8(REG_H),       R8(REG_L)},       {"LD L, L",        1, &c::LD,   R8(REG_L),      R8(REG_L)},       {"LD L, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_L)},       {"LD L, A",    1, &c::LD,   R8(REG_A), R8(REG_L)},
-		{"LD [HL], B",         1, &c::LD,   R8(REG_B),     R8(REG_HL_DATA)}, {"LD [HL], C",     1, &c::LD,   R8(REG_C),      R8(REG_HL_DATA)}, {"LD [HL], D",       1, &c::LD,  R8(REG_D),       R8(REG_HL_DATA)}, {"LD [HL], E",   1, &c::LD,  R8(REG_E),   R8(REG_HL_DATA)}, {"LD [HL], H",         1, &c::LD,   R8(REG_H),       R8(REG_HL_DATA)}, {"LD [HL], L",     1, &c::LD,   R8(REG_L),      R8(REG_HL_DATA)}, {"HALT",             1, &c::HALT, empt,            empt},            {"LD [HL], A", 1, &c::LD,   R8(REG_A), R8(REG_HL_DATA)},
-		{"LD A, B",            1, &c::LD,   R8(REG_B),     R8(REG_A)},       {"LD A, C",        1, &c::LD,   R8(REG_C),      R8(REG_A)},       {"LD A, D",          1, &c::LD,  R8(REG_D),       R8(REG_A)},       {"LD A, E",      1, &c::LD,  R8(REG_E),   R8(REG_A)},       {"LD A, H",            1, &c::LD,   R8(REG_H),       R8(REG_A)},       {"LD A, L",        1, &c::LD,   R8(REG_L),      R8(REG_A)},       {"LD A, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_A)},       {"LD A, A",    1, &c::LD,   R8(REG_A), R8(REG_A)},
+		{"LD B, B",            1, &c::LD,   R8(REG_B),     R8(REG_B)},       {"LD B, C",        1, &c::LD,   R8(REG_C),      R8(REG_B)},       {"LD B, D",          1, &c::LD,  R8(REG_D),       R8(REG_B)},       {"LD B, E",      1, &c::LD,  R8(REG_E),   R8(REG_B)},       {"LD B, H",            1, &c::LD,   R8(REG_H),       R8(REG_B)},       {"LD B, L",        1, &c::LD,   R8(REG_L),       R8(REG_B)},       {"LD B, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_B)},       {"LD B, A",    1, &c::LD,   R8(REG_A), R8(REG_B)},
+		{"LD C, B",            1, &c::LD,   R8(REG_B),     R8(REG_C)},       {"LD C, C",        1, &c::LD,   R8(REG_C),      R8(REG_C)},       {"LD C, D",          1, &c::LD,  R8(REG_D),       R8(REG_C)},       {"LD C, E",      1, &c::LD,  R8(REG_E),   R8(REG_C)},       {"LD C, H",            1, &c::LD,   R8(REG_H),       R8(REG_C)},       {"LD C, L",        1, &c::LD,   R8(REG_L),       R8(REG_C)},       {"LD C, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_C)},       {"LD C, A",    1, &c::LD,   R8(REG_A), R8(REG_C)},
+		{"LD D, B",            1, &c::LD,   R8(REG_B),     R8(REG_D)},       {"LD D, C",        1, &c::LD,   R8(REG_C),      R8(REG_D)},       {"LD D, D",          1, &c::LD,  R8(REG_D),       R8(REG_D)},       {"LD D, E",      1, &c::LD,  R8(REG_E),   R8(REG_D)},       {"LD D, H",            1, &c::LD,   R8(REG_H),       R8(REG_D)},       {"LD D, L",        1, &c::LD,   R8(REG_L),       R8(REG_D)},       {"LD D, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_D)},       {"LD D, A",    1, &c::LD,   R8(REG_A), R8(REG_D)},
+		{"LD E, B",            1, &c::LD,   R8(REG_B),     R8(REG_E)},       {"LD E, C",        1, &c::LD,   R8(REG_C),      R8(REG_E)},       {"LD E, D",          1, &c::LD,  R8(REG_D),       R8(REG_E)},       {"LD E, E",      1, &c::LD,  R8(REG_E),   R8(REG_E)},       {"LD E, H",            1, &c::LD,   R8(REG_H),       R8(REG_E)},       {"LD E, L",        1, &c::LD,   R8(REG_L),       R8(REG_E)},       {"LD E, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_E)},       {"LD E, A",    1, &c::LD,   R8(REG_A), R8(REG_E)},
+		{"LD H, B",            1, &c::LD,   R8(REG_B),     R8(REG_H)},       {"LD H, C",        1, &c::LD,   R8(REG_C),      R8(REG_H)},       {"LD H, D",          1, &c::LD,  R8(REG_D),       R8(REG_H)},       {"LD H, E",      1, &c::LD,  R8(REG_E),   R8(REG_H)},       {"LD H, H",            1, &c::LD,   R8(REG_H),       R8(REG_H)},       {"LD H, L",        1, &c::LD,   R8(REG_L),       R8(REG_H)},       {"LD H, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_H)},       {"LD H, A",    1, &c::LD,   R8(REG_A), R8(REG_H)},
+		{"LD L, B",            1, &c::LD,   R8(REG_B),     R8(REG_L)},       {"LD L, C",        1, &c::LD,   R8(REG_C),      R8(REG_L)},       {"LD L, D",          1, &c::LD,  R8(REG_D),       R8(REG_L)},       {"LD L, E",      1, &c::LD,  R8(REG_E),   R8(REG_L)},       {"LD L, H",            1, &c::LD,   R8(REG_H),       R8(REG_L)},       {"LD L, L",        1, &c::LD,   R8(REG_L),       R8(REG_L)},       {"LD L, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_L)},       {"LD L, A",    1, &c::LD,   R8(REG_A), R8(REG_L)},
+		{"LD [HL], B",         1, &c::LD,   R8(REG_B),     R8(REG_HL_DATA)}, {"LD [HL], C",     1, &c::LD,   R8(REG_C),      R8(REG_HL_DATA)}, {"LD [HL], D",       1, &c::LD,  R8(REG_D),       R8(REG_HL_DATA)}, {"LD [HL], E",   1, &c::LD,  R8(REG_E),   R8(REG_HL_DATA)}, {"LD [HL], H",         1, &c::LD,   R8(REG_H),       R8(REG_HL_DATA)}, {"LD [HL], L",     1, &c::LD,   R8(REG_L),       R8(REG_HL_DATA)}, {"HALT",             1, &c::HALT, empt,            empt},            {"LD [HL], A", 1, &c::LD,   R8(REG_A), R8(REG_HL_DATA)},
+		{"LD A, B",            1, &c::LD,   R8(REG_B),     R8(REG_A)},       {"LD A, C",        1, &c::LD,   R8(REG_C),      R8(REG_A)},       {"LD A, D",          1, &c::LD,  R8(REG_D),       R8(REG_A)},       {"LD A, E",      1, &c::LD,  R8(REG_E),   R8(REG_A)},       {"LD A, H",            1, &c::LD,   R8(REG_H),       R8(REG_A)},       {"LD A, L",        1, &c::LD,   R8(REG_L),       R8(REG_A)},       {"LD A, [HL]",       1, &c::LD,   R8(REG_HL_DATA), R8(REG_A)},       {"LD A, A",    1, &c::LD,   R8(REG_A), R8(REG_A)},
 
-		{"ADD A, B",           1, &c::ADD,  R8(REG_B),     R8(REG_A)},       {"ADD A, C",       1, &c::ADD,  R8(REG_C),      R8(REG_A)},       {"ADD A, D",         1, &c::ADD, R8(REG_D),       R8(REG_A)},       {"ADD A, E",     1, &c::ADD, R8(REG_E),   R8(REG_A)},       {"ADD A, H",           1, &c::ADD,  R8(REG_H),       R8(REG_A)},       {"ADD A, L",       1, &c::ADD,  R8(REG_L),      R8(REG_A)},       {"ADD A, [HL]",      1, &c::ADD,  R8(REG_HL_DATA), R8(REG_A)},       {"ADD A, A",   1, &c::ADD,  R8(REG_A), R8(REG_A)},
-		{"ADC A, B",           1, &c::ADC,  R8(REG_B),     R8(REG_A)},       {"ADC A, C",       1, &c::ADC,  R8(REG_C),      R8(REG_A)},       {"ADC A, D",         1, &c::ADC, R8(REG_D),       R8(REG_A)},       {"ADC A, E",     1, &c::ADC, R8(REG_E),   R8(REG_A)},       {"ADC A, H",           1, &c::ADC,  R8(REG_H),       R8(REG_A)},       {"ADC A, L",       1, &c::ADC,  R8(REG_L),      R8(REG_A)},       {"ADC A, [HL]",      1, &c::ADC,  R8(REG_HL_DATA), R8(REG_A)},       {"ADC A, A",   1, &c::ADC,  R8(REG_A), R8(REG_A)},
-		{"SUB A, B",           1, &c::SUB,  R8(REG_B),     R8(REG_A)},       {"SUB A, C",       1, &c::SUB,  R8(REG_C),      R8(REG_A)},       {"SUB A, D",         1, &c::SUB, R8(REG_D),       R8(REG_A)},       {"SUB A, E",     1, &c::SUB, R8(REG_E),   R8(REG_A)},       {"SUB A, H",           1, &c::SUB,  R8(REG_H),       R8(REG_A)},       {"SUB A, L",       1, &c::SUB,  R8(REG_L),      R8(REG_A)},       {"SUB A, [HL]",      1, &c::SUB,  R8(REG_HL_DATA), R8(REG_A)},       {"SUB A, A",   1, &c::SUB,  R8(REG_A), R8(REG_A)},
-		{"SBC A, B",           1, &c::SBC,  R8(REG_B),     R8(REG_A)},       {"SBC A, C",       1, &c::SBC,  R8(REG_C),      R8(REG_A)},       {"SBC A, D",         1, &c::SBC, R8(REG_D),       R8(REG_A)},       {"SBC A, E",     1, &c::SBC, R8(REG_E),   R8(REG_A)},       {"SBC A, H",           1, &c::SBC,  R8(REG_H),       R8(REG_A)},       {"SBC A, L",       1, &c::SBC,  R8(REG_L),      R8(REG_A)},       {"SBC A, [HL]",      1, &c::SBC,  R8(REG_HL_DATA), R8(REG_A)},       {"SBC A, A",   1, &c::SBC,  R8(REG_A), R8(REG_A)},
-		{"AND A, B",           1, &c::AND,  R8(REG_B),     R8(REG_A)},       {"AND A, C",       1, &c::AND,  R8(REG_C),      R8(REG_A)},       {"AND A, D",         1, &c::AND, R8(REG_D),       R8(REG_A)},       {"AND A, E",     1, &c::AND, R8(REG_E),   R8(REG_A)},       {"AND A, H",           1, &c::AND,  R8(REG_H),       R8(REG_A)},       {"AND A, L",       1, &c::AND,  R8(REG_L),      R8(REG_A)},       {"AND A, [HL]",      1, &c::AND,  R8(REG_HL_DATA), R8(REG_A)},       {"AND A, A",   1, &c::AND,  R8(REG_A), R8(REG_A)},
-		{"XOR A, B",           1, &c::XOR,  R8(REG_B),     R8(REG_A)},       {"XOR A, C",       1, &c::XOR,  R8(REG_C),      R8(REG_A)},       {"XOR A, D",         1, &c::XOR, R8(REG_D),       R8(REG_A)},       {"XOR A, E",     1, &c::XOR, R8(REG_E),   R8(REG_A)},       {"XOR A, H",           1, &c::XOR,  R8(REG_H),       R8(REG_A)},       {"XOR A, L",       1, &c::XOR,  R8(REG_L),      R8(REG_A)},       {"XOR A, [HL]",      1, &c::XOR,  R8(REG_HL_DATA), R8(REG_A)},       {"XOR A, A",   1, &c::XOR,  R8(REG_A), R8(REG_A)},
-		{"OR A, B",            1, &c::OR,   R8(REG_B),     R8(REG_A)},       {"OR A, C",        1, &c::OR,   R8(REG_C),      R8(REG_A)},       {"OR A, D",          1, &c::OR,  R8(REG_D),       R8(REG_A)},       {"OR A, E",      1, &c::OR,  R8(REG_E),   R8(REG_A)},       {"OR A, H",            1, &c::OR,   R8(REG_H),       R8(REG_A)},       {"OR A, L",        1, &c::OR,   R8(REG_L),      R8(REG_A)},       {"OR A, [HL]",       1, &c::OR,   R8(REG_HL_DATA), R8(REG_A)},       {"OR A, A",    1, &c::OR,   R8(REG_A), R8(REG_A)},
-		{"CP A, B",            1, &c::CP,   R8(REG_B),     R8(REG_A)},       {"CP A, C",        1, &c::CP,   R8(REG_C),      R8(REG_A)},       {"CP A, D",          1, &c::CP,  R8(REG_D),       R8(REG_A)},       {"CP A, E",      1, &c::CP,  R8(REG_E),   R8(REG_A)},       {"CP A, H",            1, &c::CP,   R8(REG_H),       R8(REG_A)},       {"CP A, L",        1, &c::CP,   R8(REG_L),      R8(REG_A)},       {"CP A, [HL]",       1, &c::CP,   R8(REG_HL_DATA), R8(REG_A)},       {"CP A, A",    1, &c::CP,   R8(REG_A), R8(REG_A)},
+		{"ADD A, B",           1, &c::ADD,  R8(REG_B),     R8(REG_A)},       {"ADD A, C",       1, &c::ADD,  R8(REG_C),      R8(REG_A)},       {"ADD A, D",         1, &c::ADD, R8(REG_D),       R8(REG_A)},       {"ADD A, E",     1, &c::ADD, R8(REG_E),   R8(REG_A)},       {"ADD A, H",           1, &c::ADD,  R8(REG_H),       R8(REG_A)},       {"ADD A, L",       1, &c::ADD,  R8(REG_L),       R8(REG_A)},       {"ADD A, [HL]",      1, &c::ADD,  R8(REG_HL_DATA), R8(REG_A)},       {"ADD A, A",   1, &c::ADD,  R8(REG_A), R8(REG_A)},
+		{"ADC A, B",           1, &c::ADC,  R8(REG_B),     R8(REG_A)},       {"ADC A, C",       1, &c::ADC,  R8(REG_C),      R8(REG_A)},       {"ADC A, D",         1, &c::ADC, R8(REG_D),       R8(REG_A)},       {"ADC A, E",     1, &c::ADC, R8(REG_E),   R8(REG_A)},       {"ADC A, H",           1, &c::ADC,  R8(REG_H),       R8(REG_A)},       {"ADC A, L",       1, &c::ADC,  R8(REG_L),       R8(REG_A)},       {"ADC A, [HL]",      1, &c::ADC,  R8(REG_HL_DATA), R8(REG_A)},       {"ADC A, A",   1, &c::ADC,  R8(REG_A), R8(REG_A)},
+		{"SUB A, B",           1, &c::SUB,  R8(REG_B),     R8(REG_A)},       {"SUB A, C",       1, &c::SUB,  R8(REG_C),      R8(REG_A)},       {"SUB A, D",         1, &c::SUB, R8(REG_D),       R8(REG_A)},       {"SUB A, E",     1, &c::SUB, R8(REG_E),   R8(REG_A)},       {"SUB A, H",           1, &c::SUB,  R8(REG_H),       R8(REG_A)},       {"SUB A, L",       1, &c::SUB,  R8(REG_L),       R8(REG_A)},       {"SUB A, [HL]",      1, &c::SUB,  R8(REG_HL_DATA), R8(REG_A)},       {"SUB A, A",   1, &c::SUB,  R8(REG_A), R8(REG_A)},
+		{"SBC A, B",           1, &c::SBC,  R8(REG_B),     R8(REG_A)},       {"SBC A, C",       1, &c::SBC,  R8(REG_C),      R8(REG_A)},       {"SBC A, D",         1, &c::SBC, R8(REG_D),       R8(REG_A)},       {"SBC A, E",     1, &c::SBC, R8(REG_E),   R8(REG_A)},       {"SBC A, H",           1, &c::SBC,  R8(REG_H),       R8(REG_A)},       {"SBC A, L",       1, &c::SBC,  R8(REG_L),       R8(REG_A)},       {"SBC A, [HL]",      1, &c::SBC,  R8(REG_HL_DATA), R8(REG_A)},       {"SBC A, A",   1, &c::SBC,  R8(REG_A), R8(REG_A)},
+		{"AND A, B",           1, &c::AND,  R8(REG_B),     R8(REG_A)},       {"AND A, C",       1, &c::AND,  R8(REG_C),      R8(REG_A)},       {"AND A, D",         1, &c::AND, R8(REG_D),       R8(REG_A)},       {"AND A, E",     1, &c::AND, R8(REG_E),   R8(REG_A)},       {"AND A, H",           1, &c::AND,  R8(REG_H),       R8(REG_A)},       {"AND A, L",       1, &c::AND,  R8(REG_L),       R8(REG_A)},       {"AND A, [HL]",      1, &c::AND,  R8(REG_HL_DATA), R8(REG_A)},       {"AND A, A",   1, &c::AND,  R8(REG_A), R8(REG_A)},
+		{"XOR A, B",           1, &c::XOR,  R8(REG_B),     R8(REG_A)},       {"XOR A, C",       1, &c::XOR,  R8(REG_C),      R8(REG_A)},       {"XOR A, D",         1, &c::XOR, R8(REG_D),       R8(REG_A)},       {"XOR A, E",     1, &c::XOR, R8(REG_E),   R8(REG_A)},       {"XOR A, H",           1, &c::XOR,  R8(REG_H),       R8(REG_A)},       {"XOR A, L",       1, &c::XOR,  R8(REG_L),       R8(REG_A)},       {"XOR A, [HL]",      1, &c::XOR,  R8(REG_HL_DATA), R8(REG_A)},       {"XOR A, A",   1, &c::XOR,  R8(REG_A), R8(REG_A)},
+		{"OR A, B",            1, &c::OR,   R8(REG_B),     R8(REG_A)},       {"OR A, C",        1, &c::OR,   R8(REG_C),      R8(REG_A)},       {"OR A, D",          1, &c::OR,  R8(REG_D),       R8(REG_A)},       {"OR A, E",      1, &c::OR,  R8(REG_E),   R8(REG_A)},       {"OR A, H",            1, &c::OR,   R8(REG_H),       R8(REG_A)},       {"OR A, L",        1, &c::OR,   R8(REG_L),       R8(REG_A)},       {"OR A, [HL]",       1, &c::OR,   R8(REG_HL_DATA), R8(REG_A)},       {"OR A, A",    1, &c::OR,   R8(REG_A), R8(REG_A)},
+		{"CP A, B",            1, &c::CP,   R8(REG_B),     R8(REG_A)},       {"CP A, C",        1, &c::CP,   R8(REG_C),      R8(REG_A)},       {"CP A, D",          1, &c::CP,  R8(REG_D),       R8(REG_A)},       {"CP A, E",      1, &c::CP,  R8(REG_E),   R8(REG_A)},       {"CP A, H",            1, &c::CP,   R8(REG_H),       R8(REG_A)},       {"CP A, L",        1, &c::CP,   R8(REG_L),       R8(REG_A)},       {"CP A, [HL]",       1, &c::CP,   R8(REG_HL_DATA), R8(REG_A)},       {"CP A, A",    1, &c::CP,   R8(REG_A), R8(REG_A)},
 
-		{"RET NZ",             1, &c::RET,  COND(COND_NZ), empt},            {"POP BC",         1, &c::POP,  R16STK(REG_BC), empt},            {"JP NZ, [${:04X}]", 3, &c::JP,  n16,             COND(COND_NZ)},   {"JP [${:04X}]", 3, &c::JP,  n16,         empt},            {"CALL NZ, [${:04X}]", 3, &c::CALL, n16,             COND(COND_NZ)},   {"PUSH BC",        1, &c::PUSH, R16STK(REG_BC), empt},            {"ADD A, ${:02X}",   2, &c::ADD,  n8,              R8(REG_A)},       {"RST $00",    1, &c::RST,  VEC(0x00), empt},
-		{"RET Z",              1, &c::RET,  COND(COND_Z),  empt},            {"RET",            1, &c::RET,  empt,           empt},            {"JP Z, [${:04X}]",  3, &c::JP,  n16,             COND(COND_Z)},    {"PREFIX",       1, &c::CB,  empt,        empt},            {"CALL Z, [${:04X}]",  3, &c::CALL, n16,             COND(COND_Z)},    {"CALL [${:04X}]", 3, &c::CALL, n16,            empt},            {"ADC A, ${:02X}",   2, &c::ADC,  n8,              R8(REG_A)},       {"RST $08",    1, &c::RST,  VEC(0x08), empt},
-		{"RET NC",             1, &c::RET,  COND(COND_NC), empt},            {"POP DE",         1, &c::POP,  R16STK(REG_DE), empt},            {"JP NC, [${:04X}]", 3, &c::JP,  n16,             COND(COND_NC)},   {"INVALID",      1, &c::INV, empt,        empt},            {"CALL NC, [${:04X}]", 3, &c::CALL, n16,             COND(COND_NC)},   {"PUSH DE",        1, &c::PUSH, R16STK(REG_DE), empt},            {"SUB A, ${:02X}",   2, &c::SUB,  n8,              R8(REG_A)},       {"RST $10",    1, &c::RST,  VEC(0x10), empt},
-		{"RET C",              1, &c::RET,  COND(COND_C),  empt},            {"RETI",           1, &c::RETI, empt,           empt},            {"JP C, [${:04X}]",  3, &c::JP,  n16,             COND(COND_C)},    {"INVALID",      1, &c::INV, empt,        empt},            {"CALL C, [${:04X}]",  3, &c::CALL, n16,             COND(COND_C)},    {"INVALID",        1, &c::INV,  empt,           empt},            {"SBC A, ${:02X}",   2, &c::SBC,  n8,              R8(REG_A)},       {"RST $18",    1, &c::RST,  VEC(0x18), empt},
-		{"LDH [$FF{:02X}], A", 2, &c::LDH,  R8(REG_A),     a8},              {"POP HL",         1, &c::POP,  R16STK(REG_HL), empt},            {"LDH [C], A",       1, &c::LDH, R8(REG_A),       R8(REG_C)},       {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH HL",        1, &c::PUSH, R16STK(REG_HL), empt},            {"AND A, ${:02X}",   2, &c::AND,  n8,              R8(REG_A)},       {"RST $20",    1, &c::RST,  VEC(0x20), empt},
-		{"ADD SP, ${:02X}",    2, &c::ADD,  n8,            R16(REG_SP)},     {"JP HL",          1, &c::JP,   R16(REG_HL),    empt},            {"LD [${:04X}], A",  3, &c::LD,  R8(REG_A),       a16},             {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,           empt},            {"XOR A, ${:02X}",   2, &c::XOR,  n8,              R8(REG_A)},       {"RST $28",    1, &c::RST,  VEC(0x28), empt},
-		{"LDH A, [$FF{:02X}]", 2, &c::LDH,  a8,            R8(REG_A)},       {"POP AF",         1, &c::POP,  R16STK(REG_AF), empt},            {"LDH A, [C]",       1, &c::LDH, R8(REG_C),       R8(REG_A)},       {"DI",           1, &c::DI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH AF",        1, &c::PUSH, R16STK(REG_AF), empt},            {"OR A, ${:02X}",    2, &c::OR,   n8,              R8(REG_A)},       {"RST $30",    1, &c::RST,  VEC(0x30), empt},
-		{"LD HL, SP+${:02X}",  2, &c::LD,   n8,            R16(REG_HL)},     {"LD SP, HL",      1, &c::LD,   R16(REG_HL),    R16(REG_SP)},     {"LD A, [${:04X}]",  3, &c::LD,  a16,             R8(REG_A)},       {"EI",           1, &c::EI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,           empt},            {"CP A, ${:02X}",    2, &c::CP,   n8,              R8(REG_A)},       {"RST $38",    1, &c::RST,  VEC(0x38), empt},
+		{"RET NZ",             1, &c::RET,  COND(COND_NZ), empt},            {"POP BC",         1, &c::POP,  R16STK(REG_BC), empt},            {"JP NZ, [${:04X}]", 3, &c::JP,  n16,             COND(COND_NZ)},   {"JP [${:04X}]", 3, &c::JP,  n16,         empt},            {"CALL NZ, [${:04X}]", 3, &c::CALL, n16,             COND(COND_NZ)},   {"PUSH BC",        1, &c::PUSH, R16STK(REG_BC),  empt},            {"ADD A, ${:02X}",   2, &c::ADD,  n8,              R8(REG_A)},       {"RST $00",    1, &c::RST,  VEC(0x00), empt},
+		{"RET Z",              1, &c::RET,  COND(COND_Z),  empt},            {"RET",            1, &c::RET,  empt,           empt},            {"JP Z, [${:04X}]",  3, &c::JP,  n16,             COND(COND_Z)},    {"PREFIX",       1, &c::CB,  empt,        empt},            {"CALL Z, [${:04X}]",  3, &c::CALL, n16,             COND(COND_Z)},    {"CALL [${:04X}]", 3, &c::CALL, n16,             empt},            {"ADC A, ${:02X}",   2, &c::ADC,  n8,              R8(REG_A)},       {"RST $08",    1, &c::RST,  VEC(0x08), empt},
+		{"RET NC",             1, &c::RET,  COND(COND_NC), empt},            {"POP DE",         1, &c::POP,  R16STK(REG_DE), empt},            {"JP NC, [${:04X}]", 3, &c::JP,  n16,             COND(COND_NC)},   {"INVALID",      1, &c::INV, empt,        empt},            {"CALL NC, [${:04X}]", 3, &c::CALL, n16,             COND(COND_NC)},   {"PUSH DE",        1, &c::PUSH, R16STK(REG_DE),  empt},            {"SUB A, ${:02X}",   2, &c::SUB,  n8,              R8(REG_A)},       {"RST $10",    1, &c::RST,  VEC(0x10), empt},
+		{"RET C",              1, &c::RET,  COND(COND_C),  empt},            {"RETI",           1, &c::RETI, empt,           empt},            {"JP C, [${:04X}]",  3, &c::JP,  n16,             COND(COND_C)},    {"INVALID",      1, &c::INV, empt,        empt},            {"CALL C, [${:04X}]",  3, &c::CALL, n16,             COND(COND_C)},    {"INVALID",        1, &c::INV,  empt,            empt},            {"SBC A, ${:02X}",   2, &c::SBC,  n8,              R8(REG_A)},       {"RST $18",    1, &c::RST,  VEC(0x18), empt},
+		{"LDH [$FF{:02X}], A", 2, &c::LDH,  R8(REG_A),     a8},              {"POP HL",         1, &c::POP,  R16STK(REG_HL), empt},            {"LDH [C], A",       1, &c::LDH, R8(REG_A),       R8(REG_C)},       {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH HL",        1, &c::PUSH, R16STK(REG_HL),  empt},            {"AND A, ${:02X}",   2, &c::AND,  n8,              R8(REG_A)},       {"RST $20",    1, &c::RST,  VEC(0x20), empt},
+		{"ADD SP, ${:02X}",    2, &c::ADD,  n8,            R16(REG_SP)},     {"JP HL",          1, &c::JP,   R16(REG_HL),    empt},            {"LD [${:04X}], A",  3, &c::LD,  R8(REG_A),       a16},             {"INVALID",      1, &c::INV, empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,            empt},            {"XOR A, ${:02X}",   2, &c::XOR,  n8,              R8(REG_A)},       {"RST $28",    1, &c::RST,  VEC(0x28), empt},
+		{"LDH A, [$FF{:02X}]", 2, &c::LDH,  a8,            R8(REG_A)},       {"POP AF",         1, &c::POP,  R16STK(REG_AF), empt},            {"LDH A, [C]",       1, &c::LDH, R8(REG_C),       R8(REG_A)},       {"DI",           1, &c::DI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"PUSH AF",        1, &c::PUSH, R16STK(REG_AF),  empt},            {"OR A, ${:02X}",    2, &c::OR,   n8,              R8(REG_A)},       {"RST $30",    1, &c::RST,  VEC(0x30), empt},
+		{"LD HL, SP+${:02X}",  2, &c::LD,   n8,            R16(REG_HL)},     {"LD SP, HL",      1, &c::LD,   R16(REG_HL),    R16(REG_SP)},     {"LD A, [${:04X}]",  3, &c::LD,  a16,             R8(REG_A)},       {"EI",           1, &c::EI,  empt,        empt},            {"INVALID",            1, &c::INV,  empt,            empt},            {"INVALID",        1, &c::INV,  empt,            empt},            {"CP A, ${:02X}",    2, &c::CP,   n8,              R8(REG_A)},       {"RST $38",    1, &c::RST,  VEC(0x38), empt},
 	};
 
 	cb_lookup =
@@ -323,15 +323,9 @@ void CPU::writeOperand(Operand op, uint16_t value) {
 }
 
 bool checkOverflow(int bit, uint16_t num1, uint16_t num2, bool carry) {
-	num1 >>= bit;
-	num2 >>= bit;
-
-	num1 <<= bit;
-	num2 <<= bit;
-
-	uint32_t low1 = (uint32_t)(num1 & (~num1));
-	uint32_t low2 = (uint32_t)(num2 & (~num2));
-	
+	uint32_t low1 = num1 & ((1u << bit) - 1);
+	uint32_t low2 = num2 & ((1u << bit) - 1);
+		
 	uint32_t sum = low1 + low2 + carry;
 	return sum >> bit;
 }
@@ -559,11 +553,12 @@ int CPU::SUB(Operand src, Operand dst) {
 
 int CPU::INC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	writeOperand(src, ++src_v);
+	uint16_t result = src_v + 1;
+	writeOperand(src, result);
 
 	if (src.type == OperandType::R8) {
-		putFlag(FLAG_Z, (src_v & 0xFF) == 0);
-		clearFlag(FLAG_N);
+		putFlag(FLAG_Z, (result & 0xFF) == 0);
+		setFlag(FLAG_N);
 		putFlag(FLAG_H, checkOverflow(3, src_v, 1, false));
 	}
 
@@ -580,12 +575,14 @@ int CPU::INC(Operand src, Operand dst) {
 
 int CPU::DEC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	writeOperand(src, --src_v);
+	uint16_t result = src_v - 1;
+	writeOperand(src, result);
 
 	if (src.type == OperandType::R8) {
-		putFlag(FLAG_Z, (src_v & 0xFF) == 0);
+		putFlag(FLAG_Z, (result & 0xFF) == 0);
 		setFlag(FLAG_N);
 		putFlag(FLAG_H, 1 > (src_v & 0xF));
+		// TODO: Ensure Carry Flag is correct (currently unimplemented)
 	}
 
 	if (src.type == OperandType::R16) {
@@ -623,7 +620,7 @@ int CPU::AND(Operand src, Operand dst) {
 	uint16_t result = src_v & dst_v;
 	writeOperand(dst, result);
 
-	putFlag(FLAG_Z, (result == 0));
+	putFlag(FLAG_Z, ((result & 0xFF) == 0));
 	clearFlag(FLAG_N);
 	setFlag(FLAG_H);
 	clearFlag(FLAG_C);
@@ -637,7 +634,7 @@ int CPU::AND(Operand src, Operand dst) {
 
 int CPU::CPL(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	writeOperand(dst, ~src_v);
+	writeOperand(src, ~src_v);
 
 	setFlag(FLAG_N);
 	setFlag(FLAG_H);
@@ -651,7 +648,7 @@ int CPU::OR(Operand src, Operand dst) {
 	uint16_t result = src_v | dst_v;
 	writeOperand(dst, result);
 
-	putFlag(FLAG_Z, (result == 0));
+	putFlag(FLAG_Z, (result & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	clearFlag(FLAG_C);
@@ -728,13 +725,13 @@ int CPU::RES(Operand src, Operand dst) {
 
 int CPU::RL(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	src_v = (src_v << 1) | (uint8_t)getFlag(FLAG_C);
-	writeOperand(src, src_v);
+	uint16_t result = (src_v << 1) | (uint8_t)getFlag(FLAG_C);
+	writeOperand(src, result);
 
-	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
+	putFlag(FLAG_Z, (result & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
-	putFlag(FLAG_C, src_v & 0xFF00);
+	putFlag(FLAG_C, src_v & 0x80);
 
 	if (src.index == REG_HL_DATA) {
 		return 16;
@@ -745,26 +742,26 @@ int CPU::RL(Operand src, Operand dst) {
 
 int CPU::RLA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	src_v = (src_v << 1) | (uint8_t)getFlag(FLAG_C);
-	writeOperand(src, src_v);
+	uint16_t result = (src_v << 1) | (uint8_t)getFlag(FLAG_C);
+	writeOperand(src, result);
 
 	clearFlag(FLAG_Z);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
-	putFlag(FLAG_C, src_v & 0xFF00);
+	putFlag(FLAG_C, src_v & 0x80);
 
 	return 4;
 }
 
 int CPU::RLC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	src_v = src_v << 1;
-	writeOperand(src, src_v);
+	uint16_t result = src_v << 1;
+	writeOperand(src, result | (src_v >> 7));
 
-	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
+	putFlag(FLAG_Z, (result & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
-	putFlag(FLAG_C, src_v & 0xFF00);
+	putFlag(FLAG_C, src_v >> 7);
 
 	if (src.index == REG_HL_DATA) {
 		return 16;
@@ -775,27 +772,26 @@ int CPU::RLC(Operand src, Operand dst) {
 
 int CPU::RLCA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	src_v = src_v << 1;
-	writeOperand(src, src_v);
+	uint16_t result = src_v << 1;
+	writeOperand(src, result | (src_v >> 7));
 
 	clearFlag(FLAG_Z);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
-	putFlag(FLAG_C, src_v & 0xFF00);
+	putFlag(FLAG_C, src_v >> 7);
 
 	return 4;
 }
 
 int CPU::RR(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	uint16_t wrap = 0x80 * getFlag(FLAG_C);
-	putFlag(FLAG_C, src_v & 1);
-	src_v = (src_v >> 1) | wrap;
-	writeOperand(src, src_v);
+	uint16_t result = (0x80 * getFlag(FLAG_C)) | (src_v >> 1);
+	writeOperand(src, result);
 
-	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
+	putFlag(FLAG_Z, (result & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+	putFlag(FLAG_C, src_v & 1);
 
 	if (src.index == REG_HL_DATA) {
 		return 16;
@@ -806,28 +802,26 @@ int CPU::RR(Operand src, Operand dst) {
 
 int CPU::RRA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	uint16_t wrap = 0x80 * getFlag(FLAG_C);
-	putFlag(FLAG_C, src_v & 1);
-	src_v = (src_v >> 1) | wrap;
-	writeOperand(src, src_v);
+	uint16_t result = (0x80 * getFlag(FLAG_C)) | (src_v >> 1);
+	writeOperand(src, result);
 
 	clearFlag(FLAG_Z);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+	putFlag(FLAG_C, src_v & 1);
 
 	return 4;
 }
 
 int CPU::RRC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	uint16_t wrap = 0x80 * (src_v & 1);
-	putFlag(FLAG_C, wrap);
-	src_v = (src_v >> 1) | wrap;
-	writeOperand(src, src_v);
+	uint16_t result = (0x80 * (src_v & 1)) | (src_v >> 1);
+	writeOperand(src, result);
 
-	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
+	putFlag(FLAG_Z, (result & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+	putFlag(FLAG_C, src_v & 1);
 
 	if (src.index == REG_HL_DATA) {
 		return 16;
@@ -838,27 +832,26 @@ int CPU::RRC(Operand src, Operand dst) {
 
 int CPU::RRCA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	uint16_t wrap = 0x80 * (src_v & 1);
-	putFlag(FLAG_C, wrap);
-	src_v = (src_v >> 1) | wrap;
-	writeOperand(src, src_v);
+	uint16_t result = (0x80 * (src_v & 1)) | (src_v >> 1);
+	writeOperand(src, result);
 
 	clearFlag(FLAG_Z);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+	putFlag(FLAG_C, src_v & 1);
 
 	return 4;
 }
 
 int CPU::SLA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	src_v = (src_v << 1);
-	writeOperand(src, src_v);
+	uint16_t result = src_v << 1;
+	writeOperand(src, result);
 
-	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
+	putFlag(FLAG_Z, (result & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
-	putFlag(FLAG_C, src_v & 0xFF00);
+	putFlag(FLAG_C, src_v & 0x80);
 
 	if (src.index == REG_HL_DATA) {
 		return 16;
@@ -869,14 +862,13 @@ int CPU::SLA(Operand src, Operand dst) {
 
 int CPU::SRA(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	uint16_t hold = src_v & 0x80;
-	putFlag(FLAG_C, src_v & 1);
-	src_v = (src_v >> 1) | hold;
-	writeOperand(src, src_v);
+	uint16_t result = (src_v & 0x80) | (src_v >> 1);
+	writeOperand(src, result);
 
-	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
+	putFlag(FLAG_Z, (result & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+	putFlag(FLAG_C, src_v & 1);
 
 	if (src.index == REG_HL_DATA) {
 		return 16;
@@ -887,13 +879,13 @@ int CPU::SRA(Operand src, Operand dst) {
 
 int CPU::SRL(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	putFlag(FLAG_C, src_v & 1);
-	src_v = (src_v >> 1);
-	writeOperand(src, src_v);
+	uint16_t result = (src_v >> 1);
+	writeOperand(src, result);
 
-	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
+	putFlag(FLAG_Z, (result & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
+	putFlag(FLAG_C, src_v & 1);
 
 	if (src.index == REG_HL_DATA) {
 		return 16;
@@ -906,6 +898,7 @@ int CPU::SWAP(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint8_t low = src_v & 0x0F;
 	src_v = (src_v >> 4) | (low << 4);
+	writeOperand(src, src_v);
 	
 	putFlag(FLAG_Z, (src_v & 0xFF) == 0);
 	clearFlag(FLAG_N);
@@ -1002,11 +995,15 @@ int CPU::RST(Operand src, Operand dst) {
 
 // Carry Flag
 int CPU::CCF(Operand src, Operand dst) {
+	clearFlag(FLAG_N);
+	clearFlag(FLAG_H);
 	putFlag(FLAG_C, !getFlag(FLAG_C));
 	return 4;
 }
 
 int CPU::SCF(Operand src, Operand dst) {
+	clearFlag(FLAG_N);
+	clearFlag(FLAG_H);
 	setFlag(FLAG_C);
 	return 4;
 }
@@ -1037,6 +1034,7 @@ int CPU::DI(Operand src, Operand dst) {
 }
 
 int CPU::EI(Operand src, Operand dst) {
+	// On the real hardware, this happens 1 instruction late
 	ime = true;
 	return 4;
 }
@@ -1071,3 +1069,30 @@ int CPU::INV(Operand src, Operand dst) {
 	}
 	return 0;
 }
+
+
+/*
+LD
+LDH
+ADC
+ADD
+SBC
+SUB
+
+CP
+
+CALL
+JP
+JR
+RET
+RETI
+RST
+
+POP
+PUSH
+
+HALT
+DAA
+STOP
+CB
+*/

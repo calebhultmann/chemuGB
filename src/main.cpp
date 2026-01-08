@@ -14,6 +14,11 @@ int main(int argc, char** argv) {
 	 - use flags
 	 - use rom
 */
+
+	// TODO: Implement all instructions (ensure 90+% correctness, blargg will test rest)
+	// TODO: Ensure correctness with registers
+	// TODO: Test usage via flame graph
+
 	if (argc < 2) {
 		std::cout << "Usage: ./chemuGB.exe \"<ROM TITLE.gb>\"";
 		return 1;
