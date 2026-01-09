@@ -330,21 +330,6 @@ bool checkOverflow(int bit, uint16_t num1, uint16_t num2, bool carry) {
 	return sum >> bit;
 }
 
-/*
-Check off the following instructions to make sure all are working properly:
-
-Stack manipulation instructions
-LD HL,SP+e8
-
-Interrupt-related instructions
-HALT
-
-Miscellaneous instructions
-DAA
-NOP
-STOP
-*/
-
 void CPU::clock() {
 	if (remaining_cycles == 0) {
 		uint16_t instruction_addr = pc; //
@@ -387,10 +372,14 @@ int CPU::executeInstruction(Instruction& curr) {
 // Loads
 int CPU::LD(Operand src, Operand dst) {
 	if (dst.type == OperandType::R16 && src.type == OperandType::n8) {
-		// TODO: LD HL, SP+e8 Flags (and addition)
 		uint16_t offset = readOperand(src);
 		uint16_t addr = sp + static_cast<int8_t>(offset);
 		writeOperand(dst, addr);
+
+		clearFlag(FLAG_Z);
+		clearFlag(FLAG_N);
+		putFlag(FLAG_H, checkOverflow(3, sp, offset, false));
+		putFlag(FLAG_C, checkOverflow(7, sp, offset, false));
 		return 12;
 	}
 	uint16_t src_v = readOperand(src);
@@ -443,7 +432,7 @@ int CPU::LDH(Operand src, Operand dst) {
 
 	if (dst.type == OperandType::R8 && dst.index == REG_C) {
 		uint16_t c = readOperand(dst);
-		write(0xFF00 | c, (uint8_t)src_v);
+		write(0xFF00 | c, src_v);
 	}
 	else {
 		writeOperand(dst, src_v);
@@ -463,7 +452,7 @@ int CPU::ADC(Operand src, Operand dst) {
 	uint16_t sum = src_v + dst_v + getFlag(FLAG_C);
 	writeOperand(dst, sum);
 	
-	putFlag(FLAG_Z, (sum == 0));
+	putFlag(FLAG_Z, (sum & 0xFF) == 0);
 	clearFlag(FLAG_N);
 	putFlag(FLAG_H, checkOverflow(3, src_v, dst_v, getFlag(FLAG_C)));
 	putFlag(FLAG_C, checkOverflow(7, src_v, dst_v, getFlag(FLAG_C)));
@@ -478,10 +467,12 @@ int CPU::ADC(Operand src, Operand dst) {
 int CPU::ADD(Operand src, Operand dst) {
 	bool is16bit = false;
 	bool isSP = false;
-	if ((src.type == OperandType::R16) || (src.type == OperandType::R16STK)) {
+	if (src.type == OperandType::R16) {
 		is16bit = true;
 	}
-	// TODO: CHECK FOR SP, e8 ADDITION
+	else if (dst.type == OperandType::R16) {
+		isSP = true;
+	}
 
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
@@ -521,10 +512,10 @@ int CPU::SBC(Operand src, Operand dst) {
 	uint16_t sum = dst_v - src_v - getFlag(FLAG_C);
 	writeOperand(dst, sum);
 
-	putFlag(FLAG_Z, sum == 0);
+	putFlag(FLAG_Z, (sum & 0xFF) == 0);
 	setFlag(FLAG_N);
-	putFlag(FLAG_H, (src_v & 0xF) > ((dst_v + getFlag(FLAG_C)) & 0xF));
-	putFlag(FLAG_C, src_v > (dst_v + getFlag(FLAG_C)));
+	putFlag(FLAG_H, ((src_v + getFlag(FLAG_C)) & 0xF) > (dst_v & 0xF));
+	putFlag(FLAG_C, (src_v + getFlag(FLAG_C)) > dst_v);
 
 	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
 		return 8;
@@ -539,7 +530,7 @@ int CPU::SUB(Operand src, Operand dst) {
 	uint16_t sum = dst_v - src_v;
 	writeOperand(dst, sum);
 
-	putFlag(FLAG_Z, sum == 0);
+	putFlag(FLAG_Z, (sum & 0xFF) == 0);
 	setFlag(FLAG_N);
 	putFlag(FLAG_H, (src_v & 0xF) > (dst_v & 0xF));
 	putFlag(FLAG_C, src_v > dst_v);
@@ -582,7 +573,6 @@ int CPU::DEC(Operand src, Operand dst) {
 		putFlag(FLAG_Z, (result & 0xFF) == 0);
 		setFlag(FLAG_N);
 		putFlag(FLAG_H, 1 > (src_v & 0xF));
-		// TODO: Ensure Carry Flag is correct (currently unimplemented)
 	}
 
 	if (src.type == OperandType::R16) {
@@ -601,7 +591,7 @@ int CPU::CP(Operand src, Operand dst) {
 	uint16_t dst_v = readOperand(dst);
 	uint16_t sum = dst_v - src_v;
 
-	putFlag(FLAG_Z, sum == 0);
+	putFlag(FLAG_Z, (sum & 0xFF) == 0);
 	setFlag(FLAG_N);
 	putFlag(FLAG_H, (src_v & 0xF) > (dst_v & 0xF));
 	putFlag(FLAG_C, src_v > dst_v);
@@ -1040,19 +1030,46 @@ int CPU::EI(Operand src, Operand dst) {
 }
 
 int CPU::HALT(Operand src, Operand dst) {
+	// Not implemented currently
 	return 4;
 }
 
 // Miscellaneous
 int CPU::DAA(Operand src, Operand dst) {
+	if (getFlag(FLAG_N)) {
+		uint8_t adjustment = 0;
+		if (getFlag(FLAG_H)) {
+			adjustment += 6;
+		}
+		if (getFlag(FLAG_C)) {
+			adjustment += 0x60;
+		}
+		af.high -= adjustment;
+	}
+	else {
+		uint8_t adjustment = 0;
+		uint8_t a_v = af.high;
+		if (getFlag(FLAG_H) || (a_v & 0xF) > 9) {
+			adjustment += 6;
+		}
+		if (getFlag(FLAG_C) || a_v > 0x99) {
+			adjustment += 0x60;
+			setFlag(FLAG_C);
+		}
+		af.high = a_v + adjustment;
+	}
+	putFlag(FLAG_Z, af.high == 0);
+	clearFlag(FLAG_H);
 	return 4;
 }
 
 int CPU::NOP(Operand src, Operand dst) {
+	// Do nothing!
 	return 4;
 }
 
 int CPU::STOP(Operand src, Operand dst) {
+	// Not implemented currently
 	return 4;
 }
 
@@ -1069,30 +1086,3 @@ int CPU::INV(Operand src, Operand dst) {
 	}
 	return 0;
 }
-
-
-/*
-LD
-LDH
-ADC
-ADD
-SBC
-SUB
-
-CP
-
-CALL
-JP
-JR
-RET
-RETI
-RST
-
-POP
-PUSH
-
-HALT
-DAA
-STOP
-CB
-*/
