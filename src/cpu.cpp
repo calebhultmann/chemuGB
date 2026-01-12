@@ -240,7 +240,8 @@ void CPU::write_r16stk(uint8_t selector, uint16_t data) {
 	case REG_HL:
 		hl.reg = data; return;
 	case REG_AF:
-		af.reg = data; return;
+		af.reg = data;
+		af.low &= 0b11110000; return;
 	default:
 		throw std::runtime_error("Invalid r16stk selection");
 	}
@@ -323,6 +324,7 @@ void CPU::writeOperand(Operand op, uint16_t value) {
 }
 
 bool checkOverflow(int bit, uint16_t num1, uint16_t num2, bool carry) {
+	bit++;
 	uint32_t low1 = num1 & ((1u << bit) - 1);
 	uint32_t low2 = num2 & ((1u << bit) - 1);
 		
@@ -432,7 +434,7 @@ int CPU::LDH(Operand src, Operand dst) {
 
 	if (dst.type == OperandType::R8 && dst.index == REG_C) {
 		uint16_t c = readOperand(dst);
-		write(0xFF00 | c, src_v);
+		write(0xFF00 | c, (uint8_t)src_v);
 	}
 	else {
 		writeOperand(dst, src_v);
@@ -483,16 +485,13 @@ int CPU::ADD(Operand src, Operand dst) {
 		clearFlag(FLAG_N);
 		putFlag(FLAG_H, checkOverflow(11, src_v, dst_v, false));
 		putFlag(FLAG_C, checkOverflow(15, src_v, dst_v, false));
+		return 8;
 	}
 	else {
 		putFlag(FLAG_Z, !isSP && ((sum & 0xFF) == 0));
 		clearFlag(FLAG_N);
 		putFlag(FLAG_H, checkOverflow(3, src_v, dst_v, false));
 		putFlag(FLAG_C, checkOverflow(7, src_v, dst_v, false));
-	}
-
-	if (src.type == OperandType::R16) {
-		return 8;
 	}
 
 	if (dst.type == OperandType::R16) {
@@ -509,13 +508,14 @@ int CPU::ADD(Operand src, Operand dst) {
 int CPU::SBC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
-	uint16_t sum = dst_v - src_v - getFlag(FLAG_C);
+	uint8_t carry = getFlag(FLAG_C);
+	uint16_t sum = dst_v - src_v - carry;
 	writeOperand(dst, sum);
 
 	putFlag(FLAG_Z, (sum & 0xFF) == 0);
 	setFlag(FLAG_N);
-	putFlag(FLAG_H, ((src_v + getFlag(FLAG_C)) & 0xF) > (dst_v & 0xF));
-	putFlag(FLAG_C, (src_v + getFlag(FLAG_C)) > dst_v);
+	putFlag(FLAG_H, ((src_v & 0xF) + carry) > (dst_v & 0xF));
+	putFlag(FLAG_C, (src_v + carry) > dst_v);
 
 	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
 		return 8;
@@ -549,8 +549,8 @@ int CPU::INC(Operand src, Operand dst) {
 
 	if (src.type == OperandType::R8) {
 		putFlag(FLAG_Z, (result & 0xFF) == 0);
-		setFlag(FLAG_N);
-		putFlag(FLAG_H, checkOverflow(3, src_v, 1, false));
+		clearFlag(FLAG_N);
+		putFlag(FLAG_H, (src_v & 0xF) == 0xF);
 	}
 
 	if (src.type == OperandType::R16) {
@@ -745,8 +745,8 @@ int CPU::RLA(Operand src, Operand dst) {
 
 int CPU::RLC(Operand src, Operand dst) {
 	uint16_t src_v = readOperand(src);
-	uint16_t result = src_v << 1;
-	writeOperand(src, result | (src_v >> 7));
+	uint16_t result = (src_v << 1) | (src_v >> 7);
+	writeOperand(src, result);
 
 	putFlag(FLAG_Z, (result & 0xFF) == 0);
 	clearFlag(FLAG_N);
