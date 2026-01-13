@@ -1,2 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+*.gb binary
+*.cpp diff=cpp
+*.h diff=cpp
