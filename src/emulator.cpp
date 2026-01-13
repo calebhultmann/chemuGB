@@ -179,34 +179,43 @@ void chemuGB::start() {
 	bool done = false;
 	bool pause = true;
 
-	while (!done) {
-		SDL_Event event;
+	constexpr uint64_t INPUT_POLL_INTERVAL_MS = 2;
+	uint64_t last_input_poll = SDL_GetTicks();
+	SDL_Event event;
 
-		while (SDL_PollEvent(&event)) {
-			switch (event.type) {
-			case SDL_EVENT_QUIT:
-				done = true;
-				break;
-			case SDL_EVENT_KEY_DOWN:
-				switch (event.key.scancode) {
-				case SDL_SCANCODE_P:
-					pause = !pause;
-					break;
-				case SDL_SCANCODE_Q:
+	while (!done) {
+		uint64_t now = SDL_GetTicks();
+		
+		if (now - last_input_poll >= INPUT_POLL_INTERVAL_MS) {
+			last_input_poll = now;
+
+			while (SDL_PollEvent(&event)) {
+				switch (event.type) {
+				case SDL_EVENT_QUIT:
 					done = true;
 					break;
-				case SDL_SCANCODE_F:
-					// draw debug frame
-					drawDebug();
-					SDL_RenderPresent(engine.dbg_renderer);
+				case SDL_EVENT_KEY_DOWN:
+					switch (event.key.scancode) {
+					case SDL_SCANCODE_P:
+						pause = !pause;
+						break;
+					case SDL_SCANCODE_Q:
+						done = true;
+						break;
+					case SDL_SCANCODE_F:
+						// draw debug frame
+						// TODO: drawDebug leaks memory
+						drawDebug();
+						SDL_RenderPresent(engine.dbg_renderer);
+						break;
+					case SDL_SCANCODE_G:
+						engine.palette = 1 - engine.palette;
+					}
 					break;
-				case SDL_SCANCODE_G:
-					engine.palette = 1 - engine.palette;
 				}
-				break;
-			}
-			if (event.type == SDL_EVENT_QUIT) {
-				done = true;
+				if (event.type == SDL_EVENT_QUIT) {
+					done = true;
+				}
 			}
 		}
 

@@ -1,4 +1,3 @@
-#include "cartridge.h"
 #include <iostream>
 #include "emulator.h"
 #include <filesystem>
@@ -16,8 +15,8 @@ int main(int argc, char** argv) {
 */
 
 	// TODO: Implement all instructions (ensure 90+% correctness, blargg will test rest)
+	// Blarg 2 (EI delay) incorrect, 3, 7, 8 all fault
 	// TODO: Ensure correctness with registers
-	// TODO: Test usage via flame graph
 
 	if (argc < 2) {
 		std::cout << "Usage: ./chemuGB.exe \"<ROM TITLE.gb>\"";

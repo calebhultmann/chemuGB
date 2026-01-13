@@ -334,40 +334,37 @@ bool checkOverflow(int bit, uint16_t num1, uint16_t num2, bool carry) {
 
 void CPU::clock() {
 	if (remaining_cycles == 0) {
-		uint16_t instruction_addr = pc; //
-		std::string instruction_str = "...";
-
+		//uint16_t instruction_addr = pc; //
+		//std::string instruction_str = "...";
 		int opcode = fetchByte();
-		Instruction curr = opcode_lookup[opcode];
+		const Instruction& curr = opcode_lookup[opcode];
+		//if (bus->bank == 1) {
+		//	std::string mnemonic = curr.mnemonic; //
+		//	int bytes = curr.bytes - 1;
+		//	uint16_t value = 0;
 
-		if (bus->bank == 1) {
-			std::string mnemonic = curr.mnemonic; //
-			int bytes = curr.bytes - 1;
-			uint16_t value = 0;
-
-			if (bytes > 0) {
-				uint16_t byte_addr = instruction_addr;
-				for (int i = bytes - 1; i >= 0; i--) {
-					byte_addr++;
-					uint16_t num = read(byte_addr);
-					value |= (num << (8 * ((bytes - 1) - i)));
-				}
-				instruction_str = std::vformat(mnemonic, std::make_format_args(value));
-			}
-			else {
-				instruction_str = mnemonic;
-			}
-			std::string output = std::format("{:04X}: {}", instruction_addr, instruction_str);
-			std::cout << output << "\n";
-		}
-
+		//	if (bytes > 0) {
+		//		uint16_t byte_addr = instruction_addr;
+		//		for (int i = bytes - 1; i >= 0; i--) {
+		//			byte_addr++;
+		//			uint16_t num = read(byte_addr);
+		//			value |= (num << (8 * ((bytes - 1) - i)));
+		//		}
+		//		instruction_str = std::vformat(mnemonic, std::make_format_args(value));
+		//	}
+		//	else {
+		//		instruction_str = mnemonic;
+		//	}
+		//	std::string output = std::format("{:04X}: {}", instruction_addr, instruction_str);
+		//	std::cout << output << "\n";
+		//}
  		remaining_cycles = executeInstruction(curr);
 	}
 
 	remaining_cycles--;
 }
 
-int CPU::executeInstruction(Instruction& curr) {
+int CPU::executeInstruction(const Instruction& curr) {
 	return (this->*curr.execute)(curr.src, curr.dst);
 }
 

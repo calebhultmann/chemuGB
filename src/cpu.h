@@ -134,7 +134,7 @@ public:
 public:
 	int remaining_cycles = 0;
 	void clock();
-	int executeInstruction(Instruction& curr);
+	int executeInstruction(const Instruction& curr);
 
 // Public R/W Interfaces
 public:
