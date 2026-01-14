@@ -25,7 +25,7 @@ CPU::CPU() {
 	{
 	//   MNEMONIC              B  FUNC      SRC            DST                MNEMONIC          B  FUNC      SRC             DST                MNEMONIC            B  FUNC     SRC              DST                MNEMONIC        B  FUNC     SRC          DST                MNEMONIC              B  FUNC      SRC              DST                MNEMONIC          B  FUNC      SRC              DST                MNEMONIC            B  FUNC      SRC              DST                MNEMONIC      B  FUNC      SRC        DST
 		{"NOP",                1, &c::NOP,  empt,          empt},            {"LD BC, ${:04X}", 3, &c::LD,   n16,            R16(REG_BC)},     {"LD [BC], A",       1, &c::LD,  R8(REG_A),       R16MEM(REG_BC)},  {"INC BC",       1, &c::INC, R16(REG_BC), empt},            {"INC B",              1, &c::INC,  R8(REG_B),       empt},            {"DEC B",          1, &c::DEC,  R8(REG_B),       empt},            {"LD B, ${:02X}",    2, &c::LD,   n8,              R8(REG_B)},       {"RLCA",       1, &c::RLCA, R8(REG_A), empt},
-		{"LD [${:04X}], SP",   3, &c::LD,   R16(REG_SP),   a16},             {"ADD HL, BC",     1, &c::ADD,  R16(REG_BC),    R16(REG_HL)},     {"LD A, [BC]",       1, &c::LD,  R16MEM(REG_BC),  R8(REG_A)},       {"DEC BC",       1, &c::DEC, R16(REG_BC), empt},            {"INC C",              1, &c::INC,  R8(REG_C),       empt},            {"DEC C",          1, &c::DEC,  R8(REG_C),       empt},            {"LD C, ${:02X}",    2, &c::LD,   n8,              R8(REG_C)},       {"RRCA",       1, &c::RRCA, R8(REG_A), empt},
+		{"LD [${:04X}], SP",   3, &c::LD,   R16(REG_SP),   n16},             {"ADD HL, BC",     1, &c::ADD,  R16(REG_BC),    R16(REG_HL)},     {"LD A, [BC]",       1, &c::LD,  R16MEM(REG_BC),  R8(REG_A)},       {"DEC BC",       1, &c::DEC, R16(REG_BC), empt},            {"INC C",              1, &c::INC,  R8(REG_C),       empt},            {"DEC C",          1, &c::DEC,  R8(REG_C),       empt},            {"LD C, ${:02X}",    2, &c::LD,   n8,              R8(REG_C)},       {"RRCA",       1, &c::RRCA, R8(REG_A), empt},
 		{"STOP ${:02X}",	   2, &c::STOP, n8,            empt},            {"LD DE, ${:04X}", 3, &c::LD,   n16,            R16(REG_DE)},     {"LD [DE], A",       1, &c::LD,  R8(REG_A),       R16MEM(REG_DE)},  {"INC DE",       1, &c::INC, R16(REG_DE), empt},            {"INC D",              1, &c::INC,  R8(REG_D),       empt},            {"DEC D",          1, &c::DEC,  R8(REG_D),       empt},            {"LD D, ${:02X}",    2, &c::LD,   n8,              R8(REG_D)},       {"RLA",        1, &c::RLA,  R8(REG_A), empt},
 		{"JR ${:04X}",         2, &c::JR,   n8,            empt},            {"ADD HL, DE",     1, &c::ADD,  R16(REG_DE),    R16(REG_HL)},     {"LD A, [DE]",       1, &c::LD,  R16MEM(REG_DE),  R8(REG_A)},       {"DEC DE",       1, &c::DEC, R16(REG_DE), empt},            {"INC E",              1, &c::INC,  R8(REG_E),       empt},            {"DEC E",          1, &c::DEC,  R8(REG_E),       empt},            {"LD E, ${:02X}",    2, &c::LD,   n8,              R8(REG_E)},       {"RRA",        1, &c::RRA,  R8(REG_A), empt},
 		{"JR NZ, ${:04X}",     2, &c::JR,   n8,            COND(COND_NZ)},   {"LD HL, ${:04X}", 3, &c::LD,   n16,            R16(REG_HL)},     {"LD [HL+], A",      1, &c::LD,  R8(REG_A),       R16MEM(REG_HLI)}, {"INC HL",       1, &c::INC, R16(REG_HL), empt},            {"INC H",              1, &c::INC,  R8(REG_H),       empt},            {"DEC H",          1, &c::DEC,  R8(REG_H),       empt},            {"LD H, ${:02X}",    2, &c::LD,   n8,              R8(REG_H)},       {"DAA",        1, &c::DAA,  empt,      empt},
@@ -280,13 +280,13 @@ void CPU::write_r16mem(uint8_t selector, uint8_t data) {
 bool CPU::check_cond(uint8_t selector) {
 	switch (selector) {
 	case COND_NZ:
-		return (af.low & 0b10000000) == 0;
+		return (af.low & FLAG_Z) == 0;
 	case COND_Z:
-		return (af.low & 0b10000000);
+		return (af.low & FLAG_Z);
 	case COND_NC:
-		return (af.low & 0b00010000) == 0;
+		return (af.low & FLAG_C) == 0;
 	case COND_C:
-		return (af.low & 0b00010000);
+		return (af.low & FLAG_C);
 	default:
 		throw std::runtime_error("Invalid cond selection");
 	}
@@ -442,6 +442,15 @@ int CPU::LD(Operand src, Operand dst) {
 		putFlag(FLAG_C, checkOverflow(7, sp, offset, false));
 		return 12;
 	}
+
+	if (dst.type == OperandType::n16 && src.type == OperandType::R16) {
+		uint16_t addr = readOperand(dst);
+		write(addr, sp & 0xFF);
+		addr++;
+		write(addr, sp >> 8);
+		return 20;
+	}
+
 	uint16_t src_v = readOperand(src);
 	writeOperand(dst, src_v);
 
@@ -536,7 +545,13 @@ int CPU::ADD(Operand src, Operand dst) {
 
 	uint16_t src_v = readOperand(src);
 	uint16_t dst_v = readOperand(dst);
-	uint16_t sum = src_v + dst_v;
+	uint16_t sum;
+	if (isSP) {
+		sum = dst_v + static_cast<int8_t>(src_v);
+	}
+	else {
+		sum = src_v + dst_v;
+	}
 	writeOperand(dst, sum);
 
 	if (is16bit) {
@@ -1032,9 +1047,9 @@ int CPU::RST(Operand src, Operand dst) {
 	uint16_t rst_addr = readOperand(src);
 
 	sp--;
-	write(sp, (pc, 0xFF00) >> 8);
+	write(sp, (pc & 0xFF00) >> 8);
 	sp--;
-	write(sp, (pc, 0xFF));
+	write(sp, (pc & 0xFF));
 
 	pc = rst_addr;
 
