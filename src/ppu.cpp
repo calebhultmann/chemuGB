@@ -66,6 +66,7 @@ void PPU::clock() {
 		return;
 	}
 	if (bus->ly == 144 && dot_count == 0) {
+		bus->interrupts |= INTERRUPT_VBLANK;
 		frame_ready = true;
 	}
 	if (++dot_count == 456) {

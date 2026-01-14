@@ -332,12 +332,72 @@ bool checkOverflow(int bit, uint16_t num1, uint16_t num2, bool carry) {
 	return sum >> bit;
 }
 
+void CPU::callInterrupt(uint8_t interrupt) {
+	bus->interrupts &= ~interrupt;
+	ime = false;
+
+	uint8_t interrupt_addr;
+	switch (interrupt) {
+	case INTERRUPT_VBLANK: interrupt_addr = INTERRUPT_VBLANK_ADDR; break;
+	case INTERRUPT_LCD:    interrupt_addr = INTERRUPT_LCD_ADDR; break;
+	case INTERRUPT_TIMER:  interrupt_addr = INTERRUPT_TIMER_ADDR; break;
+	case INTERRUPT_SERIAL: interrupt_addr = INTERRUPT_SERIAL_ADDR; break;
+	case INTERRUPT_JOYPAD: interrupt_addr = INTERRUPT_JOYPAD_ADDR; break;
+	}
+
+	sp--;
+	write(sp, (pc & 0xFF00) >> 8);
+	sp--;
+	write(sp, (pc & 0xFF));
+
+	pc = interrupt_addr;
+}
+
 void CPU::clock() {
 	if (remaining_cycles == 0) {
+
+		if (ime) {
+			uint8_t requested = bus->ie & bus->interrupts;
+			if (requested & INTERRUPT_VBLANK) {
+				callInterrupt(INTERRUPT_VBLANK);
+				remaining_cycles = 19;
+				return;
+			}
+			if (requested & INTERRUPT_LCD) {
+				callInterrupt(INTERRUPT_LCD);
+				remaining_cycles = 19;
+				return;
+			}
+			if (requested & INTERRUPT_TIMER) {
+				callInterrupt(INTERRUPT_TIMER);
+				remaining_cycles = 19;
+				return;
+			}
+			if (requested & INTERRUPT_SERIAL) {
+				callInterrupt(INTERRUPT_SERIAL);
+				remaining_cycles = 19;
+				return;
+			}
+			if (requested & INTERRUPT_JOYPAD) {
+				callInterrupt(INTERRUPT_JOYPAD);
+				remaining_cycles = 19;
+				return;
+			}
+
+		}
+		
+		// If the last instruction was EI, now enable IME
+		if (ei_buffer) {
+			ei_buffer = false;
+			ime = true;
+		}
+
 		//uint16_t instruction_addr = pc; //
 		//std::string instruction_str = "...";
+
 		int opcode = fetchByte();
 		const Instruction& curr = opcode_lookup[opcode];
+
 		//if (bus->bank == 1) {
 		//	std::string mnemonic = curr.mnemonic; //
 		//	int bytes = curr.bytes - 1;
@@ -358,7 +418,8 @@ void CPU::clock() {
 		//	std::string output = std::format("{:04X}: {}", instruction_addr, instruction_str);
 		//	std::cout << output << "\n";
 		//}
- 		remaining_cycles = executeInstruction(curr);
+
+		remaining_cycles = executeInstruction(curr);
 	}
 
 	remaining_cycles--;
@@ -1021,8 +1082,7 @@ int CPU::DI(Operand src, Operand dst) {
 }
 
 int CPU::EI(Operand src, Operand dst) {
-	// On the real hardware, this happens 1 instruction late
-	ime = true;
+	ei_buffer = true;
 	return 4;
 }
 

@@ -41,6 +41,19 @@ enum flag : uint8_t {
 	FLAG_C = 0b00010000
 };
 
+enum interrupt : uint8_t {
+	INTERRUPT_VBLANK = 0b00000001,
+	INTERRUPT_LCD    = 0b00000010,
+	INTERRUPT_TIMER  = 0b00000100,
+	INTERRUPT_SERIAL = 0b00001000,
+	INTERRUPT_JOYPAD = 0b00010000,
+	INTERRUPT_VBLANK_ADDR = 0x40,
+	INTERRUPT_LCD_ADDR    = 0x48,
+	INTERRUPT_TIMER_ADDR  = 0x50,
+	INTERRUPT_SERIAL_ADDR = 0x58,
+	INTERRUPT_JOYPAD_ADDR = 0x60,
+};
+
 union Reg16 {
 	struct {
 		uint8_t low;
@@ -70,6 +83,7 @@ private:
 	Reg16 hl;
 	uint16_t sp = 0;
 	uint16_t pc = 0;
+	bool ei_buffer = false;
 	bool ime;
 
 // External Registers
@@ -161,6 +175,8 @@ private:
 	void	 writeOperand(Operand op, uint16_t value);
 
 	bool check_cond(uint8_t selector);
+
+	void callInterrupt(uint8_t addr);
 
 // Instructions
 public:

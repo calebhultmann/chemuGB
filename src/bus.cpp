@@ -37,7 +37,7 @@ void Bus::clock() {
 		if (inc) {
 			if (tima == 0xFF) {
 				tima = tma;
-				interrupts |= 0b00000100;
+				interrupts |= INTERRUPT_TIMER;
 			}
 			else {
 				tima++;
