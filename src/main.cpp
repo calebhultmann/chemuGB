@@ -16,7 +16,6 @@ int main(int argc, char** argv) {
 
 	// TODO: Implement all instructions (ensure 90+% correctness, blargg will test rest)
 	// Blarg 2 (HALT unimplemented) incorrect, 3, 7, 8 all fault
-	// TODO: Ensure correctness with registers
 	// TODO: LCD, Serial, Joypad interrupt requests are unimplemented
 
 	if (argc < 2) {
