@@ -44,7 +44,16 @@ void Bus::clock() {
 			}
 		}
 	}
-	cpu.clock();
+	if (!halt) {
+		cpu.clock();
+	}
+	// Resume CPU when an interrupt is pending
+	else {
+		if (ie & interrupts) {
+			halt = false;
+		}
+	}
+
 	if (lcdc & 0b10000000) {
 		ppu.clock();
 	}

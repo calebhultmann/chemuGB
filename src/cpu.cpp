@@ -353,37 +353,41 @@ void CPU::callInterrupt(uint8_t interrupt) {
 	pc = interrupt_addr;
 }
 
+bool CPU::checkInterrupts() {
+	uint8_t requested = bus->ie & bus->interrupts;
+	if (requested & INTERRUPT_VBLANK) {
+		callInterrupt(INTERRUPT_VBLANK);
+		remaining_cycles = 19;
+		return true;
+	}
+	if (requested & INTERRUPT_LCD) {
+		callInterrupt(INTERRUPT_LCD);
+		remaining_cycles = 19;
+		return true;
+	}
+	if (requested & INTERRUPT_TIMER) {
+		callInterrupt(INTERRUPT_TIMER);
+		remaining_cycles = 19;
+		return true;
+	}
+	if (requested & INTERRUPT_SERIAL) {
+		callInterrupt(INTERRUPT_SERIAL);
+		remaining_cycles = 19;
+		return true;
+	}
+	if (requested & INTERRUPT_JOYPAD) {
+		callInterrupt(INTERRUPT_JOYPAD);
+		remaining_cycles = 19;
+		return true;
+	}
+	return false;
+}
+
 void CPU::clock() {
 	if (remaining_cycles == 0) {
-
-		if (ime) {
-			uint8_t requested = bus->ie & bus->interrupts;
-			if (requested & INTERRUPT_VBLANK) {
-				callInterrupt(INTERRUPT_VBLANK);
-				remaining_cycles = 19;
-				return;
-			}
-			if (requested & INTERRUPT_LCD) {
-				callInterrupt(INTERRUPT_LCD);
-				remaining_cycles = 19;
-				return;
-			}
-			if (requested & INTERRUPT_TIMER) {
-				callInterrupt(INTERRUPT_TIMER);
-				remaining_cycles = 19;
-				return;
-			}
-			if (requested & INTERRUPT_SERIAL) {
-				callInterrupt(INTERRUPT_SERIAL);
-				remaining_cycles = 19;
-				return;
-			}
-			if (requested & INTERRUPT_JOYPAD) {
-				callInterrupt(INTERRUPT_JOYPAD);
-				remaining_cycles = 19;
-				return;
-			}
-
+		// If IME is enabled, check for interrupt requests, handling them as needed
+		if (ime && checkInterrupts()) {
+			return;
 		}
 		
 		// If the last instruction was EI, now enable IME
@@ -392,38 +396,42 @@ void CPU::clock() {
 			ime = true;
 		}
 
-		//uint16_t instruction_addr = pc; //
-		//std::string instruction_str = "...";
-
+		// Fetch and execute the next instruction
 		int opcode = fetchByte();
+		if (haltbug) {
+			haltbug = false;
+			pc--;
+		}
 		const Instruction& curr = opcode_lookup[opcode];
-
-		//if (bus->bank == 1) {
-		//	std::string mnemonic = curr.mnemonic; //
-		//	int bytes = curr.bytes - 1;
-		//	uint16_t value = 0;
-
-		//	if (bytes > 0) {
-		//		uint16_t byte_addr = instruction_addr;
-		//		for (int i = bytes - 1; i >= 0; i--) {
-		//			byte_addr++;
-		//			uint16_t num = read(byte_addr);
-		//			value |= (num << (8 * ((bytes - 1) - i)));
-		//		}
-		//		instruction_str = std::vformat(mnemonic, std::make_format_args(value));
-		//	}
-		//	else {
-		//		instruction_str = mnemonic;
-		//	}
-		//	std::string output = std::format("{:04X}: {}", instruction_addr, instruction_str);
-		//	std::cout << output << "\n";
-		//}
-
 		remaining_cycles = executeInstruction(curr);
 	}
 
 	remaining_cycles--;
 }
+
+//uint16_t instruction_addr = pc; //
+//std::string instruction_str = "...";
+// 
+//if (bus->bank == 1) {
+//	std::string mnemonic = curr.mnemonic; //
+//	int bytes = curr.bytes - 1;
+//	uint16_t value = 0;
+
+//	if (bytes > 0) {
+//		uint16_t byte_addr = instruction_addr;
+//		for (int i = bytes - 1; i >= 0; i--) {
+//			byte_addr++;
+//			uint16_t num = read(byte_addr);
+//			value |= (num << (8 * ((bytes - 1) - i)));
+//		}
+//		instruction_str = std::vformat(mnemonic, std::make_format_args(value));
+//	}
+//	else {
+//		instruction_str = mnemonic;
+//	}
+//	std::string output = std::format("{:04X}: {}", instruction_addr, instruction_str);
+//	std::cout << output << "\n";
+//}
 
 int CPU::executeInstruction(const Instruction& curr) {
 	return (this->*curr.execute)(curr.src, curr.dst);
@@ -1102,8 +1110,15 @@ int CPU::EI(Operand src, Operand dst) {
 }
 
 int CPU::HALT(Operand src, Operand dst) {
-	// Not implemented currently
-	return 4;
+	if (!ime && (bus->ie & bus->interrupts)) {
+		haltbug = true;
+	}
+	else {
+		bus->halt = true;
+	}
+	
+
+	return 1;
 }
 
 // Miscellaneous

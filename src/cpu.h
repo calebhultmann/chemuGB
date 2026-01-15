@@ -83,8 +83,10 @@ private:
 	Reg16 hl;
 	uint16_t sp = 0;
 	uint16_t pc = 0;
-	bool ei_buffer = false;
 	bool ime;
+
+	bool ei_buffer = false;
+	bool haltbug = false;
 
 // External Registers
 public:
@@ -177,6 +179,7 @@ private:
 	bool check_cond(uint8_t selector);
 
 	void callInterrupt(uint8_t addr);
+	bool checkInterrupts();
 
 // Instructions
 public:

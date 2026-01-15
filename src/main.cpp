@@ -14,8 +14,6 @@ int main(int argc, char** argv) {
 	 - use rom
 */
 
-	// TODO: Implement all instructions (ensure 90+% correctness, blargg will test rest)
-	// Blarg 2 (HALT unimplemented) incorrect
 	// TODO: LCD, Serial, Joypad interrupt requests are unimplemented
 
 	if (argc < 2) {

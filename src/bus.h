@@ -87,6 +87,7 @@ public: // system functions
 	int insertCartridge(const std::filesystem::path romPath);
 	void clock();
 
+	bool halt = false;
 
 private:
 	// DMG Boot ROM:
