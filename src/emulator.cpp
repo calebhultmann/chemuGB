@@ -75,104 +75,126 @@ void chemuGB::drawDebugRegs() {
 void chemuGB::drawDebug() {
 	cpe::Pixel white = cpe::Pixel{ 255,255,255 };
 	int debug_x = 0;
-	drawDebugRegs();
+	//drawDebugRegs();
 
-	engine.DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
-	engine.DrawString(debug_x, (34 + 1) * SCALE, std::format("${:04X}: ", system.cpu.PC()), white);
+	//engine.DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
+	//engine.DrawString(debug_x, (34 + 1) * SCALE, std::format("${:04X}: ", system.cpu.PC()), white);
 
 	// Draw Tileblocks
 	// For each tileblock
+	std::array<uint32_t, 128*64> tileblock_buffer;
+
 	for (int tileblock = 0; tileblock < 3; tileblock++) {
 		uint16_t block_start_addr = 0x800 * tileblock;
-		int tileblock_x = 0;
-		int tileblock_y = 93 + 17 * tileblock;
 
-		// For each tile
-		for (int tile_id = 0; tile_id < 16 * 8; tile_id += 1) {
-			uint16_t tile_start_addr = block_start_addr + tile_id * 16;
-			int tile_x = (tileblock_x + ((tile_id % 16) * 2)) * 8;
-			int tile_y = (tileblock_y + ((tile_id / 16) * 2)) * 8;
+		for (int y = 0; y < 64; y++) {
+			for (int x = 0; x < 16; x++) {
+				int tile_index = (y / 8) * 16 + x;
+				uint16_t tile_addr = block_start_addr + tile_index * 16;
+				uint16_t tile_line_addr = tile_addr + (y % 8) * 2;
+				uint8_t data_low = system.ppu.vram[tile_line_addr];
+				uint8_t	data_high = system.ppu.vram[tile_line_addr + 1];
 
-			// For each horizontal line
-			for (int line_y = 0; line_y < 8; line_y++) {
-				uint8_t data_low = system.ppu.vram[tile_start_addr + line_y * 2];
-				uint8_t	data_high = system.ppu.vram[tile_start_addr + line_y * 2 + 1];
-
-				// For each pixel in that line
 				for (int bit = 0; bit < 8; bit++) {
 					int high_bit = ((data_high & (0b10000000 >> bit)) >> (7 - bit)) << 1;
 					int low_bit = (data_low & (0b10000000 >> bit)) >> (7 - bit);
 					int pixel_color_id = high_bit | low_bit;
 					int pixel_color = (system.bgp & (0b11 << (2 * pixel_color_id))) >> (2 * pixel_color_id);
-					uint32_t color = engine.gameboy_palette[1][pixel_color];
-					SDL_SetRenderDrawColor(engine.dbg_renderer, (color >> 16) & 0xFF, (color >> 8) & 0xFF, (color >> 0) & 0xFF, (color >> 24) & 0xFF);
-					int pixel_x = tile_x + bit * 2;
-					int pixel_y = tile_y + line_y * 2;
-
-					SDL_FRect rect = { float(pixel_x), float(pixel_y), float(2), float(2) };
-					SDL_RenderFillRect(engine.dbg_renderer, &rect);
+					uint32_t color = engine.gameboy_palette[engine.palette][pixel_color];
+					tileblock_buffer[(y * 128) + (x * 8) + bit] = color;
 				}
 			}
 		}
-	}
-	
 
-	// Draw Tilemaps
-	// For each tilemap
+		SDL_Rect tileblock_rect = { 128 * tileblock, 256, 128, 64 };
+
+		SDL_UpdateTexture(
+			engine.dbg_screen,
+			&tileblock_rect,
+			tileblock_buffer.data(),
+			128 * sizeof(uint32_t)
+		);
+	}
+
+	std::array<uint32_t, 256 * 256> tilemap_buffer;
+
 	for (int tilemap = 0; tilemap < 2; tilemap++) {
-		int tilemap_x = 33;
-		int tilemap_y = 78 + 33 * tilemap;
 		uint16_t tilemap_start_addr = 0x1800 + 0x400 * tilemap;
-		// For each tile
-		for (int tile_x = 0; tile_x < 32; tile_x++) {
-			for (int tile_y = 0; tile_y < 32; tile_y++) {
-				int tile_pixel_x = tilemap_x + tile_x;
-				int tile_pixel_y = tilemap_y + tile_y;
-				uint16_t tile_start_addr = tilemap_start_addr + 32 * tile_y + tile_x;
-				uint8_t tile_id = system.ppu.vram[tile_start_addr];
-				tile_start_addr = tile_id * 16;
 
-				// For each pixel
-				for (int line_y = 0; line_y < 8; line_y++) {
-					uint8_t data_low = system.ppu.vram[tile_start_addr + line_y * 2];
-					uint8_t	data_high = system.ppu.vram[tile_start_addr + line_y * 2 + 1];
+		for (int y = 0; y < 256; y++) {
+			for (int x = 0; x < 32; x++) {
+				int tile_index = (y / 8) * 32 + x;
+				uint8_t tile_id = system.ppu.vram[tilemap_start_addr + tile_index];
+				uint16_t tile_start_addr;
+				if (system.lcdc & 0b00010000) {
+					tile_start_addr = tile_id * 16;
+				}
+				else {
+					tile_start_addr = 0x1000 + (16 * static_cast<int8_t>(tile_id));
+				}
+				uint16_t tile_line_addr = tile_start_addr + (y % 8) * 2;
+				uint8_t data_low = system.ppu.vram[tile_line_addr];
+				uint8_t	data_high = system.ppu.vram[tile_line_addr + 1];
 
-					// For each pixel in that line
-					for (int bit = 0; bit < 8; bit++) {
-						int high_bit = ((data_high & (0b10000000 >> bit)) >> (7 - bit)) << 1;
-						int low_bit = (data_low & (0b10000000 >> bit)) >> (7 - bit);
-						int pixel_color_id = high_bit | low_bit;
-						int pixel_color = (system.bgp & (0b11 << (2 * pixel_color_id))) >> (2 * pixel_color_id);
-						uint32_t color = engine.gameboy_palette[1][pixel_color];
-						SDL_SetRenderDrawColor(engine.dbg_renderer, (color >> 16) & 0xFF, (color >> 8) & 0xFF, (color >> 0) & 0xFF, (color >> 24) & 0xFF);
-						int pixel_x = tile_pixel_x * 8 + bit;
-						int pixel_y = tile_pixel_y * 8 + line_y;
-
-						SDL_FRect rect = { float(pixel_x), float(pixel_y), float(1), float(1) };
-						SDL_RenderFillRect(engine.dbg_renderer, &rect);
-					}
+				for (int bit = 0; bit < 8; bit++) {
+					int high_bit = ((data_high & (0b10000000 >> bit)) >> (7 - bit)) << 1;
+					int low_bit = (data_low & (0b10000000 >> bit)) >> (7 - bit);
+					int pixel_color_id = high_bit | low_bit;
+					int pixel_color = (system.bgp & (0b11 << (2 * pixel_color_id))) >> (2 * pixel_color_id);
+					uint32_t color = engine.gameboy_palette[engine.palette][pixel_color];
+					tilemap_buffer[(y * 256) + (x * 8) + bit] = color;
 				}
 			}
 		}
+
+		SDL_Rect tilemap_rect = { 256 * tilemap, 0, 256, 256 };
+
+		SDL_UpdateTexture(
+			engine.dbg_screen,
+			&tilemap_rect,
+			tilemap_buffer.data(),
+			256 * sizeof(uint32_t)
+		);
+	}
+	SDL_RenderTexture(engine.dbg_renderer, engine.dbg_screen, NULL, NULL);
+
+	// Draw Background Outline
+	SDL_SetRenderDrawColor(engine.dbg_renderer, 255, 100, 100, 255);
+	float x = system.scx;
+	float y = system.scy;
+	float wrap_x = static_cast<float>(((int)x + 160) % 256);
+	float wrap_y = static_cast<float>(((int)y + 144) % 256);
+	float offset = 0;
+	if (system.lcdc & 0b00001000) {
+		offset = 512;
+	}
+	//draw top and bottom
+	if (x + 160 > 256) {
+		// top
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, y * 2, 256 * 2 + offset, y * 2);
+		SDL_RenderLine(engine.dbg_renderer, 0 + offset, y * 2, wrap_x * 2 + offset, y * 2);
+		// bottom
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, wrap_y * 2, 256 * 2 + offset, wrap_y * 2);
+		SDL_RenderLine(engine.dbg_renderer, 0 + offset, wrap_y * 2, wrap_x * 2 + offset, wrap_y * 2);
+	}
+	else {
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, y * 2, (x + 160) * 2 + offset, y * 2);
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, wrap_y * 2, (x + 160) * 2 + offset, wrap_y * 2);
 	}
 
-
-	SDL_SetRenderDrawColor(engine.dbg_renderer, 255, 100, 100, 255);
-	SDL_FRect outline = { float(33 * 8 + system.scx), float(78 * 8 + system.scy), float(160), float(144) };
-	SDL_RenderRect(engine.dbg_renderer, &outline);
-
-
-	/*
-	DrawString(debug_x, (34 + 1) * SCALE, " $4FA1: ADD A, R16", white);
-	DrawString(debug_x, (36 + 1) * SCALE, " $4FA3: XOR A, IMM8", white);
-	...
-	DrawString(debug_x, (62 + 1) * SCALE, " $0000:       etc. ", white);
-	DrawString(debug_x, (64 + 1) * SCALE, ">$0000:       etc. ", white);
-	DrawString(debug_x, (66 + 1) * SCALE, " $4FA3: XOR A, IMM8", white);
-	...
-	DrawString(debug_x, (94 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });
-	DrawString(debug_x, (96 + 1) * SCALE, " $0000:       etc. ", cpe::Pixel{ 255 ,255 ,255 });*/
-
+	//draw left and right
+	if (y + 144 > 256) {
+		//left
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, y * 2, x * 2 + offset, 256 * 2);
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, 0, x * 2 + offset, wrap_y * 2);
+		//right
+		SDL_RenderLine(engine.dbg_renderer, wrap_x * 2 + offset, y * 2, wrap_x * 2 + offset, 256 * 2);
+		SDL_RenderLine(engine.dbg_renderer, wrap_x * 2 + offset, 0, wrap_x * 2 + offset, wrap_y * 2);
+	}
+	else {
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, y * 2, x * 2 + offset, (y + 144) * 2);
+		SDL_RenderLine(engine.dbg_renderer, wrap_x * 2 + offset, y * 2, wrap_x * 2 + offset, (y + 144) * 2);
+	}
 }
 
 void chemuGB::start() {
@@ -202,12 +224,6 @@ void chemuGB::start() {
 					case SDL_SCANCODE_Q:
 						done = true;
 						break;
-					case SDL_SCANCODE_F:
-						// draw debug frame
-						// TODO: drawDebug leaks memory
-						drawDebug();
-						SDL_RenderPresent(engine.dbg_renderer);
-						break;
 					case SDL_SCANCODE_G:
 						engine.palette = 1 - engine.palette;
 					}
@@ -223,6 +239,8 @@ void chemuGB::start() {
 			system.clock();
 			if (system.ppu.is_frame_ready()) {
 				engine.renderFrame(system.ppu.current_frame);
+				drawDebug();
+				SDL_RenderPresent(engine.dbg_renderer);
 			}
 		}
 	}

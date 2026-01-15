@@ -26,7 +26,7 @@ public:
 	int initialize(std::filesystem::path romPath, uint8_t flags);
 	void start();
 
-private:	
+private:
 	void drawDebugRegs();
 	void drawDebug();
 
