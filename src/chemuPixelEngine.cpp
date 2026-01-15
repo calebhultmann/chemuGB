@@ -121,7 +121,8 @@ namespace cpe
 	int pixelEngine::initialize(bool debug) {
 		int SCREEN_HEIGHT = 144;
 		int SCREEN_WIDTH = 160;
-		int DEBUG_WIDTH = 96;
+		int DEBUG_WIDTH = 64;
+		int DEBUG_HEIGHT = 40;
 		SCALE = 8;
 
 		// Initialize SDL3
@@ -132,22 +133,21 @@ namespace cpe
 		}
 
 		// Create the emulator window
-		int total_width = SCREEN_WIDTH + (debug ? DEBUG_WIDTH : 0);
-		window = SDL_CreateWindow("chemuGB - Gameboy Emulator", total_width * SCALE, SCREEN_HEIGHT * SCALE, SDL_WINDOW_RESIZABLE);
+		window = SDL_CreateWindow("chemuGB - Gameboy Emulator", SCREEN_WIDTH * SCALE, SCREEN_HEIGHT * SCALE, SDL_WINDOW_RESIZABLE);
 		if (window == NULL) {
 			SDL_Log("Window could not be created! %s", SDL_GetError());
 			SDL_Quit();
 			return Error::NoSDLWindow;
 		}
 
-		dbg_window = SDL_CreateWindow("chemuGB - Gameboy Emulator", DEBUG_WIDTH * SCALE, SCREEN_HEIGHT * SCALE, SDL_WINDOW_RESIZABLE);
+		dbg_window = SDL_CreateWindow("chemuGB - Debug", DEBUG_WIDTH * SCALE * 2, DEBUG_HEIGHT * SCALE * 2, SDL_WINDOW_RESIZABLE);
 		dbg_renderer = SDL_CreateRenderer(dbg_window, NULL);
 		dbg_screen = SDL_CreateTexture(
 			dbg_renderer,
 			SDL_PIXELFORMAT_ARGB8888,
 			SDL_TEXTUREACCESS_STREAMING,
-			DEBUG_WIDTH,
-			SCREEN_HEIGHT);
+			DEBUG_WIDTH * SCALE,
+			DEBUG_HEIGHT * SCALE);
 		SDL_SetTextureScaleMode(dbg_screen, SDL_SCALEMODE_NEAREST);
 
 		// Create the renderer
