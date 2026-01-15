@@ -61,7 +61,7 @@ public:
 	uint8_t read(uint16_t addr);
 	void write(uint16_t addr, uint8_t data);
 
-	uint8_t getIdFromTilemap(uint8_t tilemap,  uint8_t tile_x, uint8_t tile_y);
+	uint8_t getIdFromTilemap(uint8_t tile_x, uint8_t tile_y);
 	uint16_t getTileAddress(uint8_t tile_index);
 	
 	void changeMode(uint8_t mode);
