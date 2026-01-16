@@ -3,7 +3,6 @@
 Bus::Bus() {
 	cpu.connectBus(this);
 	ppu.connectBus(this);
-	ppu.fifo.connectBus(this);
 	cart = std::make_shared<Cartridge>();
 }
 
