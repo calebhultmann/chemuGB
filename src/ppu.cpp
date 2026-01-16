@@ -35,15 +35,39 @@ void PPU::changeMode(uint8_t mode) {
 }
 
 void PPU::prepareScanline() {
-	for (uint8_t x = 0; x < 20; x++) {
-		fifo.fetchBackground(x);
-		for (uint8_t i = 0; i < 8; i++) {
-			PixelFetcher::Pixel curr = fifo.FIFO.front();
-			fifo.FIFO.pop();
+	int curr_pixel = 0;
+	int x_index = 0;
+	uint8_t scroll = 0;
 
-			uint8_t pixel_color = (bus->bgp & (0b11 << (2 * curr.color))) >> (2 * curr.color);
-			current_frame[bus->ly * 160 + x * 8 + i] = pixel_color;
+	while (curr_pixel < 160) {
+		uint8_t tile_x = ((bus->scx / 8) + x_index) & 0x1F;
+		uint8_t tile_y = (bus->ly + bus->scy) & 0xFF;
+
+		bool is_window = false;
+		// window how
+
+		uint8_t tile_index = getIdFromTilemap(tile_x, tile_y);
+		uint16_t tile_address = getTileAddress(tile_index);
+
+		uint8_t tile_data_low = vram[tile_address + (2 * (tile_y % 8))];
+		uint8_t tile_data_high = vram[tile_address + (2 * (tile_y % 8)) + 1];
+
+		for (int bit = 7; bit >= 0; bit--) {
+			if (curr_pixel == 160) {
+				break;
+			}
+			uint8_t high_bit = ((tile_data_high & (0b10000000 >> (7 - bit))) >> bit) << 1;
+			uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - bit))) >> bit;
+			if (curr_pixel == 0 && scroll < bus->scx % 8) {
+				scroll++;
+				continue;
+			}
+			uint8_t color = high_bit | low_bit;
+			uint8_t pixel_color = (bus->bgp & (0b11 << (2 * color))) >> (2 * color);
+			current_frame[bus->ly * 160 + curr_pixel] = pixel_color;
+			curr_pixel++;
 		}
+		x_index++;
 	}
 }
 
