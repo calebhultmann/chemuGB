@@ -195,6 +195,36 @@ void chemuGB::drawDebug() {
 		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, y * 2, x * 2 + offset, (y + 144) * 2);
 		SDL_RenderLine(engine.dbg_renderer, wrap_x * 2 + offset, y * 2, wrap_x * 2 + offset, (y + 144) * 2);
 	}
+
+	offset = 0;
+	if (system.lcdc & 0b01000000) {
+		offset = 512;
+	}
+	if (system.lcdc & 0b00100000) {
+		SDL_SetRenderDrawColor(engine.dbg_renderer, 100, 100, 255, 255);
+	}
+	else {
+		SDL_SetRenderDrawColor(engine.dbg_renderer, 255, 255, 100, 255);
+	}
+
+	x = (float)(system.wx - 7);
+	y = system.wy;
+
+	if (x + 160 > 256) {
+		// top
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, y * 2, 256 * 2 + offset, y * 2);
+	}
+	else {
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, y * 2, (x + 160) * 2 + offset, y * 2);
+	}
+
+	if (y + 144 > 256) {
+		//left
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, y * 2, x * 2 + offset, 256 * 2);
+	}
+	else {
+		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, y * 2, x * 2 + offset, (y + 144) * 2);
+	}
 }
 
 void chemuGB::start() {
