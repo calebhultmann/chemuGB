@@ -20,9 +20,6 @@ class PPU;
 class PPU
 {
 public:
-	//PPU();
-	//~PPU();
-
 	Bus* bus = nullptr;
 	void connectBus(Bus* b) { bus = b; }
 
@@ -48,6 +45,7 @@ public:
 	
 	void changeMode(uint8_t mode);
 	void prepareScanline();
+	void prepareBackground();
 
 	void clock();
 };

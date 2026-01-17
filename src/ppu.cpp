@@ -5,10 +5,10 @@ void PPU::changeMode(uint8_t mode) {
 	bus->stat = (bus->stat & 0b11111100) | (mode & 0b00000011);
 }
 
-void PPU::prepareScanline() {
+void PPU::prepareBackground() {
 	bool is_window = false;
 	bool wx_condition = false;
-	
+
 	uint8_t tile_x_index = 0;
 	uint8_t tile_data_low = 0;
 	uint8_t tile_data_high = 0;
@@ -24,8 +24,8 @@ void PPU::prepareScanline() {
 			if ((bus->lcdc & 0b00100000) && wy_condition) {
 				is_window = true;
 
-				uint8_t tile_x = ((bus->scx / 8) + tile_x_index) & 0x1F;
-				uint8_t tile_y = (bus->ly + bus->scy) & 0xFF;
+				uint8_t tile_x = tile_x_index;
+				uint8_t tile_y = (bus->ly + bus->wy) & 0xFF;
 
 				uint8_t tile_index = getIdFromTilemap(is_window, tile_x, tile_y);
 				uint16_t tile_address = getTileAddress(tile_index);
@@ -37,9 +37,21 @@ void PPU::prepareScanline() {
 
 		// Get next tile from background/window
 		if (curr_bit < 0) {
-			uint8_t tile_x = ((bus->scx / 8) + tile_x_index) & 0x1F;
-			uint8_t tile_y = (bus->ly + bus->scy) & 0xFF;
-			
+			uint8_t tile_x;
+			uint8_t tile_y;
+
+			if (is_window) {
+				tile_x = tile_x_index;
+				tile_y = (bus->ly + bus->wy) & 0xFF;
+				curr_bit = 7;
+
+			}
+			else {
+				tile_x = ((bus->scx / 8) + tile_x_index) & 0x1F;
+				tile_y = (bus->ly + bus->scy) & 0xFF;
+				curr_bit += 8;
+			}
+
 			uint8_t tile_index = getIdFromTilemap(is_window, tile_x, tile_y);
 			uint16_t tile_address = getTileAddress(tile_index);
 
@@ -47,7 +59,6 @@ void PPU::prepareScanline() {
 			tile_data_high = vram[tile_address + (2 * (tile_y % 8)) + 1];
 
 			tile_x_index++;
-			curr_bit += 8;
 		}
 
 		uint8_t high_bit = ((tile_data_high & (0b10000000 >> (7 - curr_bit))) >> curr_bit) << 1;
@@ -56,10 +67,19 @@ void PPU::prepareScanline() {
 		uint8_t color = high_bit | low_bit;
 		uint8_t pixel_color = (bus->bgp & (0b11 << (2 * color))) >> (2 * color);
 
-		// Eventually write to bg buffer so that another function can pull from the buffer to mix with the OBJ buffer to prepare the scanline correctly
-		current_frame[bus->ly * 160 + curr_pixel] = pixel_color;
+		bg_scanline_buffer[curr_pixel] = pixel_color;
 
 		curr_bit--;
+	}
+}
+
+void PPU::prepareScanline() {
+	prepareBackground();
+	//prepareObjects();
+
+	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
+		// Eventually, pull from BG buffer and OBJ buffer simultaneously to meld them together correctly
+		current_frame[bus->ly * 160 + curr_pixel] = bg_scanline_buffer[curr_pixel];
 	}
 }
 
