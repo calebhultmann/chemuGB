@@ -8,6 +8,7 @@
 #include "cpu.h"
 #include "ppu.h"
 #include <filesystem>
+#include "joypad.h"
 
 class Bus {
 public:
@@ -20,6 +21,7 @@ public: // Bus devices
 	std::shared_ptr<Cartridge> cart;
 	uint8_t WRAM[0x2000];
 	uint8_t HRAM[0x7F];
+	Joypad joypad;
 
 	struct Audio {
 		// Channel 1 - Pulse with period sweep

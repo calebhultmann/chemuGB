@@ -3,8 +3,6 @@
 #include "emulator.h"
 #include <iostream>
 #include <SDL3/SDL_render.h>
-#include <SDL3/SDL.h>
-#include <chrono>
 
 chemuGB::chemuGB() {
 	DEBUG = true;
@@ -75,6 +73,69 @@ void chemuGB::drawDebugRegs() {
 void chemuGB::drawDebug() {
 	cpe::Pixel white = cpe::Pixel{ 255,255,255 };
 	int debug_x = 0;
+	std::cout << "active: ";
+	if (system.joyp & DPAD_ENABLE) {
+		std::cout << "DPAD: ";
+		if (~system.joypad.dpad & KEY_RIGHT) {
+			std::cout << "RIGHT, ";
+		}
+		if ((system.joyp & 0b0001) == 0) {
+			std::cout << "(1), ";
+		}
+		
+		if (~system.joypad.dpad & KEY_LEFT) {
+			std::cout << "LEFT, ";
+		}
+		if ((system.joyp & 0b0010) == 0) {
+			std::cout << "(2), ";
+		}
+
+		if (~system.joypad.dpad & KEY_UP) {
+			std::cout << "UP, ";
+		}
+		if ((system.joyp & 0b0100) == 0) {
+			std::cout << "(3), ";
+		}
+		
+		if (~system.joypad.dpad & KEY_DOWN) {
+			std::cout << "DOWN, ";
+		}
+		if ((system.joyp & 0b1000) == 0) {
+			std::cout << "(4), ";
+		}
+
+	}
+	if (system.joyp & BUTTON_ENABLE) {
+		std::cout << "BUTTONS: ";
+		if (~system.joypad.buttons & (KEY_A & KEY)) {
+			std::cout << "A, ";
+		}
+		if ((system.joyp & 0b0001) == 0) {
+			std::cout << "(1), ";
+		}
+
+		if (~system.joypad.buttons & (KEY_B & KEY)) {
+			std::cout << "B, ";
+		}
+		if ((system.joyp & 0b0010) == 0) {
+			std::cout << "(2), ";
+		}
+
+		if (~system.joypad.buttons & (KEY_SELECT & KEY)) {
+			std::cout << "SELECT, ";
+		}
+		if ((system.joyp & 0b0100) == 0) {
+			std::cout << "(3), ";
+		}
+
+		if (~system.joypad.buttons & (KEY_START & KEY)) {
+			std::cout << "START, ";
+		}
+		if ((system.joyp & 0b1000) == 0) {
+			std::cout << "(4), ";
+		}
+	}
+	std::cout << "\n";
 	//drawDebugRegs();
 
 	//engine.DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
@@ -248,14 +309,86 @@ void chemuGB::start() {
 					break;
 				case SDL_EVENT_KEY_DOWN:
 					switch (event.key.scancode) {
+					// P - Pause
 					case SDL_SCANCODE_P:
 						pause = !pause;
 						break;
+					// Q - Quit
 					case SDL_SCANCODE_Q:
 						done = true;
 						break;
+					// G - Green/Grayscale
 					case SDL_SCANCODE_G:
 						engine.palette = 1 - engine.palette;
+						break;
+					// W - D-pad Up
+					case SDL_SCANCODE_W:
+						system.joypad.press(KEY_UP);
+						break;
+					// A - D-pad Left
+					case SDL_SCANCODE_A:
+						system.joypad.press(KEY_LEFT);
+						break;
+					// S - D-pad Down
+					case SDL_SCANCODE_S:
+						system.joypad.press(KEY_DOWN);
+						break;
+					// D - D-pad Right
+					case SDL_SCANCODE_D:
+						system.joypad.press(KEY_RIGHT);
+						break;
+					// N - B Button
+					case SDL_SCANCODE_N:
+						system.joypad.press(KEY_B);
+						break;
+					// M - A button
+					case SDL_SCANCODE_M:
+						system.joypad.press(KEY_A);
+						break;
+					// V - Select
+					case SDL_SCANCODE_V:
+						system.joypad.press(KEY_SELECT);
+						break;
+					// B - Start
+					case SDL_SCANCODE_B:
+						system.joypad.press(KEY_START);
+						break;
+					}
+					break;
+				case SDL_EVENT_KEY_UP:
+					switch (event.key.scancode) {
+						// W - D-pad Up
+					case SDL_SCANCODE_W:
+						system.joypad.release(KEY_UP);
+						break;
+						// A - D-pad Left
+					case SDL_SCANCODE_A:
+						system.joypad.release(KEY_LEFT);
+						break;
+						// S - D-pad Down
+					case SDL_SCANCODE_S:
+						system.joypad.release(KEY_DOWN);
+						break;
+						// D - D-pad Right
+					case SDL_SCANCODE_D:
+						system.joypad.release(KEY_RIGHT);
+						break;
+						// N - B Button
+					case SDL_SCANCODE_N:
+						system.joypad.release(KEY_B);
+						break;
+						// M - A button
+					case SDL_SCANCODE_M:
+						system.joypad.release(KEY_A);
+						break;
+						// V - Select
+					case SDL_SCANCODE_V:
+						system.joypad.release(KEY_SELECT);
+						break;
+						// B - Start
+					case SDL_SCANCODE_B:
+						system.joypad.release(KEY_START);
+						break;
 					}
 					break;
 				}

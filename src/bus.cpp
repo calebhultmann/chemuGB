@@ -4,6 +4,7 @@ Bus::Bus() {
 	cpu.connectBus(this);
 	ppu.connectBus(this);
 	cart = std::make_shared<Cartridge>();
+	joypad.connectBus(this);
 }
 
 Bus::~Bus() {
@@ -113,7 +114,17 @@ uint8_t Bus::readIOregs(uint16_t addr) {
 
 void Bus::writeIOregs(uint16_t addr, uint8_t data) {
 	switch (addr) {
-	case 0xFF00: joyp = data & 0b00110000; break;
+	case 0xFF00: {
+		uint8_t active = 0b1111;
+		if (~data & BUTTON_ENABLE) {
+			active &= joypad.buttons;
+		}
+		if (~data & DPAD_ENABLE) {
+			active &= joypad.dpad;
+		}
+		
+		joyp = (data & 0b00110000) | active; break;
+	}
 	case 0xFF01: sb = data; break;
 	case 0xFF02: sc = data & 0b10000011; break;
 	case 0xFF04: div = 0; break;
