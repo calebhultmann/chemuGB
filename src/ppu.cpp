@@ -65,26 +65,138 @@ void PPU::prepareBackground() {
 		uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - curr_bit))) >> curr_bit;
 
 		uint8_t color = high_bit | low_bit;
-		uint8_t pixel_color = (bus->bgp & (0b11 << (2 * color))) >> (2 * color);
 
-		bg_scanline_buffer[curr_pixel] = pixel_color;
+		bg_scanline_buffer[curr_pixel] = color;
 
 		curr_bit--;
 	}
 }
 
+void PPU::prepareObjects() {
+
+	// Clear obj buffer to transparent pixels
+	for (uint8_t x = 0; x < GB_W; x++) {
+		obj_scanline_buffer[x].color = 0;
+	}
+
+	uint8_t objs[10] = { 40,40,40,40,40,40,40,40,40,40 };
+	// Currently only handles 8x8 objects
+	uint8_t OBJ_HEIGHT = 8;
+	if (bus->lcdc & 0b00000100) {
+		OBJ_HEIGHT = 16;
+	}
+
+	// Pull up to 10 suitable objects from OAM
+	uint8_t obj_count = 0;
+	for (uint8_t obj = 0; obj < 40; obj++) {
+		uint8_t obj_y = oam[obj * 4];
+		if (bus->ly + 16 < obj_y + OBJ_HEIGHT && obj_y <= bus->ly + 16) {
+			objs[obj_count++] = obj;
+			if (obj_count == 10) {
+				break;
+			}
+		}
+	}
+
+	if (obj_count == 0) {
+		return;
+	}
+
+	for (uint8_t obj = 0; obj < 10; obj++) {
+		uint8_t obj_num = objs[obj];
+		if (obj_num == 40) {
+			break;
+		}
+
+		uint8_t tile_y = oam[obj_num * 4];
+		uint8_t tile_x = oam[obj_num * 4 + 1];
+		uint8_t tile_index = oam[obj_num * 4 + 2];
+		uint8_t tile_attr = oam[obj_num * 4 + 3];
+
+		uint8_t tile_line = (bus->ly - (tile_y - 16));
+		if (tile_attr & Y_FLIP) {
+			tile_line = 7 - tile_line;
+		}
+
+		uint16_t tile_addr = 16 * tile_index + 2 * tile_line;
+
+		uint8_t	tile_data_low = vram[tile_addr];
+		uint8_t	tile_data_high = vram[tile_addr + 1];
+
+
+		for (uint8_t pixel_x = 0; pixel_x < 8; pixel_x++) {
+			uint8_t loc_x = tile_x + pixel_x;
+			// Remaining pixels are not visible
+			if (loc_x >= 168) {
+				break;
+			}
+			// Current pixel is not visible
+			if (loc_x < 8) {
+				continue;
+			}
+
+			uint8_t curr_bit = 7 - pixel_x;
+			if (tile_attr & X_FLIP) {
+				curr_bit = 7 - curr_bit;
+			}
+			
+			uint8_t high_bit = ((tile_data_high & (0b10000000 >> (7 - curr_bit))) >> curr_bit) << 1;
+			uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - curr_bit))) >> curr_bit;
+			uint8_t new_color = high_bit | low_bit;
+			Pixel& curr = obj_scanline_buffer[loc_x - 8];
+
+			if (new_color == 0 || (curr.color != 0 && tile_x >= curr.init_x)) {
+				continue;
+			}
+			curr.color = new_color;
+			curr.palette = tile_attr & PALETTE;
+			curr.priority = tile_attr & PRIORITY;
+			curr.init_x = tile_x;
+		}
+	}
+}
+
 void PPU::prepareScanline() {
 	prepareBackground();
-	//prepareObjects();
+	prepareObjects();
 
 	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
-		// Eventually, pull from BG buffer and OBJ buffer simultaneously to meld them together correctly
-		current_frame[bus->ly * 160 + curr_pixel] = bg_scanline_buffer[curr_pixel];
+		uint8_t pixel_color;
+
+		if (obj_scanline_buffer[curr_pixel].color == 0 || (obj_scanline_buffer[curr_pixel].priority && bg_scanline_buffer[curr_pixel] != 0)) {
+			
+			uint8_t color = bg_scanline_buffer[curr_pixel];
+			pixel_color = (bus->bgp & (0b11 << (2 * color))) >> (2 * color);
+		}
+		else {
+			uint8_t color = obj_scanline_buffer[curr_pixel].color;
+			if (obj_scanline_buffer[curr_pixel].palette) {
+				pixel_color = (bus->obp1 & (0b11 << (2 * color))) >> (2 * color);
+			}
+			else {
+				pixel_color = (bus->obp0 & (0b11 << (2 * color))) >> (2 * color);
+			}
+		}
+		current_frame[bus->ly * 160 + curr_pixel] = pixel_color;
 	}
 }
 
 void PPU::clock() {
+
+	if (bus->ly == bus->lyc) {
+		bus->stat |= 0b00000100;
+	}
+	else {
+		bus->stat &= 0b11111011;
+	}
+
 	if (bus->ly < 144) {
+		if (dot_count == 0) {
+			if ((bus->stat & 0b01000000) && (bus->stat & 0b00000100)) {
+				bus->interrupts |= INTERRUPT_LCD;
+			}
+		}
+
 		if (bus->ly == bus->wy) {
 			wy_condition = true;
 		}

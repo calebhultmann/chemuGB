@@ -73,69 +73,69 @@ void chemuGB::drawDebugRegs() {
 void chemuGB::drawDebug() {
 	cpe::Pixel white = cpe::Pixel{ 255,255,255 };
 	int debug_x = 0;
-	std::cout << "active: ";
-	if (system.joyp & DPAD_ENABLE) {
-		std::cout << "DPAD: ";
-		if (~system.joypad.dpad & KEY_RIGHT) {
-			std::cout << "RIGHT, ";
-		}
-		if ((system.joyp & 0b0001) == 0) {
-			std::cout << "(1), ";
-		}
-		
-		if (~system.joypad.dpad & KEY_LEFT) {
-			std::cout << "LEFT, ";
-		}
-		if ((system.joyp & 0b0010) == 0) {
-			std::cout << "(2), ";
-		}
+	//std::cout << "active: ";
+	//if (system.joyp & DPAD_ENABLE) {
+	//	std::cout << "DPAD: ";
+	//	if (~system.joypad.dpad & KEY_RIGHT) {
+	//		std::cout << "RIGHT, ";
+	//	}
+	//	if ((system.joyp & 0b0001) == 0) {
+	//		std::cout << "(1), ";
+	//	}
+	//	
+	//	if (~system.joypad.dpad & KEY_LEFT) {
+	//		std::cout << "LEFT, ";
+	//	}
+	//	if ((system.joyp & 0b0010) == 0) {
+	//		std::cout << "(2), ";
+	//	}
 
-		if (~system.joypad.dpad & KEY_UP) {
-			std::cout << "UP, ";
-		}
-		if ((system.joyp & 0b0100) == 0) {
-			std::cout << "(3), ";
-		}
-		
-		if (~system.joypad.dpad & KEY_DOWN) {
-			std::cout << "DOWN, ";
-		}
-		if ((system.joyp & 0b1000) == 0) {
-			std::cout << "(4), ";
-		}
+	//	if (~system.joypad.dpad & KEY_UP) {
+	//		std::cout << "UP, ";
+	//	}
+	//	if ((system.joyp & 0b0100) == 0) {
+	//		std::cout << "(3), ";
+	//	}
+	//	
+	//	if (~system.joypad.dpad & KEY_DOWN) {
+	//		std::cout << "DOWN, ";
+	//	}
+	//	if ((system.joyp & 0b1000) == 0) {
+	//		std::cout << "(4), ";
+	//	}
 
-	}
-	if (system.joyp & BUTTON_ENABLE) {
-		std::cout << "BUTTONS: ";
-		if (~system.joypad.buttons & (KEY_A & KEY)) {
-			std::cout << "A, ";
-		}
-		if ((system.joyp & 0b0001) == 0) {
-			std::cout << "(1), ";
-		}
+	//}
+	//if (system.joyp & BUTTON_ENABLE) {
+	//	std::cout << "BUTTONS: ";
+	//	if (~system.joypad.buttons & (KEY_A & KEY)) {
+	//		std::cout << "A, ";
+	//	}
+	//	if ((system.joyp & 0b0001) == 0) {
+	//		std::cout << "(1), ";
+	//	}
 
-		if (~system.joypad.buttons & (KEY_B & KEY)) {
-			std::cout << "B, ";
-		}
-		if ((system.joyp & 0b0010) == 0) {
-			std::cout << "(2), ";
-		}
+	//	if (~system.joypad.buttons & (KEY_B & KEY)) {
+	//		std::cout << "B, ";
+	//	}
+	//	if ((system.joyp & 0b0010) == 0) {
+	//		std::cout << "(2), ";
+	//	}
 
-		if (~system.joypad.buttons & (KEY_SELECT & KEY)) {
-			std::cout << "SELECT, ";
-		}
-		if ((system.joyp & 0b0100) == 0) {
-			std::cout << "(3), ";
-		}
+	//	if (~system.joypad.buttons & (KEY_SELECT & KEY)) {
+	//		std::cout << "SELECT, ";
+	//	}
+	//	if ((system.joyp & 0b0100) == 0) {
+	//		std::cout << "(3), ";
+	//	}
 
-		if (~system.joypad.buttons & (KEY_START & KEY)) {
-			std::cout << "START, ";
-		}
-		if ((system.joyp & 0b1000) == 0) {
-			std::cout << "(4), ";
-		}
-	}
-	std::cout << "\n";
+	//	if (~system.joypad.buttons & (KEY_START & KEY)) {
+	//		std::cout << "START, ";
+	//	}
+	//	if ((system.joyp & 0b1000) == 0) {
+	//		std::cout << "(4), ";
+	//	}
+	//}
+	//std::cout << "\n";
 	//drawDebugRegs();
 
 	//engine.DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
