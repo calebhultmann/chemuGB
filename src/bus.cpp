@@ -159,7 +159,15 @@ void Bus::writeIOregs(uint16_t addr, uint8_t data) {
 	case 0xFF43: scx = data; break;
 	case 0xFF44: break;
 	case 0xFF45: lyc = data; break;
-	case 0xFF46: dma = data; break;
+	case 0xFF46: {
+		uint16_t addr = (uint16_t)data << 8;
+		for (uint8_t byte = 0; byte < 0xA0; byte++) {
+			uint8_t oam_data = read(addr | byte);
+			write(0xFE00 | byte, oam_data);
+		}
+		
+		dma = data; break;
+	}
 	case 0xFF47: bgp = data; break;
 	case 0xFF48: obp0 = data; break;
 	case 0xFF49: obp1 = data; break;
