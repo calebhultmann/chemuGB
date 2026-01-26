@@ -20,19 +20,24 @@ public:
 	uint8_t vram[0x2000];
 	uint8_t oam[0xA0];
 
-	struct Pixel {
+	struct OBJ_Pixel {
 		uint8_t color;
 		uint8_t palette;
 		uint8_t priority;
 		uint8_t init_x;
 	};
 
+	struct BG_Pixel {
+		uint8_t color;
+		uint8_t window;
+	};
+
 	static constexpr int GB_W = 160;
 	static constexpr int GB_H = 144;
 
 	uint8_t current_frame[GB_W * GB_H];
-	uint8_t bg_scanline_buffer[GB_W];
-	Pixel obj_scanline_buffer[GB_W] {};
+	BG_Pixel bg_scanline_buffer[GB_W] {};
+	OBJ_Pixel obj_scanline_buffer[GB_W] {};
 	bool frame_ready;
 	bool is_frame_ready();
 

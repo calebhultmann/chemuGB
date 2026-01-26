@@ -65,8 +65,12 @@ void PPU::prepareBackground() {
 		uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - curr_bit))) >> curr_bit;
 
 		uint8_t color = high_bit | low_bit;
-
-		bg_scanline_buffer[curr_pixel] = color;
+		if (is_window) {
+			bg_scanline_buffer[curr_pixel] = { color, 1 };
+		}
+		else {
+			bg_scanline_buffer[curr_pixel] = { color, 0 };
+		}
 
 		curr_bit--;
 	}
@@ -80,7 +84,7 @@ void PPU::prepareObjects() {
 	}
 
 	uint8_t objs[10] = { 40,40,40,40,40,40,40,40,40,40 };
-	// Currently only handles 8x8 objects
+	// TODO: Currently only handles 8x8 objects
 	uint8_t OBJ_HEIGHT = 8;
 	if (bus->lcdc & 0b00000100) {
 		OBJ_HEIGHT = 16;
@@ -115,7 +119,7 @@ void PPU::prepareObjects() {
 
 		uint8_t tile_line = (bus->ly - (tile_y - 16));
 		if (tile_attr & Y_FLIP) {
-			tile_line = 7 - tile_line;
+			tile_line = (OBJ_HEIGHT - 1) - tile_line;
 		}
 
 		uint16_t tile_addr = 16 * tile_index + 2 * tile_line;
@@ -143,7 +147,7 @@ void PPU::prepareObjects() {
 			uint8_t high_bit = ((tile_data_high & (0b10000000 >> (7 - curr_bit))) >> curr_bit) << 1;
 			uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - curr_bit))) >> curr_bit;
 			uint8_t new_color = high_bit | low_bit;
-			Pixel& curr = obj_scanline_buffer[loc_x - 8];
+			OBJ_Pixel& curr = obj_scanline_buffer[loc_x - 8];
 
 			if (new_color == 0 || (curr.color != 0 && tile_x >= curr.init_x)) {
 				continue;
@@ -163,9 +167,8 @@ void PPU::prepareScanline() {
 	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
 		uint8_t pixel_color;
 
-		if (obj_scanline_buffer[curr_pixel].color == 0 || (obj_scanline_buffer[curr_pixel].priority && bg_scanline_buffer[curr_pixel] != 0)) {
-			
-			uint8_t color = bg_scanline_buffer[curr_pixel];
+		if (bg_scanline_buffer[curr_pixel].window || obj_scanline_buffer[curr_pixel].color == 0 || (obj_scanline_buffer[curr_pixel].priority && bg_scanline_buffer[curr_pixel].color != 0)) {
+			uint8_t color = bg_scanline_buffer[curr_pixel].color;
 			pixel_color = (bus->bgp & (0b11 << (2 * color))) >> (2 * color);
 		}
 		else {

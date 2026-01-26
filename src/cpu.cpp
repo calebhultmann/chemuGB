@@ -1162,7 +1162,7 @@ int CPU::STOP(Operand src, Operand dst) {
 
 int CPU::CB(Operand src, Operand dst) {
 	int opcode = fetchByte();
-	Instruction curr = cb_lookup[opcode];
+	const Instruction& curr = cb_lookup[opcode];
 	return executeInstruction(curr) + 4;
 }
 
