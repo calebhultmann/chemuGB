@@ -9,7 +9,7 @@ chemuGB::chemuGB() {
 }
 
 chemuGB::~chemuGB() {
-	delete disassembler;
+
 }
 
 int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
@@ -23,13 +23,10 @@ int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
 		return status;
 	}
 
-	if (DEBUG) {
-		disassembler = new Disassembler(&system.cpu);
-		//disassembler->disassembleROM(system.cart->romBanks);
-	}
 	return 0;
 }
 
+// Depreciated function that does not utilize the new rendering system
 void chemuGB::drawDebugRegs() {
 	cpe::Pixel white = cpe::Pixel{ 255,255,255 };
 	cpe::Pixel green = cpe::Pixel{   0,255,100 };
@@ -73,6 +70,8 @@ void chemuGB::drawDebugRegs() {
 void chemuGB::drawDebug() {
 	cpe::Pixel white = cpe::Pixel{ 255,255,255 };
 	int debug_x = 0;
+
+	// Joypad input printing:
 	//std::cout << "active: ";
 	//if (system.joyp & DPAD_ENABLE) {
 	//	std::cout << "DPAD: ";
@@ -136,10 +135,6 @@ void chemuGB::drawDebug() {
 	//	}
 	//}
 	//std::cout << "\n";
-	//drawDebugRegs();
-
-	//engine.DrawString(debug_x, (32 + 1) * SCALE, "Instructions: ", white);
-	//engine.DrawString(debug_x, (34 + 1) * SCALE, std::format("${:04X}: ", system.cpu.PC()), white);
 
 	// Draw Tileblocks
 	// For each tileblock
@@ -270,7 +265,7 @@ void chemuGB::drawDebug() {
 
 	x = (float)(system.wx - 7);
 	y = system.wy;
-
+	// Rewrite this to show the opposite of what it currently shows
 	if (x + 160 > 256) {
 		// top
 		SDL_RenderLine(engine.dbg_renderer, x * 2 + offset, y * 2, 256 * 2 + offset, y * 2);

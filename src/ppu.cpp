@@ -65,13 +65,7 @@ void PPU::prepareBackground() {
 		uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - curr_bit))) >> curr_bit;
 
 		uint8_t color = high_bit | low_bit;
-		if (is_window) {
-			bg_scanline_buffer[curr_pixel] = { color, 1 };
-		}
-		else {
-			bg_scanline_buffer[curr_pixel] = { color, 0 };
-		}
-
+		bg_scanline_buffer[curr_pixel] = { color, is_window };
 		curr_bit--;
 	}
 }
@@ -117,12 +111,12 @@ void PPU::prepareObjects() {
 		uint8_t tile_index = oam[obj_num * 4 + 2];
 		uint8_t tile_attr = oam[obj_num * 4 + 3];
 
-		uint8_t tile_line = (bus->ly - (tile_y - 16));
+		uint8_t tile_line = (bus->ly + 16 - tile_y);
 		if (tile_attr & Y_FLIP) {
 			tile_line = (OBJ_HEIGHT - 1) - tile_line;
 		}
 
-		uint16_t tile_addr = 16 * tile_index + 2 * tile_line;
+		uint16_t tile_addr = 16 * (tile_index & 0xFE) + 2 * tile_line;
 
 		uint8_t	tile_data_low = vram[tile_addr];
 		uint8_t	tile_data_high = vram[tile_addr + 1];
