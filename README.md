@@ -1,7 +1,7 @@
 ﻿# 🕹️ chemuGB - Nintendo GameBoy Emulator
 *A documentation-accurate emulator for the Game Boy handheld console*
 
-<img src="readme_assets/chemuGB_demo.gif" width="25%" alt="chemuGB Demo with Kirby's Dream Land 2">
+<img src="docs/chemuGB_demo.gif" width="25%" alt="chemuGB Demo with Kirby's Dream Land 2">
 
 ## 💡 Highlights:
  - **Tech used:** C++, SDL3, CMake

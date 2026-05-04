@@ -1,55 +1,66 @@
 cmake_minimum_required(VERSION 3.30)
 
-# The toolchain file setup should ideally be in a CMakePresets.json file,
-# but we'll keep it here for simplicity
-set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
-    CACHE STRING "Vcpkg toolchain file")
+project(chemuGB VERSION 2.0 LANGUAGES CXX)
 
-project(Gameboy VERSION 1.0)
-
+# Global Settings
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON) #what does this do?
 
-# Add dependencies
-find_package(SDL3 REQUIRED)
+# Put binaries in build/<preset>/
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-# No C++20 modules
-set(CMAKE_CXX_SCAN_FOR_MODULES OFF) 
+# Dependencies
+#  SDL3 - Graphics
+include(FetchContent)
 
-# Emulator executable
-add_executable(Emulator)
-
-# Emulator sources and headers
-file(GLOB_RECURSE Emulator_SOURCES CONFIGURE_DEPENDS 
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.inl"
+FetchContent_Declare(
+	SDL3
+	GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+	GIT_TAG release-3.4.8
 )
 
-target_sources(Emulator PRIVATE ${Emulator_SOURCES})
+FetchContent_MakeAvailable(SDL3)
 
-# Emulator include dirs
+#  OpenGL - ImGui backend
+find_package(OpenGL REQUIRED)
+
+# Imgui (Vendored)
+set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external/imgui)
+
+add_library(imgui
+	${IMGUI_DIR}/imgui.cpp
+	${IMGUI_DIR}/imgui_draw.cpp
+	${IMGUI_DIR}/imgui_tables.cpp
+	${IMGUI_DIR}/imgui_widgets.cpp
+
+	${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
+	${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
+target_include_directories(imgui PUBLIC
+	${IMGUI_DIR}
+	${IMGUI_DIR}/backends
+)
+
+# Executable
+add_executable(Emulator
+	src/main.cpp
+	# Other necessary build files in core
+)
+
 target_include_directories(Emulator PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
+	${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
-# Preprocessor defines
-target_compile_definitions(Emulator PRIVATE
-    MY_TEST_DEFINE
-)
-
-# Automatically links to these libs
+# Linking
 target_link_libraries(Emulator PRIVATE
-    SDL3::SDL3
+	SDL3::SDL3
+	OpenGL::GL
+	imgui
 )
 
-# Add directories with any random loose .dlls or .libs here
-target_link_directories(Emulator PRIVATE
-
-)
-
-# Set configuration properties for Emulator
+# Compiler Warnings
 if(MSVC)
     target_compile_options(Emulator PRIVATE
         /W3
@@ -65,11 +76,7 @@ else()
     )
 endif()
 
-# Set Emulator as the startup project
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT Emulator)
-
-# Filters
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/src" PREFIX "Source Files" FILES ${Emulator_SOURCES})
-
-# Enable solution folders
-set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+# VS nicety
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    PROPERTY VS_STARTUP_PROJECT Emulator
+)
