@@ -2,8 +2,8 @@
 #include <fstream>
 #include <iostream>
 
-#include "mapper_NO_MBC.h"
-#include "mapper_MBC1.h"
+#include "mappers/mapper_NO_MBC.h"
+#include "mappers/mapper_MBC1.h"
 
 Cartridge::Cartridge() {
 

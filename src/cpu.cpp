@@ -1,8 +1,6 @@
 #include "cpu.h"
 #include "bus.h"
 #include <stdexcept>
-#include <format>
-#include <iostream>
 
 constexpr CPU::Operand R8(int r)		{ return { CPU::OperandType::R8, r }; };
 constexpr CPU::Operand R16(int r)		{ return { CPU::OperandType::R16, r }; };
