@@ -38,7 +38,7 @@
       "name": "msvc-debug",
       "inherits": "base",
       "displayName": "MSVC Debug",
-      "generator": "Ninja",
+      "generator": "Visual Studio 17 2022",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }

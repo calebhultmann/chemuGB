@@ -43,21 +43,48 @@ target_include_directories(imgui PUBLIC
 	${IMGUI_DIR}/backends
 )
 
+target_link_libraries(imgui PUBLIC
+	SDL3::SDL3
+)
+
 # Executable
 add_executable(Emulator
 	src/main.cpp
-	# Other necessary build files in core
+	src/chemuPixelEngine.cpp
+	src/chemuPixelEngine.h
+	src/errors.h
+	src/bus.cpp
+	src/bus.h
+	src/cartridge.cpp
+	src/cartridge.h
+	src/cpu.cpp
+	src/cpu.h
+	src/emulator.cpp
+	src/emulator.h
+	src/joypad.cpp
+	src/joypad.h
+	src/ppu.cpp
+	src/ppu.h
+	
+	# Mappers
+	src/mapper.cpp
+	src/mapper.h
+	src/mapper_NO_MBC.cpp
+	src/mapper_NO_MBC.h
+	src/mapper_MBC1.cpp
+	src/mapper_MBC1.h
 )
 
-target_include_directories(Emulator PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}/src
-)
 
 # Linking
 target_link_libraries(Emulator PRIVATE
 	SDL3::SDL3
 	OpenGL::GL
 	imgui
+)
+
+target_include_directories(Emulator PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 # Compiler Warnings
