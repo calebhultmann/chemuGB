@@ -1,6 +1,7 @@
 #include <iostream>
 #include "emulator.h"
 #include <filesystem>
+#include "config.h"
 
 int main(int argc, char** argv) {
 /*
@@ -21,13 +22,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	char* rom = argv[argc - 1];
-	std::cout << rom << "\n";
-
-
-	std::filesystem::path filePath = std::filesystem::path(__FILE__).parent_path();
-	filePath /= "..\\roms";
-	filePath /= rom;
+	Config config = parse_args(argc, argv);
 	
 	if (!std::filesystem::exists(filePath)) {
 		std::cerr << "ROM not found in roms/\n";
@@ -39,6 +34,10 @@ int main(int argc, char** argv) {
 	if (init_status != Error::None) {
 		return init_status;
 	}
+
+
+
+
 
 	gb.start();
 	return 0;

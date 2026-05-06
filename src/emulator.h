@@ -3,7 +3,6 @@
 #include "chemuPixelEngine.h"
 #include "bus.h"
 #include <filesystem>
-#include "disassembler.h"
 
 class chemuGB {
 
@@ -11,12 +10,13 @@ public:
 	cpe::pixelEngine engine;
 	Bus system;
 
-	Disassembler* disassembler = nullptr;
-
 	chemuGB();
 	~chemuGB();
 
-// Flags and attributes
+	constexpr uint64_t INPUT_POLL_INTERVAL_MS = 2;
+	uint64_t last_input_poll;
+
+	// Flags and attributes
 private:
 	int DEBUG = 0;
 	int COLOR = 0;
@@ -24,10 +24,6 @@ private:
 
 public:
 	int initialize(std::filesystem::path romPath, uint8_t flags);
-	void start();
-
-private:
-	void drawDebugRegs();
-	void drawDebug();
+	void exit();
 
 };

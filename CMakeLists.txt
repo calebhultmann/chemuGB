@@ -65,6 +65,8 @@ add_executable(Emulator
 	src/joypad.h
 	src/ppu.cpp
 	src/ppu.h
+	src/config.cpp
+	src/config.h
 	
 	# Mappers
 	src/mapper.cpp
@@ -73,7 +75,7 @@ add_executable(Emulator
 	src/mapper_NO_MBC.h
 	src/mapper_MBC1.cpp
 	src/mapper_MBC1.h
-)
+	)
 
 
 # Linking
