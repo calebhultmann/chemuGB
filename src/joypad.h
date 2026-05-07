@@ -1,6 +1,17 @@
 #pragma once
 #include <cstdint>
+#include "SDL3/SDL.h"
 
+enum control {
+	RIGHT,
+	LEFT,
+	UP,
+	DOWN,
+	A,
+	B,
+	SELECT,
+	START
+};
 enum key : uint8_t {
 	KEY_RIGHT  = 0b00001,
 	KEY_LEFT   = 0b00010,

@@ -1,3 +1,7 @@
+class Debugger {
+
+};
+
 /*
 
 void chemuGB::drawDebug() {
