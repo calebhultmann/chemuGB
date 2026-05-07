@@ -1,7 +1,7 @@
 #include <iostream>
-#include "emulator.h"
 #include <filesystem>
 #include "config.h"
+#include "console.h"
 
 int main(int argc, char** argv) {
 /*
@@ -22,23 +22,18 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	Config config = parse_args(argc, argv);
+	Config config;
+	if (parse_args(config, argc, argv) != 0) {
+		//return error
+	}
 	
-	if (!std::filesystem::exists(filePath)) {
+	// handle IMMEDIATE errors here (like rom not existing)
+	if (!std::filesystem::exists(config.filePath)) {
 		std::cerr << "ROM not found in roms/\n";
 		return Error::FileNotFound;
 	}
 
-	chemuGB gb;
-	int init_status = gb.initialize(filePath, 0);
-	if (init_status != Error::None) {
-		return init_status;
-	}
-
-
-
-
-
-	gb.start();
+	Console console(config);
+	console.start();
 	return 0;
 }

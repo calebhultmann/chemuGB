@@ -4,7 +4,7 @@
 #include <SDL3/SDL_render.h>
 
 chemuGB::chemuGB() {
-	DEBUG = true;
+	
 }
 
 chemuGB::~chemuGB() {

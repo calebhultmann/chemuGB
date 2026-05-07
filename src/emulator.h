@@ -1,6 +1,6 @@
 #pragma once
 
-#include "chemuPixelEngine.h"
+#include "renderer/chemuPixelEngine.h"
 #include "bus.h"
 #include <filesystem>
 
@@ -13,17 +13,16 @@ public:
 	chemuGB();
 	~chemuGB();
 
-	constexpr uint64_t INPUT_POLL_INTERVAL_MS = 2;
+	const uint64_t INPUT_POLL_INTERVAL_MS = 2;
 	uint64_t last_input_poll;
 
-	// Flags and attributes
-private:
-	int DEBUG = 0;
-	int COLOR = 0;
-	int SCALE = 8;
+	// how to get rid of these
+	bool pause = false;
+	bool done = false;
 
 public:
 	int initialize(std::filesystem::path romPath, uint8_t flags);
+	void step();
 	void exit();
 
 };
