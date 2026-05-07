@@ -4,7 +4,7 @@ struct Config {
 	bool debug = false;
 	// breakpoint?
 	// trace?
-	std::filesystem::path filepath;
+	std::filesystem::path filePath;
 };
 
-Config parse_args(int argc, char** argv);
+int parse_args(Config& config, int argc, char** argv);
