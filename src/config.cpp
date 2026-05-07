@@ -1,7 +1,7 @@
 #include "config.h"
 #include <iostream>
 
-Config parse_args(Config& config, int argc, char** argv) {
+int parse_args(Config& config, int argc, char** argv) {
 	for (int i = 1; i < argc - 1; i++) {
 		if (argv[i] == "--debug") {
 			config.debug = true;

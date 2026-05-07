@@ -13,8 +13,7 @@ public:
 	chemuGB();
 	~chemuGB();
 
-	const uint64_t INPUT_POLL_INTERVAL_MS = 2;
-	uint64_t last_input_poll;
+
 
 	// how to get rid of these
 	bool pause = false;
@@ -24,5 +23,6 @@ public:
 	int initialize(std::filesystem::path romPath, uint8_t flags);
 	void step();
 	void exit();
+	bool handle_event(SDL_Event& event);
 
 };

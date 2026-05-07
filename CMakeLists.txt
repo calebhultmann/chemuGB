@@ -49,32 +49,51 @@ target_link_libraries(imgui PUBLIC
 
 # Executable
 add_executable(Emulator
-	src/main.cpp
-	src/chemuPixelEngine.cpp
-	src/chemuPixelEngine.h
-	src/errors.h
+	# Core
+
+	# Debugger
+	src/debugger/debugger.h
+
+	# Mappers
+	src/mappers/mapper.cpp
+	src/mappers/mapper.h
+	src/mappers/mapper_NO_MBC.cpp
+	src/mappers/mapper_NO_MBC.h
+	src/mappers/mapper_MBC1.cpp
+	src/mappers/mapper_MBC1.h
+
+	# Renderer
+	src/renderer/chemuPixelEngine.cpp
+	src/renderer/chemuPixelEngine.h
+	
+	
 	src/bus.cpp
 	src/bus.h
+
 	src/cartridge.cpp
 	src/cartridge.h
-	src/cpu.cpp
-	src/cpu.h
-	src/emulator.cpp
-	src/emulator.h
-	src/joypad.cpp
-	src/joypad.h
-	src/ppu.cpp
-	src/ppu.h
+	
 	src/config.cpp
 	src/config.h
 	
-	# Mappers
-	src/mapper.cpp
-	src/mapper.h
-	src/mapper_NO_MBC.cpp
-	src/mapper_NO_MBC.h
-	src/mapper_MBC1.cpp
-	src/mapper_MBC1.h
+	src/console.cpp
+	src/console.h
+	
+	src/cpu.cpp
+	src/cpu.h
+	
+	src/emulator.cpp
+	src/emulator.h
+	
+	src/errors.h
+	
+	src/joypad.cpp
+	src/joypad.h
+	
+	src/main.cpp
+	
+	src/ppu.cpp
+	src/ppu.h
 	)
 
 

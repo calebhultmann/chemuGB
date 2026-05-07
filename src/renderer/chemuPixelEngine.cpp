@@ -140,7 +140,7 @@ namespace cpe
 			return Error::NoSDLWindow;
 		}
 
-		dbg_window = SDL_CreateWindow("chemuGB - Debug", DEBUG_WIDTH * SCALE * 2, DEBUG_HEIGHT * SCALE * 2, SDL_WINDOW_RESIZABLE);
+		/*dbg_window = SDL_CreateWindow("chemuGB - Debug", DEBUG_WIDTH * SCALE * 2, DEBUG_HEIGHT * SCALE * 2, SDL_WINDOW_RESIZABLE);
 		dbg_renderer = SDL_CreateRenderer(dbg_window, NULL);
 		dbg_screen = SDL_CreateTexture(
 			dbg_renderer,
@@ -148,7 +148,7 @@ namespace cpe
 			SDL_TEXTUREACCESS_STREAMING,
 			DEBUG_WIDTH * SCALE,
 			DEBUG_HEIGHT * SCALE);
-		SDL_SetTextureScaleMode(dbg_screen, SDL_SCALEMODE_NEAREST);
+		SDL_SetTextureScaleMode(dbg_screen, SDL_SCALEMODE_NEAREST);*/
 
 		// Create the renderer
 		renderer = SDL_CreateRenderer(window, NULL);
@@ -167,8 +167,8 @@ namespace cpe
 			SCREEN_HEIGHT);
 		SDL_SetTextureScaleMode(screen, SDL_SCALEMODE_NEAREST);
 
-		font.toTexture(dbg_renderer, fontTexture);
-		SDL_SetTextureScaleMode(fontTexture, SDL_SCALEMODE_NEAREST);
+		//font.toTexture(dbg_renderer, fontTexture);
+		//SDL_SetTextureScaleMode(fontTexture, SDL_SCALEMODE_NEAREST);
 		return 0;
 	}
 

@@ -19,12 +19,70 @@ Console::~Console() {
 }
 
 void Console::start() {
+	last_input_poll = SDL_GetTicks();
 	return;
 }
 
-
+#include <iostream>
 void Console::run() {
+	std::cout << "Running!\n";
+	while (running) {
+		poll_events();
+		if (!paused) {
+			gb.step();
+		}
+	}
+}
 
+void Console::poll_events() {
+	// TODO: This will continue to increase while the game is NOT stepping (debugging)
+	//       Does this have negative effects (input every step)?
+	// THIS IS AN OLD TODO, UPDATE TO NEW METHOD
+	uint64_t now = SDL_GetTicks();
+	SDL_Event event;
+
+	if (now - last_input_poll >= INPUT_POLL_INTERVAL_MS) {
+		last_input_poll = now;
+
+		while (SDL_PollEvent(&event)) {
+			// if (debugger.handle_event(event))
+
+			if (handle_global_event(event)) {
+				continue;
+			}
+
+			if (gb.handle_event(event)) {
+				continue;
+			}
+		}
+	}
+
+}
+
+bool Console::handle_global_event(SDL_Event& event) {
+	switch (event.type) {
+	case SDL_EVENT_QUIT:
+		running = false;
+		return true;
+	case SDL_EVENT_KEY_DOWN:
+		switch (event.key.scancode) {
+		// Pause
+		case SDL_SCANCODE_P:
+			paused = !paused;
+			return true;
+
+		// Quit
+		case SDL_SCANCODE_Q:
+			running = false;
+			return true;
+
+		// Green/Grayscale
+		case SDL_SCANCODE_G:
+			gb.engine.palette = 1 - gb.engine.palette;
+			return true;
+		}
+	}
+	return false;
 }
 /*
 

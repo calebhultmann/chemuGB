@@ -35,5 +35,6 @@ int main(int argc, char** argv) {
 
 	Console console(config);
 	console.start();
+	console.run();
 	return 0;
 }
