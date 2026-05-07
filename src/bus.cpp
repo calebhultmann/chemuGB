@@ -16,7 +16,10 @@ int Bus::insertCartridge(const std::filesystem::path romPath) {
 }
 
 void Bus::clock() {
-	div++;
+	if (++t_state == 4) {
+		t_state = 0;
+		div++;
+	}
 
 	if (tac & 0b00000100) {
 		bool inc = false;

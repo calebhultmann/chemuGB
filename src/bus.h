@@ -88,6 +88,7 @@ public:
 public: // system functions
 	int insertCartridge(const std::filesystem::path romPath);
 	void clock();
+	uint8_t t_state = 0;
 
 	bool halt = false;
 
