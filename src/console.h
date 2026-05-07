@@ -2,6 +2,7 @@
 #include "emulator.h"
 #include "debugger/debugger.h"
 #include <SDL3/SDL_events.h>
+#include "renderer/chemuPixelEngine.h"
 
 class Console {
 public:
@@ -11,6 +12,7 @@ public:
 	// renderer
 	chemuGB gb;
 	Debugger debugger;
+	cpe::pixelEngine engine;
 
 	// flags and attributes (in progress)
 	bool debug;

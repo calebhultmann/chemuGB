@@ -8,14 +8,19 @@ Console::Console(Config& config) {
 
 	}
 
+	int status = engine.initialize(false);
+	//if (status != Error::None) {
+	//	return status;
+	//}
+	
 	if (config.debug) {
 		// start debugger and link, turn console debug mode on
 	}
-	
 }
 
 Console::~Console() {
-
+	SDL_DestroyWindow(engine.window);
+	SDL_Quit();
 }
 
 void Console::start() {
@@ -30,6 +35,9 @@ void Console::run() {
 		poll_events();
 		if (!paused) {
 			gb.step();
+			if (gb.system.ppu.is_frame_ready()) {
+				engine.renderFrame(gb.system.ppu.current_frame);
+			}
 		}
 	}
 }
@@ -78,7 +86,7 @@ bool Console::handle_global_event(SDL_Event& event) {
 
 		// Green/Grayscale
 		case SDL_SCANCODE_G:
-			gb.engine.palette = 1 - gb.engine.palette;
+			engine.palette = 1 - engine.palette;
 			return true;
 		}
 	}

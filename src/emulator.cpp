@@ -12,12 +12,7 @@ chemuGB::~chemuGB() {
 }
 
 int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
-	int status = engine.initialize(false);
-	if (status != Error::None) {
-		return status;
-	}
-	
-	status = system.insertCartridge(romPath);
+	int status = system.insertCartridge(romPath);
 	if (status != Error::None) {
 		return status;
 	}
@@ -27,17 +22,6 @@ int chemuGB::initialize(std::filesystem::path romPath, uint8_t flags) {
 
 void chemuGB::step() {
 	system.clock();
-	// TODO: Should this go here or in console/renderer?
-	if (system.ppu.is_frame_ready()) {
-		engine.renderFrame(system.ppu.current_frame);
-		//drawDebug();
-		SDL_RenderPresent(engine.dbg_renderer);
-	}
-}
-
-void chemuGB::exit() {
-	SDL_DestroyWindow(engine.window);
-	SDL_Quit();
 }
 
 bool chemuGB::handle_event(SDL_Event& event) {
