@@ -65,7 +65,9 @@ void Console::poll_events() {
 		last_input_poll = now;
 
 		while (SDL_PollEvent(&event)) {
-			// if (debugger.handle_event(event))
+			if (debugger.handle_event(event)) {
+				continue;
+			}
 
 			if (handle_global_event(event)) {
 				continue;

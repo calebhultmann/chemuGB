@@ -76,7 +76,7 @@ public:
 	void connectBus(Bus* b) { bus = b; }
 
 // Internal Registers
-private:
+public:
 	Reg16 af; // 0bZNHC0000	
 	Reg16 bc;
 	Reg16 de;

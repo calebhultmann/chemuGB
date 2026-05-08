@@ -33,7 +33,21 @@ void Debugger::init() {
 }
 
 bool Debugger::handle_event(const SDL_Event& event) {
-	return true;
+	switch (event.type) {
+	case SDL_EVENT_MOUSE_BUTTON_DOWN:
+		ImGui_ImplSDL3_ProcessEvent(&event);
+		return false;
+	case SDL_EVENT_MOUSE_BUTTON_UP:
+		ImGui_ImplSDL3_ProcessEvent(&event);
+		return false;
+	case SDL_EVENT_MOUSE_WHEEL:
+		ImGui_ImplSDL3_ProcessEvent(&event);
+		return true;
+	case SDL_EVENT_MOUSE_MOTION:
+		ImGui_ImplSDL3_ProcessEvent(&event);
+		return true;
+	}
+	return false;
 }
 
 void Debugger::frame(const chemuGB& gb) {
@@ -50,11 +64,27 @@ void Debugger::begin_frame() {
 }
 
 void Debugger::draw(const chemuGB& gb) {
-	ImGui::Begin("Debugger");
+	//begin regs
+	auto& cpu = gb.system.cpu;
+	ImGui::Begin("Registers");
+	ImGui::Text("A:  %02X", cpu.af.high);
+	ImGui::Text("B:  %02X", cpu.bc.high);
+	ImGui::Text("C:  %02X", cpu.bc.low);
 
-	ImGui::Text("Hello from debugger");
+	ImGui::Separator();
 
+	ImGui::Text("PC: %04X", cpu.pc);
+	ImGui::Text("SP: %04X", cpu.sp);
 	ImGui::End();
+
+
+	
+
+	//ImGui::Begin("Debugger");
+
+	//ImGui::Text("Hello from debugger");
+
+	//ImGui::End();
 }
 
 void Debugger::end_frame() {
