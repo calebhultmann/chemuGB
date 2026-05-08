@@ -1,5 +1,6 @@
 #include "console.h"
 
+
 Console::Console(Config& config) {
 	
 	if (gb.initialize(config.filePath, 0) != Error::None) {
@@ -8,17 +9,19 @@ Console::Console(Config& config) {
 
 	}
 
-	int status = engine.initialize(false);
+	int status = engine.initialize();
 	//if (status != Error::None) {
 	//	return status;
 	//}
-	
+	debug = config.debug;
 	if (config.debug) {
 		// start debugger and link, turn console debug mode on
+		debugger.init();
 	}
 }
 
 Console::~Console() {
+	SDL_DestroyRenderer(engine.renderer);
 	SDL_DestroyWindow(engine.window);
 	SDL_Quit();
 }
@@ -30,15 +33,24 @@ void Console::start() {
 
 #include <iostream>
 void Console::run() {
-	std::cout << "Running!\n";
 	while (running) {
 		poll_events();
 		if (!paused) {
+			//std::cout << "step\n";
 			gb.step();
+
+			// TODO: This will have to be moved in order for debugger to be operational while emu is paused
+			if (debug &&
+				mode == DEBUG_MODE::NORMAL &&
+				gb.system.ppu.frame_ready) {
+				debugger.frame(gb);
+			}
 			if (gb.system.ppu.is_frame_ready()) {
 				engine.renderFrame(gb.system.ppu.current_frame);
 			}
 		}
+
+
 	}
 }
 

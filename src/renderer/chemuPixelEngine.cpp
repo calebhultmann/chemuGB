@@ -118,11 +118,9 @@ namespace cpe
 		}
 	}
 
-	int pixelEngine::initialize(bool debug) {
+	int pixelEngine::initialize() {
 		int SCREEN_HEIGHT = 144;
 		int SCREEN_WIDTH = 160;
-		int DEBUG_WIDTH = 64;
-		int DEBUG_HEIGHT = 40;
 		SCALE = 8;
 
 		// Initialize SDL3
@@ -139,16 +137,6 @@ namespace cpe
 			SDL_Quit();
 			return Error::NoSDLWindow;
 		}
-
-		/*dbg_window = SDL_CreateWindow("chemuGB - Debug", DEBUG_WIDTH * SCALE * 2, DEBUG_HEIGHT * SCALE * 2, SDL_WINDOW_RESIZABLE);
-		dbg_renderer = SDL_CreateRenderer(dbg_window, NULL);
-		dbg_screen = SDL_CreateTexture(
-			dbg_renderer,
-			SDL_PIXELFORMAT_ARGB8888,
-			SDL_TEXTUREACCESS_STREAMING,
-			DEBUG_WIDTH * SCALE,
-			DEBUG_HEIGHT * SCALE);
-		SDL_SetTextureScaleMode(dbg_screen, SDL_SCALEMODE_NEAREST);*/
 
 		// Create the renderer
 		renderer = SDL_CreateRenderer(window, NULL);
@@ -167,33 +155,31 @@ namespace cpe
 			SCREEN_HEIGHT);
 		SDL_SetTextureScaleMode(screen, SDL_SCALEMODE_NEAREST);
 
-		//font.toTexture(dbg_renderer, fontTexture);
-		//SDL_SetTextureScaleMode(fontTexture, SDL_SCALEMODE_NEAREST);
 		return 0;
 	}
 
-	void pixelEngine::DrawString(int x, int y, std::string text, Pixel color) {
-		SDL_SetTextureColorMod(fontTexture, color.r, color.g, color.b);
-		int init_x = x;
-		for (size_t i = 0; i < text.length(); i++) {
-			
-			char c = text[i];
-			if (c == '\n') {
-				x = init_x;
-				y += (2 * SCALE);
-				continue;
-			}
-			int index = c - 32;
-			int srcX = (index % 16) * 8;
-			int srcY = (index / 16) * 8;
-			
-			SDL_FRect srcRect = { static_cast<float>(srcX), static_cast<float>(srcY), 8, 8 };
-			SDL_FRect dstRect = { static_cast<float>(x), static_cast<float>(y), 16, 16 };
-			x += (2 * SCALE);
+	//void pixelEngine::DrawString(int x, int y, std::string text, Pixel color) {
+	//	SDL_SetTextureColorMod(fontTexture, color.r, color.g, color.b);
+	//	int init_x = x;
+	//	for (size_t i = 0; i < text.length(); i++) {
+	//		
+	//		char c = text[i];
+	//		if (c == '\n') {
+	//			x = init_x;
+	//			y += (2 * SCALE);
+	//			continue;
+	//		}
+	//		int index = c - 32;
+	//		int srcX = (index % 16) * 8;
+	//		int srcY = (index / 16) * 8;
+	//		
+	//		SDL_FRect srcRect = { static_cast<float>(srcX), static_cast<float>(srcY), 8, 8 };
+	//		SDL_FRect dstRect = { static_cast<float>(x), static_cast<float>(y), 16, 16 };
+	//		x += (2 * SCALE);
 
-			SDL_RenderTexture(dbg_renderer, fontTexture, &srcRect, &dstRect);
-		}
-	}
+	//		SDL_RenderTexture(dbg_renderer, fontTexture, &srcRect, &dstRect);
+	//	}
+	//}
 
 	void pixelEngine::renderFrame(uint8_t current_frame[]) {
 		// Turn frame info into frame buffer

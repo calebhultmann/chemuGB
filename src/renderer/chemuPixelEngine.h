@@ -47,11 +47,8 @@ namespace cpe
 		pixelEngine();
 
 		SDL_Window* window = nullptr;
-		SDL_Window* dbg_window = nullptr;
 		SDL_Renderer* renderer = nullptr;
-		SDL_Renderer* dbg_renderer = nullptr;
 		SDL_Texture* screen = nullptr;
-		SDL_Texture* dbg_screen = nullptr;
 
 		Sprite font;
 		SDL_Texture* fontTexture = nullptr;
@@ -61,7 +58,7 @@ namespace cpe
 		std::array<uint32_t, GB_W * GB_H> frame_buffer;
 		
 		void constructFontSheet();
-		int initialize(bool debug);
+		int initialize();
 		void renderFrame(uint8_t current_frame[]);
 		void DrawString(int x, int y, std::string text, Pixel color);
 	};

@@ -35,7 +35,7 @@ add_library(imgui
 	${IMGUI_DIR}/imgui_widgets.cpp
 
 	${IMGUI_DIR}/backends/imgui_impl_sdl3.cpp
-	${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp
+	${IMGUI_DIR}/backends/imgui_impl_sdlrenderer3.cpp
 )
 
 target_include_directories(imgui PUBLIC
@@ -52,6 +52,7 @@ add_executable(Emulator
 	# Core
 
 	# Debugger
+	src/debugger/debugger.cpp
 	src/debugger/debugger.h
 
 	# Mappers

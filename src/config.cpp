@@ -1,9 +1,11 @@
 #include "config.h"
 #include <iostream>
+#include <string>
 
 int parse_args(Config& config, int argc, char** argv) {
 	for (int i = 1; i < argc - 1; i++) {
-		if (argv[i] == "--debug") {
+		std::string arg = argv[i];
+		if (arg == "--debug") {
 			config.debug = true;
 		}
 	}

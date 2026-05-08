@@ -1,5 +1,23 @@
-class Debugger {
+#pragma once
 
+#include <SDL3/SDL_render.h>
+
+class chemuGB;
+
+class Debugger {
+public:
+	Debugger();
+	~Debugger();
+	void init();
+
+	SDL_Window* window;
+	SDL_Renderer* renderer;
+
+	bool handle_event(const SDL_Event& event);
+	void frame(const chemuGB&);
+	void begin_frame();
+	void draw(const chemuGB&);
+	void end_frame();
 };
 
 /*

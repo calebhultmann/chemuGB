@@ -4,6 +4,11 @@
 #include <SDL3/SDL_events.h>
 #include "renderer/chemuPixelEngine.h"
 
+enum DEBUG_MODE {
+	NORMAL,
+	STEP
+};
+
 class Console {
 public:
 	Console(Config& config);
@@ -21,6 +26,14 @@ public:
 	bool running = true;
 	bool paused = false;
 	// int scale = 8; can i get rid of this somehow? what is it used for?
+	// normal mode -> update debugger every emu frame
+	// step mode -> update debugger every emu step
+
+	// TODO: TOGGLE MODE
+	//	         New control button 'O' switches debug mode (only works in debug mode)
+	//           When in Step Mode, emulator steps IFF step button 'I' is pressed
+	//           Deactivating Step Mode returns the console back to Normal Mode
+	int mode = DEBUG_MODE::NORMAL;
 
 	const uint64_t INPUT_POLL_INTERVAL_MS = 2;
 	uint64_t last_input_poll;
