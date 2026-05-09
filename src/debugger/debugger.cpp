@@ -24,7 +24,7 @@ void Debugger::init() {
 
 	ImGui::StyleColorsDark();
 
-	window = SDL_CreateWindow("debug", 1920, 1080, 0);
+	window = SDL_CreateWindow("debug", 480, 270, 0);
 	renderer = SDL_CreateRenderer(window, NULL);
 
 	ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
@@ -50,6 +50,93 @@ bool Debugger::handle_event(const SDL_Event& event) {
 	return false;
 }
 
+void Debugger::draw_registers(const chemuGB& gb) {
+	using namespace ImGui;
+	auto& cpu = gb.system.cpu;
+
+	if (BeginTable("regs", 5, ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_BordersInnerV | ImGuiTableFlags_SizingFixedSame)) {
+		TableNextRow();
+		TableSetColumnIndex(0);
+		Text("B");
+		TableSetColumnIndex(1);
+		Text("%02X", cpu.bc.high);
+		TableSetColumnIndex(2);
+		Text("  %3d", cpu.bc.high);
+		TableSetColumnIndex(3);
+		Text("BC");
+		TableSetColumnIndex(4);
+		Text(" %04X", cpu.bc.reg);
+		TableNextRow();
+		TableSetColumnIndex(0);
+		Text("C");
+		TableSetColumnIndex(1);
+		Text("%02X", cpu.bc.low);
+		TableSetColumnIndex(2);
+		Text("  %3d", cpu.bc.low);
+		TableSetColumnIndex(4);
+		Text("%5d", cpu.bc.reg);
+
+		TableNextRow();
+		TableSetColumnIndex(0);
+		Text("D");
+		TableSetColumnIndex(1);
+		Text("%02X", cpu.de.high);
+		TableSetColumnIndex(2);
+		Text("  %3d", cpu.de.high);
+		TableSetColumnIndex(3);
+		Text("DE");
+		TableSetColumnIndex(4);
+		Text(" %04X", cpu.de.reg);
+		TableNextRow();
+		TableSetColumnIndex(0);
+		Text("E");
+		TableSetColumnIndex(1);
+		Text("%02X", cpu.de.low);
+		TableSetColumnIndex(2);
+		Text("  %3d", cpu.de.low);
+		TableSetColumnIndex(4);
+		Text("%5d", cpu.de.reg);
+
+		TableNextRow();
+		TableSetColumnIndex(0);
+		Text("H");
+		TableSetColumnIndex(1);
+		Text("%02X", cpu.hl.high);
+		TableSetColumnIndex(2);
+		Text("  %3d", cpu.hl.high);
+		TableSetColumnIndex(3);
+		Text("HL");
+		TableSetColumnIndex(4);
+		Text(" %04X", cpu.hl.reg);
+		TableNextRow();
+		TableSetColumnIndex(0);
+		Text("L");
+		TableSetColumnIndex(1);
+		Text("%02X", cpu.hl.low);
+		TableSetColumnIndex(2);
+		Text("  %3d", cpu.hl.low);
+		TableSetColumnIndex(4);
+		Text("%5d", cpu.hl.reg);
+
+		TableNextRow();
+		TableSetColumnIndex(0);
+		Text("PC");
+		TableSetColumnIndex(2);
+		Text(" %04X", cpu.pc);
+		TableSetColumnIndex(3);
+		Text("SP");
+		TableSetColumnIndex(4);
+		Text(" %04X", cpu.sp);
+		TableNextRow();
+		TableSetColumnIndex(2);
+		Text("%5d", cpu.pc);
+		TableSetColumnIndex(4);
+		Text("%5d", cpu.sp);
+
+		EndTable();
+	}
+}
+
 void Debugger::frame(const chemuGB& gb) {
 	begin_frame();
 	draw(gb);
@@ -57,6 +144,8 @@ void Debugger::frame(const chemuGB& gb) {
 }
 
 void Debugger::begin_frame() {
+	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+	SDL_RenderClear(renderer);
 	ImGui_ImplSDLRenderer3_NewFrame();
 	ImGui_ImplSDL3_NewFrame();
 
@@ -64,27 +153,7 @@ void Debugger::begin_frame() {
 }
 
 void Debugger::draw(const chemuGB& gb) {
-	//begin regs
-	auto& cpu = gb.system.cpu;
-	ImGui::Begin("Registers");
-	ImGui::Text("A:  %02X", cpu.af.high);
-	ImGui::Text("B:  %02X", cpu.bc.high);
-	ImGui::Text("C:  %02X", cpu.bc.low);
-
-	ImGui::Separator();
-
-	ImGui::Text("PC: %04X", cpu.pc);
-	ImGui::Text("SP: %04X", cpu.sp);
-	ImGui::End();
-
-
-	
-
-	//ImGui::Begin("Debugger");
-
-	//ImGui::Text("Hello from debugger");
-
-	//ImGui::End();
+	draw_registers(gb);
 }
 
 void Debugger::end_frame() {

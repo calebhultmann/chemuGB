@@ -13,7 +13,10 @@ public:
 	SDL_Window* window;
 	SDL_Renderer* renderer;
 
-	bool handle_event(const SDL_Event& event);
+	bool handle_event(const SDL_Event&);
+
+	void draw_registers(const chemuGB&) {
+	
 	void frame(const chemuGB&);
 	void begin_frame();
 	void draw(const chemuGB&);
