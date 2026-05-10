@@ -17,7 +17,7 @@ public:
 	// renderer
 	chemuGB gb;
 	Debugger debugger;
-	cpe::pixelEngine engine;
+	pixelEngine engine;
 
 	// flags and attributes (in progress)
 	bool debug;

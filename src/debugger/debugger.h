@@ -3,19 +3,26 @@
 #include <SDL3/SDL_render.h>
 
 class chemuGB;
+class pixelEngine;
 
 class Debugger {
 public:
 	Debugger();
 	~Debugger();
-	void init();
+	void init(pixelEngine&);
+
+	pixelEngine* engine = nullptr;
 
 	SDL_Window* window;
 	SDL_Renderer* renderer;
+	SDL_Texture* texture;
+
+	uint32_t vram_pixels[128 * 64];
 
 	bool handle_event(const SDL_Event&);
 
-	void draw_registers(const chemuGB&) {
+	void draw_registers(const chemuGB&);
+	void draw_vram(const chemuGB&);
 	
 	void frame(const chemuGB&);
 	void begin_frame();

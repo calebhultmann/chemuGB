@@ -16,7 +16,7 @@ Console::Console(Config& config) {
 	debug = config.debug;
 	if (config.debug) {
 		// start debugger and link, turn console debug mode on
-		debugger.init();
+		debugger.init(engine);
 	}
 }
 
