@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SDL3/SDL_render.h>
+#include <array>
 
 class chemuGB;
 class pixelEngine;
@@ -15,14 +16,16 @@ public:
 
 	SDL_Window* window;
 	SDL_Renderer* renderer;
-	SDL_Texture* texture;
+	SDL_Texture* vramtexture;
 
-	uint32_t vram_pixels[128 * 64];
+	std::array<uint32_t, 128 * 64> tileblock_buffer;
 
 	bool handle_event(const SDL_Event&);
 
 	void draw_registers(const chemuGB&);
 	void draw_vram(const chemuGB&);
+	void draw_background(const chemuGB&);
+
 	
 	void frame(const chemuGB&);
 	void begin_frame();

@@ -236,7 +236,7 @@ bool PPU::is_frame_ready() {
 	return false;
 }
 
-uint8_t PPU::read(uint16_t addr) {
+uint8_t PPU::read(uint16_t addr) const {
 	if (addr >= 0x8000 && addr <= 0x9FFF) {
 		if ((bus->stat & 0b00000011) == 3) {
 			return 0xF;
@@ -271,7 +271,7 @@ void PPU::write(uint16_t addr, uint8_t data) {
 	}
 }
 
-uint8_t PPU::getIdFromTilemap(bool is_window, uint8_t tile_x, uint8_t tile_y) {
+uint8_t PPU::getIdFromTilemap(bool is_window, uint8_t tile_x, uint8_t tile_y) const {
 	uint16_t init_addr = 0x1800;
 	if (is_window && bus->lcdc & 0b01000000) {
 		init_addr = 0x1C00;
@@ -283,7 +283,7 @@ uint8_t PPU::getIdFromTilemap(bool is_window, uint8_t tile_x, uint8_t tile_y) {
 	return vram[init_addr + (tile_y / 8) * 32 + tile_x];
 }
 
-uint16_t PPU::getTileAddress(uint8_t tile_index) {
+uint16_t PPU::getTileAddress(uint8_t tile_index) const {
 	if (bus->lcdc & 0b00010000) {
 		return 0x0000 + 16 * tile_index;
 	}

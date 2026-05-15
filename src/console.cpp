@@ -2,7 +2,7 @@
 
 
 Console::Console(Config& config) {
-	
+	// TODO: exit statuses for failed inits
 	if (gb.initialize(config.filePath, 0) != Error::None) {
 		// How to deal with exit status in constructor
 		// return init_status
@@ -31,12 +31,10 @@ void Console::start() {
 	return;
 }
 
-#include <iostream>
 void Console::run() {
 	while (running) {
 		poll_events();
 		if (!paused) {
-			//std::cout << "step\n";
 			gb.step();
 
 			// TODO: This will have to be moved in order for debugger to be operational while emu is paused
@@ -49,8 +47,6 @@ void Console::run() {
 				engine.renderFrame(gb.system.ppu.current_frame);
 			}
 		}
-
-
 	}
 }
 

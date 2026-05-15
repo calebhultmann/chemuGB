@@ -34,7 +34,7 @@ void Debugger::init(pixelEngine& eng) {
 
 	engine = &eng;
 
-	texture = SDL_CreateTexture(
+	vramtexture = SDL_CreateTexture(
 		renderer,
 		SDL_PIXELFORMAT_ARGB8888,
 		SDL_TEXTUREACCESS_STREAMING,
@@ -147,6 +147,7 @@ void Debugger::draw_registers(const chemuGB& gb) {
 		EndTable();
 	}
 }
+
 void Debugger::draw_vram(const chemuGB& gb) {
 	auto& vram = gb.system.ppu.vram;
 
@@ -174,7 +175,7 @@ void Debugger::draw_vram(const chemuGB& gb) {
 
 		SDL_Rect tileblock_rect = { 0, 64 * tileblock, 128, 64 };
 		SDL_UpdateTexture(
-			texture,
+			vramtexture,
 			&tileblock_rect,
 			tileblock_buffer.data(),
 			128 * sizeof(uint32_t)
@@ -184,12 +185,61 @@ void Debugger::draw_vram(const chemuGB& gb) {
 	ImGui::Begin("Tile Viewer");
 
 	ImGui::Image(
-		(ImTextureID)(intptr_t)texture,
+		(ImTextureID)(intptr_t)vramtexture,
 		ImVec2(128 * 2, 192 * 2)
 	);
 
 	ImGui::End();
 }
+
+//void Debugger::draw_background(const chemuGB& gb) {
+//	auto& vram = gb.system.ppu.vram;
+//	uint32_t scanline_buffer[160];
+//
+//	uint8_t tile_x_index = 0;
+//	uint8_t tile_data_low = 0;
+//	uint8_t tile_data_high = 0;
+//
+//	int curr_bit = -1;
+//	curr_bit -= gb.system.scx % 8;
+//
+//	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
+//		// Get next tile from background/window
+//		if (curr_bit < 0) {
+//			uint8_t tile_x;
+//			uint8_t tile_y;
+//
+//			tile_x = ((gb.system.scx / 8) + tile_x_index) & 0x1F;
+//			tile_y = (gb.system.ly + gb.system.scy) & 0xFF;
+//			curr_bit += 8;
+//
+//			uint8_t tile_index = gb.system.ppu.getIdFromTilemap(false, tile_x, tile_y);
+//			uint16_t tile_address = gb.system.ppu.getTileAddress(tile_index);
+//
+//			tile_data_low = vram[tile_address + (2 * (tile_y % 8))];
+//			tile_data_high = vram[tile_address + (2 * (tile_y % 8)) + 1];
+//
+//			tile_x_index++;
+//		}
+//
+//		uint8_t high_bit = ((tile_data_high & (0b10000000 >> (7 - curr_bit))) >> curr_bit) << 1;
+//		uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - curr_bit))) >> curr_bit;
+//
+//		uint8_t color = high_bit | low_bit;
+//
+//		scanline_buffer[curr_pixel] = engine->gameboy_palette[engine->palette][color];
+//		curr_bit--;
+//
+//		//SDL_Rect tilemap_rect = { 0, 0, 256, 256 };
+//
+//		//SDL_UpdateTexture(
+//		//	engine.dbg_screen,
+//		//	&tilemap_rect,
+//		//	tilemap_buffer.data(),
+//		//	256 * sizeof(uint32_t)
+//		//);
+//	}
+//}
 
 void Debugger::frame(const chemuGB& gb) {
 	begin_frame();

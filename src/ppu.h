@@ -44,11 +44,11 @@ public:
 	int dot_count = 0;
 	bool wy_condition = false;
 	
-	uint8_t read(uint16_t addr);
+	uint8_t read(uint16_t addr) const;
 	void write(uint16_t addr, uint8_t data);
 
-	uint8_t getIdFromTilemap(bool is_window, uint8_t tile_x, uint8_t tile_y);
-	uint16_t getTileAddress(uint8_t tile_index);
+	uint8_t getIdFromTilemap(bool is_window, uint8_t tile_x, uint8_t tile_y) const;
+	uint16_t getTileAddress(uint8_t tile_index) const;
 	
 	void changeMode(uint8_t mode);
 	void prepareScanline();
