@@ -1,14 +1,12 @@
 #include "ppu.h"
 #include "bus.h"
+#include "debugger/hooks.h"
 
 void PPU::changeMode(uint8_t mode) {
 	bus->stat = (bus->stat & 0b11111100) | (mode & 0b00000011);
 }
 
 void PPU::prepareBackground() {
-	bool is_window = false;
-	bool wx_condition = false;
-
 	uint8_t tile_x_index = 0;
 	uint8_t tile_data_low = 0;
 	uint8_t tile_data_high = 0;
@@ -17,42 +15,16 @@ void PPU::prepareBackground() {
 	curr_bit -= bus->scx % 8;
 
 	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
-		// Check for window activation
-		if (curr_pixel + 7 == bus->wx) {
-			wx_condition = true;
-
-			if ((bus->lcdc & 0b00100000) && wy_condition) {
-				is_window = true;
-
-				uint8_t tile_x = tile_x_index;
-				uint8_t tile_y = (bus->ly + bus->wy) & 0xFF;
-
-				uint8_t tile_index = getIdFromTilemap(is_window, tile_x, tile_y);
-				uint16_t tile_address = getTileAddress(tile_index);
-
-				tile_data_low = vram[tile_address + (2 * (tile_y % 8))];
-				tile_data_high = vram[tile_address + (2 * (tile_y % 8)) + 1];
-			}
-		}
-
 		// Get next tile from background/window
 		if (curr_bit < 0) {
 			uint8_t tile_x;
 			uint8_t tile_y;
 
-			if (is_window) {
-				tile_x = tile_x_index;
-				tile_y = (bus->ly + bus->wy) & 0xFF;
-				curr_bit = 7;
+			tile_x = ((bus->scx / 8) + tile_x_index) & 0x1F;
+			tile_y = (bus->ly + bus->scy) & 0xFF;
+			curr_bit += 8;
 
-			}
-			else {
-				tile_x = ((bus->scx / 8) + tile_x_index) & 0x1F;
-				tile_y = (bus->ly + bus->scy) & 0xFF;
-				curr_bit += 8;
-			}
-
-			uint8_t tile_index = getIdFromTilemap(is_window, tile_x, tile_y);
+			uint8_t tile_index = getIdFromTilemap(false, tile_x, tile_y);
 			uint16_t tile_address = getTileAddress(tile_index);
 
 			tile_data_low = vram[tile_address + (2 * (tile_y % 8))];
@@ -65,7 +37,75 @@ void PPU::prepareBackground() {
 		uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - curr_bit))) >> curr_bit;
 
 		uint8_t color = high_bit | low_bit;
-		bg_scanline_buffer[curr_pixel] = { color, is_window };
+		bg_scanline_buffer[curr_pixel] = color;
+		curr_bit--;
+	}
+}
+
+void PPU::prepareWindow() {
+	for (uint8_t x = 0; x < GB_W; x++) {
+		window_scanline_buffer[x].window = 0;
+	}
+
+	bool is_window = false;
+
+	uint8_t tile_x_index = 0;
+	uint8_t tile_data_low = 0;
+	uint8_t tile_data_high = 0;
+
+	int curr_bit = -1;
+	curr_bit -= bus->scx % 8;
+
+	if (!(bus->lcdc & 0b00100000) || !wy_condition) {
+		return;
+	}
+
+
+	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
+		// Check for window activation
+		// TODO: THIS BUGS OUT WHEN WX < 7
+		// TODO: THIS DOESN'T WORK WHEN WX is MOVE RIGHT
+		
+		// Activate on WX (FIX)
+		if (curr_pixel + 7 == bus->wx) {
+			is_window = true;
+
+			uint8_t tile_x = tile_x_index;
+			uint8_t tile_y = (bus->ly + bus->wy) & 0xFF;
+
+			uint8_t tile_index = getIdFromTilemap(is_window, tile_x, tile_y);
+			uint16_t tile_address = getTileAddress(tile_index);
+
+			tile_data_low = vram[tile_address + (2 * (tile_y % 8))];
+			tile_data_high = vram[tile_address + (2 * (tile_y % 8)) + 1];
+		}
+
+		if (!is_window) {
+			continue;
+		}
+
+		if (curr_bit < 0) {
+			uint8_t tile_x;
+			uint8_t tile_y;
+
+			tile_x = tile_x_index;
+			tile_y = (bus->ly + bus->wy) & 0xFF;
+			curr_bit = 7;
+
+			uint8_t tile_index = getIdFromTilemap(true, tile_x, tile_y);
+			uint16_t tile_address = getTileAddress(tile_index);
+
+			tile_data_low = vram[tile_address + (2 * (tile_y % 8))];
+			tile_data_high = vram[tile_address + (2 * (tile_y % 8)) + 1];
+
+			tile_x_index++;
+		}
+
+		uint8_t high_bit = ((tile_data_high & (0b10000000 >> (7 - curr_bit))) >> curr_bit) << 1;
+		uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - curr_bit))) >> curr_bit;
+
+		uint8_t color = high_bit | low_bit;
+		window_scanline_buffer[curr_pixel] = { color, is_window };
 		curr_bit--;
 	}
 }
@@ -155,14 +195,26 @@ void PPU::prepareObjects() {
 }
 
 void PPU::prepareScanline() {
+	if (hooks.on_scanline) {
+		hooks.on_scanline(bus->ly);
+	}
+
 	prepareBackground();
+	prepareWindow();
 	prepareObjects();
 
 	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
 		uint8_t pixel_color;
 
-		if (bg_scanline_buffer[curr_pixel].window || obj_scanline_buffer[curr_pixel].color == 0 || (obj_scanline_buffer[curr_pixel].priority && bg_scanline_buffer[curr_pixel].color != 0)) {
-			uint8_t color = bg_scanline_buffer[curr_pixel].color;
+		if (window_scanline_buffer[curr_pixel].window) {
+			uint8_t color = window_scanline_buffer[curr_pixel].color;
+			pixel_color = (bus->bgp & (0b11 << (2 * color))) >> (2 * color);
+		}
+		else if (obj_scanline_buffer[curr_pixel].color == 0 ||
+				(obj_scanline_buffer[curr_pixel].priority && bg_scanline_buffer[curr_pixel] != 0)
+				) {
+
+			uint8_t color = bg_scanline_buffer[curr_pixel];
 			pixel_color = (bus->bgp & (0b11 << (2 * color))) >> (2 * color);
 		}
 		else {
