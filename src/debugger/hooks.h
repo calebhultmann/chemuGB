@@ -20,9 +20,9 @@ struct RenderEvent {
 
 	// optional metadata for later
 	// uint16_t tile_index = 0
-	// uint8_t palette = 0
 	// uint8_t obj_index = 0;
 
+	uint8_t palette = 0;
 	bool priority = false;
 	bool window_on = false;
 };

@@ -5,6 +5,7 @@
 #include "../external/imgui/backends/imgui_impl_sdl3.h"
 #include "../external/imgui/backends/imgui_impl_sdlrenderer3.h"
 #include "../renderer/chemuPixelEngine.h"
+#include "hooks.h"
 
 Debugger::Debugger() {
 
@@ -16,7 +17,8 @@ Debugger::~Debugger() {
 	SDL_Quit();
 }
 #include <iostream>
-void Debugger::init(pixelEngine& eng) {
+void Debugger::init(pixelEngine& eng, chemuGB& gb) {
+	// Initialize ImGui
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
@@ -29,11 +31,11 @@ void Debugger::init(pixelEngine& eng) {
 	renderer = SDL_CreateRenderer(window, NULL);
 
 	ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
-	
 	ImGui_ImplSDLRenderer3_Init(renderer);
 
 	engine = &eng;
 
+	// Initialize necessary textures
 	vramtexture = SDL_CreateTexture(
 		renderer,
 		SDL_PIXELFORMAT_ARGB8888,
@@ -41,6 +43,34 @@ void Debugger::init(pixelEngine& eng) {
 		128,
 		192
 	);
+
+	composite_layer_texture = SDL_CreateTexture(
+		renderer,
+		SDL_PIXELFORMAT_ARGB8888,
+		SDL_TEXTUREACCESS_STREAMING,
+		160,
+		144
+	);
+
+	gb.system.ppu.hooks.on_render_event = [&](const RenderEvent& event) {
+		int pixel_index = event.y * 160 + event.x;
+		switch (event.type) {
+		case RenderEventType::BG_PIXEL:
+			bg_buffer[pixel_index].color_index = event.color_index;
+			break;
+		case RenderEventType::WINDOW_PIXEL:
+			window_buffer[pixel_index].color_index = event.color_index;
+			window_buffer[pixel_index].window_on = event.window_on;
+			break;
+		case RenderEventType::OBJECT_PIXEL:
+			obj_buffer[pixel_index].color_index = event.color_index;
+			obj_buffer[pixel_index].priority = event.priority;
+			obj_buffer[pixel_index].palette = event.palette;
+			break;
+		}
+
+	};
+
 }
 
 bool Debugger::handle_event(const SDL_Event& event) {
@@ -192,6 +222,91 @@ void Debugger::draw_vram(const chemuGB& gb) {
 	ImGui::End();
 }
 
+void Debugger::compose_background_layer(const chemuGB& gb) {
+	for (size_t i = 0; i < GB_SIZE; i++) {	
+		composite_buffer[i].source_layer = Layer::BG;
+		composite_buffer[i].color_index = bg_buffer[i].color_index;
+		composite_buffer[i].palette = gb.system.bgp;
+		composite_buffer[i].pixel_on = true;
+	}
+}
+
+void Debugger::compose_window_layer(const chemuGB& gb) {
+	for (size_t i = 0; i < GB_SIZE; i++) {
+		if (!window_buffer[i].window_on) {
+			continue;
+		}
+
+		composite_buffer[i].source_layer = Layer::Window;
+		composite_buffer[i].color_index = window_buffer[i].color_index;
+		composite_buffer[i].palette = gb.system.bgp;
+		composite_buffer[i].pixel_on = true;
+	}
+}
+
+void Debugger::compose_object_layer(const chemuGB& gb) {
+	for (size_t i = 0; i < GB_SIZE; i++) {
+		if (obj_buffer[i].color_index == 0) {
+			continue;
+		}
+
+		if ((obj_buffer[i].priority == 0) ||
+			(composite_buffer[i].color_index == 0)) {
+			composite_buffer[i].source_layer = Layer::OBJ;
+			composite_buffer[i].color_index = obj_buffer[i].color_index;
+			composite_buffer[i].palette = obj_buffer[i].palette;
+			composite_buffer[i].pixel_on = true;
+		}
+	}
+}
+
+void Debugger::draw_composed_layers() {
+	for (size_t i = 0; i < GB_SIZE; i++) {
+		if (!composite_buffer[i].pixel_on) {
+			continue;
+		}
+
+		uint8_t color = (composite_buffer[i].palette & (0b11 << (2 * composite_buffer[i].color_index))) >> (2 * composite_buffer[i].color_index);
+		composite_data_buffer[i] = engine->gameboy_palette[engine->palette][color];
+	}
+}
+
+void Debugger::draw_layers(const chemuGB& gb) {
+	CompositePixelData zero = { Layer::BG, 0, 0, 0 };
+
+	std::fill(composite_buffer.begin(), composite_buffer.end(), zero);
+	std::fill(composite_data_buffer.begin(), composite_data_buffer.end(), 0);
+
+	ImGui::Begin("Layer Viewer");
+	ImGui::Checkbox("Background", &background_layer);
+	ImGui::Checkbox("Window", &window_layer);
+	ImGui::Checkbox("Objects", &objects_layer);
+	if (background_layer) {
+		compose_background_layer(gb);
+	}
+	if (window_layer) {
+		compose_window_layer(gb);
+	}
+	if (objects_layer) {
+		compose_object_layer(gb);
+	}
+
+	draw_composed_layers();
+
+	SDL_UpdateTexture(
+		composite_layer_texture,
+		nullptr,
+		composite_data_buffer.data(),
+		GB_W * sizeof(uint32_t)
+	);
+
+	ImGui::Image(
+		(ImTextureID)(intptr_t)composite_layer_texture,
+		ImVec2(160 * 2, 144 * 2)
+	);
+
+	ImGui::End();
+}
 //void Debugger::draw_background(const chemuGB& gb) {
 //	auto& vram = gb.system.ppu.vram;
 //	uint32_t scanline_buffer[160];
@@ -259,6 +374,7 @@ void Debugger::begin_frame() {
 void Debugger::draw(const chemuGB& gb) {
 	draw_registers(gb);
 	draw_vram(gb);
+	draw_layers(gb);
 }
 
 void Debugger::end_frame() {

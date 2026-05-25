@@ -147,6 +147,7 @@ void PPU::prepareWindow() {
 			event.y = bus->ly;
 
 			event.color_index = color;
+			event.window_on = true;
 
 			hooks.on_render_event(event);
 		}
@@ -246,6 +247,21 @@ void PPU::prepareObjects() {
 			curr.palette = tile_attr & PALETTE ? bus->obp1 : bus->obp0;
 			curr.priority = tile_attr & PRIORITY;
 			curr.init_x = tile_x;
+
+			if (hooks.on_render_event) {
+				RenderEvent event;
+
+				event.type = RenderEventType::OBJECT_PIXEL;
+
+				event.x = loc_x;
+				event.y = bus->ly;
+
+				event.color_index = new_color;
+				event.priority = curr.priority;
+				event.palette = curr.palette;
+
+				hooks.on_render_event(event);
+			}
 		}
 	}
 }
