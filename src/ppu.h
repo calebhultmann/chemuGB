@@ -23,14 +23,14 @@ public:
 	uint8_t oam[0xA0];
 
 	struct OBJ_Pixel {
-		uint8_t color;
+		uint8_t color_index;
 		uint8_t palette;
 		uint8_t priority;
 		uint8_t init_x;
 	};
 
 	struct WINDOW_Pixel {
-		uint8_t color;
+		uint8_t color_index;
 		bool window;
 	};
 
@@ -52,7 +52,8 @@ public:
 
 	uint8_t getIdFromTilemap(bool is_window, uint8_t tile_x, uint8_t tile_y) const;
 	uint16_t getTileAddress(uint8_t tile_index) const;
-	
+	uint8_t getColorFromIndex(uint8_t palette, uint8_t index) const;
+
 	void changeMode(uint8_t mode);
 	void prepareScanline();
 	void prepareBackground();
