@@ -28,24 +28,45 @@ Console::~Console() {
 
 void Console::start() {
 	last_input_poll = SDL_GetTicks();
+	mode = CONSOLE_MODE::RUNNING;
 	return;
 }
 
 void Console::run() {
 	while (running) {
-		poll_events();
-		if (!paused) {
+		switch (mode) {
+		case CONSOLE_MODE::RUNNING:
+			poll_events();
 			gb.step();
-
-			// TODO: This will have to be moved in order for debugger to be operational while emu is paused
-			if (debug &&
-				mode == DEBUG_MODE::NORMAL &&
-				gb.system.ppu.frame_ready) {
-				debugger.frame(gb);
-			}
 			if (gb.system.ppu.is_frame_ready()) {
 				engine.renderFrame(gb.system.ppu.current_frame);
+				if (debug) {
+					debugger.frame(gb);
+				}
 			}
+			break;
+
+		case CONSOLE_MODE::PAUSED:
+			poll_events();
+			if (debug) {
+				debugger.frame(gb);
+			}
+			break;
+
+		case CONSOLE_MODE::STEPPING:
+			poll_events();
+			gb.step();
+			if (gb.system.ppu.is_frame_ready()) {
+				engine.renderFrame(gb.system.ppu.current_frame);
+				if (debug) {
+					debugger.frame(gb);
+				}
+				mode = CONSOLE_MODE::PAUSED;
+			}
+			break;
+		
+		case CONSOLE_MODE::EXITING:
+			break;
 		}
 	}
 }
@@ -86,7 +107,14 @@ bool Console::handle_global_event(SDL_Event& event) {
 		switch (event.key.scancode) {
 		// Pause
 		case SDL_SCANCODE_P:
-			paused = !paused;
+			switch (mode) {
+			case CONSOLE_MODE::RUNNING:
+				mode = CONSOLE_MODE::PAUSED;
+				break;
+			case CONSOLE_MODE::PAUSED:
+				mode = CONSOLE_MODE::RUNNING;
+				break;
+			}
 			return true;
 
 		// Quit
@@ -97,6 +125,13 @@ bool Console::handle_global_event(SDL_Event& event) {
 		// Green/Grayscale
 		case SDL_SCANCODE_G:
 			engine.palette = 1 - engine.palette;
+			return true;
+
+		// Frame Step
+		case SDL_SCANCODE_I:
+			if (mode == CONSOLE_MODE::PAUSED) {
+				mode = CONSOLE_MODE::STEPPING;
+			}
 			return true;
 		}
 	}
