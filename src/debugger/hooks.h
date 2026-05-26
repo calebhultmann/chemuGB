@@ -29,4 +29,5 @@ struct RenderEvent {
 
 struct PPUHooks {
 	std::function<void(const RenderEvent&)> on_render_event = nullptr;
+	std::function<void(const uint8_t (&)[0xA0], const uint8_t (&)[0x2000])> on_oam_capture = nullptr;
 };

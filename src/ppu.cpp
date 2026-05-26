@@ -347,6 +347,10 @@ void PPU::clock() {
 		case 456:
 			dot_count = 0;
 			if (++bus->ly == 144) {
+				if (hooks.on_oam_capture) {
+					hooks.on_oam_capture(oam, vram);
+				}
+
 				changeMode(1);
 				return;
 			}

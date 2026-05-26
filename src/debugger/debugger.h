@@ -23,6 +23,29 @@ struct OBJPixelData {
 	uint8_t palette;
 };
 
+struct OAMEntry {
+
+};
+
+struct ObjectData {
+	SDL_Texture* texture;
+	uint8_t oam_index;
+
+	uint8_t height;
+
+	uint8_t x;
+	uint8_t y;
+	uint8_t tile_index;
+
+	uint8_t tile0;
+	uint8_t tile1;
+
+	bool priority;
+	bool x_flip;
+	bool y_flip;
+	bool palette;
+};
+
 enum class Layer {
 	BG,
 	Window,
@@ -64,6 +87,9 @@ public:
 	bool background_layer = true;
 	bool window_layer = true;
 	bool objects_layer = true;
+	int selected_sprite = 0;
+	std::array<ObjectData, 40> objects;
+	std::array<uint32_t, 128> obj_texture_buffer;
 
 	bool handle_event(const SDL_Event&);
 
@@ -74,7 +100,7 @@ public:
 	void compose_window_layer(const chemuGB&);
 	void compose_object_layer(const chemuGB&);
 	void draw_composed_layers();
-
+	void draw_oam();
 	
 	void frame(const chemuGB&);
 	void begin_frame();
@@ -83,6 +109,15 @@ public:
 };
 
 /*
+Things to do:
+- Tilemap viewer
+- Palette Viewer
+- OAM Viewer
+- Screen pixel inspector
+
+
+
+
 
 void chemuGB::drawDebug() {
 	std::array<uint32_t, 256 * 256> tilemap_buffer;
