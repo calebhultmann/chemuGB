@@ -89,12 +89,11 @@ void PPU::prepareWindow() {
 		return;
 	}
 
+	uint8_t start_pixel = (bus->wx < 7) ? 0 : bus->wx - 7;
+
 	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
 		// Check for window activation
-		// TODO: THIS BUGS OUT WHEN WX < 7
-		
-		// Activate on WX (FIX)
-		if (curr_pixel + 7 == bus->wx) {
+		if (curr_pixel == start_pixel) {
 			is_window = true;
 
 			uint8_t tile_x = tile_x_index;
@@ -174,7 +173,6 @@ void PPU::prepareObjects() {
 	}
 
 	uint8_t objs[10] = { 40,40,40,40,40,40,40,40,40,40 };
-	// TODO: Currently only handles 8x8 objects
 	uint8_t OBJ_HEIGHT = 8;
 	if (bus->lcdc & 0b00000100) {
 		OBJ_HEIGHT = 16;
@@ -320,11 +318,11 @@ void PPU::prepareScanline() {
 				color = getColorFromIndex(obj.palette, obj.color_index);
 			}
 			else {
-				color = getColorFromIndex(bus->bgp, bg_scanline_buffer[curr_pixel]);
+				color = getColorFromIndex(bus->bgp, bg_index);
 			}
 		}
 		else {
-			color = getColorFromIndex(bus->bgp, bg_scanline_buffer[curr_pixel]);
+			color = getColorFromIndex(bus->bgp, bg_index);
 		}
 
 		current_frame[bus->ly * 160 + curr_pixel] = color;
