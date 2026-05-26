@@ -212,7 +212,19 @@ void PPU::prepareObjects() {
 			tile_line = (OBJ_HEIGHT - 1) - tile_line;
 		}
 
-		uint16_t tile_addr = 16 * (tile_index & 0xFE) + 2 * tile_line;
+		uint8_t effective_tile = tile_index;
+
+		if (OBJ_HEIGHT == 16) {
+			effective_tile &= 0xFE;
+
+			if (tile_line >= 8) {
+				effective_tile += 1;
+				tile_line -= 8;
+			}
+		}
+
+		uint16_t tile_addr = 16 * effective_tile + 2 * tile_line;
+
 
 		uint8_t	tile_data_low = vram[tile_addr];
 		uint8_t	tile_data_high = vram[tile_addr + 1];
