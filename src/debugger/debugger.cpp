@@ -5,6 +5,7 @@
 #include "../external/imgui/backends/imgui_impl_sdl3.h"
 #include "../external/imgui/backends/imgui_impl_sdlrenderer3.h"
 #include "../renderer/chemuPixelEngine.h"
+#include "hooks.h"
 
 Debugger::Debugger() {
 
@@ -16,7 +17,8 @@ Debugger::~Debugger() {
 	SDL_Quit();
 }
 #include <iostream>
-void Debugger::init(pixelEngine& eng) {
+void Debugger::init(pixelEngine& eng, chemuGB& gb) {
+	// Initialize ImGui
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 
@@ -25,15 +27,15 @@ void Debugger::init(pixelEngine& eng) {
 
 	ImGui::StyleColorsDark();
 
-	window = SDL_CreateWindow("debug", 960, 540, SDL_WINDOW_RESIZABLE);
+	window = SDL_CreateWindow("debug", 160 * 8, 144 * 8, SDL_WINDOW_RESIZABLE);
 	renderer = SDL_CreateRenderer(window, NULL);
 
 	ImGui_ImplSDL3_InitForSDLRenderer(window, renderer);
-	
 	ImGui_ImplSDLRenderer3_Init(renderer);
 
 	engine = &eng;
 
+	// Initialize necessary textures
 	vramtexture = SDL_CreateTexture(
 		renderer,
 		SDL_PIXELFORMAT_ARGB8888,
@@ -41,6 +43,102 @@ void Debugger::init(pixelEngine& eng) {
 		128,
 		192
 	);
+
+	composite_layer_texture = SDL_CreateTexture(
+		renderer,
+		SDL_PIXELFORMAT_ARGB8888,
+		SDL_TEXTUREACCESS_STREAMING,
+		160,
+		144
+	);
+
+	for (int i = 0; i < 40; i++) {
+		objects[i].texture = SDL_CreateTexture(
+			renderer,
+			SDL_PIXELFORMAT_ARGB8888,
+			SDL_TEXTUREACCESS_STREAMING,
+			8,
+			16
+		);
+	}
+
+	gb.system.ppu.hooks.on_render_event = [&](const RenderEvent& event) {
+		int pixel_index = event.y * 160 + event.x;
+		switch (event.type) {
+		case RenderEventType::BG_PIXEL:
+			bg_buffer[pixel_index].color_index = event.color_index;
+			break;
+		case RenderEventType::WINDOW_PIXEL:
+			window_buffer[pixel_index].color_index = event.color_index;
+			window_buffer[pixel_index].window_on = event.window_on;
+			break;
+		case RenderEventType::OBJECT_PIXEL:
+			obj_buffer[pixel_index].color_index = event.color_index;
+			obj_buffer[pixel_index].priority = event.priority;
+			obj_buffer[pixel_index].palette = event.palette;
+			break;
+		}
+	};
+
+	gb.system.ppu.hooks.on_oam_capture = [&](const uint8_t(&oam)[0xA0], const uint8_t(&vram)[0x2000]) {
+		for (uint8_t i = 0; i < 40; i++) {
+			uint8_t index = i * 4;
+			// Skip obj capture if no new object
+			// TODO: This may need to include if lcdc obj size changes
+			if (objects[i].tile_index == oam[index + 2]) {
+				continue;
+			}
+
+
+			ObjectData& obj = objects[i];
+			// TODO: Implement 8x16 view mode
+			obj.height = 8;
+
+
+
+			obj.oam_index = i;
+			obj.x = oam[index];
+			obj.y = oam[index + 1];
+			
+			obj.tile_index = oam[index + 2];
+			obj.tile0 = obj.tile_index;
+
+			uint8_t flags = oam[index + 3];
+
+			obj.priority = flags & PRIORITY;
+			obj.x_flip = flags & X_FLIP;
+			obj.y_flip = flags & Y_FLIP;
+			obj.palette = flags & PALETTE;
+
+			// Update texture
+			for (int i = 0; i < obj.height; i++) {
+				uint16_t tile_addr = obj.tile_index * 16;
+				uint16_t tile_line_addr = tile_addr + i * 2;
+				uint8_t data_low = vram[tile_line_addr];
+				uint8_t	data_high = vram[tile_line_addr + 1];
+
+				for (int bit = 0; bit < 8; bit++) {
+					int high_bit = ((data_high & (0b10000000 >> bit)) >> (7 - bit)) << 1;
+					int low_bit = (data_low & (0b10000000 >> bit)) >> (7 - bit);
+					int pixel_color_id = high_bit | low_bit;
+					int pixel_color = (gb.system.bgp & (0b11 << (2 * pixel_color_id))) >> (2 * pixel_color_id);
+					uint32_t color = engine->gameboy_palette[engine->palette][pixel_color];
+					obj_texture_buffer[i * 8 + bit] = color;
+				}
+			}
+
+
+			SDL_Rect obj_rect = { 0, 0, 8, obj.height };
+			SDL_UpdateTexture(
+				obj.texture,
+				&obj_rect,
+				obj_texture_buffer.data(),
+				8 * sizeof(uint32_t)
+			);
+
+		}
+	};
+
 }
 
 bool Debugger::handle_event(const SDL_Event& event) {
@@ -192,6 +290,131 @@ void Debugger::draw_vram(const chemuGB& gb) {
 	ImGui::End();
 }
 
+void Debugger::compose_background_layer(const chemuGB& gb) {
+	for (size_t i = 0; i < GB_SIZE; i++) {	
+		composite_buffer[i].source_layer = Layer::BG;
+		composite_buffer[i].color_index = bg_buffer[i].color_index;
+		composite_buffer[i].palette = gb.system.bgp;
+		composite_buffer[i].pixel_on = true;
+	}
+}
+
+void Debugger::compose_window_layer(const chemuGB& gb) {
+	for (size_t i = 0; i < GB_SIZE; i++) {
+		if (!window_buffer[i].window_on) {
+			continue;
+		}
+
+		composite_buffer[i].source_layer = Layer::Window;
+		composite_buffer[i].color_index = window_buffer[i].color_index;
+		composite_buffer[i].palette = gb.system.bgp;
+		composite_buffer[i].pixel_on = true;
+	}
+}
+
+void Debugger::compose_object_layer(const chemuGB& gb) {
+	for (size_t i = 0; i < GB_SIZE; i++) {
+		if (obj_buffer[i].color_index == 0) {
+			continue;
+		}
+
+		if ((obj_buffer[i].priority == 0) ||
+			(composite_buffer[i].color_index == 0)) {
+			composite_buffer[i].source_layer = Layer::OBJ;
+			composite_buffer[i].color_index = obj_buffer[i].color_index;
+			composite_buffer[i].palette = obj_buffer[i].palette;
+			composite_buffer[i].pixel_on = true;
+		}
+	}
+}
+
+void Debugger::draw_composed_layers() {
+	for (size_t i = 0; i < GB_SIZE; i++) {
+		if (!composite_buffer[i].pixel_on) {
+			continue;
+		}
+
+		uint8_t color = (composite_buffer[i].palette & (0b11 << (2 * composite_buffer[i].color_index))) >> (2 * composite_buffer[i].color_index);
+		composite_data_buffer[i] = engine->gameboy_palette[engine->palette][color];
+	}
+}
+
+void Debugger::draw_layers(const chemuGB& gb) {
+	CompositePixelData zero = { Layer::BG, 0, 0, 0 };
+
+	std::fill(composite_buffer.begin(), composite_buffer.end(), zero);
+	std::fill(composite_data_buffer.begin(), composite_data_buffer.end(), 0);
+
+	ImGui::Begin("Layer Viewer");
+	ImGui::Checkbox("Background", &background_layer);
+	ImGui::Checkbox("Window", &window_layer);
+	ImGui::Checkbox("Objects", &objects_layer);
+	if (background_layer) {
+		compose_background_layer(gb);
+	}
+	if (window_layer) {
+		compose_window_layer(gb);
+	}
+	if (objects_layer) {
+		compose_object_layer(gb);
+	}
+
+	draw_composed_layers();
+
+	SDL_UpdateTexture(
+		composite_layer_texture,
+		nullptr,
+		composite_data_buffer.data(),
+		GB_W * sizeof(uint32_t)
+	);
+
+	ImGui::Image(
+		(ImTextureID)(intptr_t)composite_layer_texture,
+		ImVec2(160 * 2, 144 * 2)
+	);
+
+	ImGui::End();
+}
+
+void Debugger::draw_oam() {
+	using namespace ImGui;
+	Begin("OAM Viewer");
+	BeginTable("oam_layout", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV);
+
+	TableNextColumn();
+	for (int i = 0; i < 40; i++) {
+		PushID(i);
+
+		if (ImageButton("thing", objects[i].texture, ImVec2(32, 64))) {
+			selected_sprite = i;
+		}
+
+		if ((i + 1) % 10 != 0) {
+			SameLine();
+		}
+
+		PopID();
+	}
+
+	TableNextColumn();
+	ObjectData& obj = objects[selected_sprite];
+	Image(
+		(ImTextureID)(intptr_t)obj.texture,
+		ImVec2(8 * 8, 16 * 8)
+	);
+
+	Text("X: %d", obj.x);
+	Text("Y: %d", obj.y);
+	Text("Tile Index: %d", obj.tile_index);
+	Text("Priority: %d", obj.priority);
+	Text("X Flip: %d", obj.x_flip);
+	Text("Y Flip: %d", obj.y_flip);
+	Text("Palette: %d", obj.palette);
+
+	EndTable();
+	End();
+
+}
 //void Debugger::draw_background(const chemuGB& gb) {
 //	auto& vram = gb.system.ppu.vram;
 //	uint32_t scanline_buffer[160];
@@ -259,6 +482,8 @@ void Debugger::begin_frame() {
 void Debugger::draw(const chemuGB& gb) {
 	draw_registers(gb);
 	draw_vram(gb);
+	draw_layers(gb);
+	draw_oam();
 }
 
 void Debugger::end_frame() {

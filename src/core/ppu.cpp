@@ -1,14 +1,12 @@
 #include "ppu.h"
 #include "bus.h"
+#include "debugger/hooks.h"
 
 void PPU::changeMode(uint8_t mode) {
 	bus->stat = (bus->stat & 0b11111100) | (mode & 0b00000011);
 }
 
 void PPU::prepareBackground() {
-	bool is_window = false;
-	bool wx_condition = false;
-
 	uint8_t tile_x_index = 0;
 	uint8_t tile_data_low = 0;
 	uint8_t tile_data_high = 0;
@@ -17,42 +15,16 @@ void PPU::prepareBackground() {
 	curr_bit -= bus->scx % 8;
 
 	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
-		// Check for window activation
-		if (curr_pixel + 7 == bus->wx) {
-			wx_condition = true;
-
-			if ((bus->lcdc & 0b00100000) && wy_condition) {
-				is_window = true;
-
-				uint8_t tile_x = tile_x_index;
-				uint8_t tile_y = (bus->ly + bus->wy) & 0xFF;
-
-				uint8_t tile_index = getIdFromTilemap(is_window, tile_x, tile_y);
-				uint16_t tile_address = getTileAddress(tile_index);
-
-				tile_data_low = vram[tile_address + (2 * (tile_y % 8))];
-				tile_data_high = vram[tile_address + (2 * (tile_y % 8)) + 1];
-			}
-		}
-
 		// Get next tile from background/window
 		if (curr_bit < 0) {
 			uint8_t tile_x;
 			uint8_t tile_y;
 
-			if (is_window) {
-				tile_x = tile_x_index;
-				tile_y = (bus->ly + bus->wy) & 0xFF;
-				curr_bit = 7;
+			tile_x = ((bus->scx / 8) + tile_x_index) & 0x1F;
+			tile_y = (bus->ly + bus->scy) & 0xFF;
+			curr_bit += 8;
 
-			}
-			else {
-				tile_x = ((bus->scx / 8) + tile_x_index) & 0x1F;
-				tile_y = (bus->ly + bus->scy) & 0xFF;
-				curr_bit += 8;
-			}
-
-			uint8_t tile_index = getIdFromTilemap(is_window, tile_x, tile_y);
+			uint8_t tile_index = getIdFromTilemap(false, tile_x, tile_y);
 			uint16_t tile_address = getTileAddress(tile_index);
 
 			tile_data_low = vram[tile_address + (2 * (tile_y % 8))];
@@ -65,16 +37,140 @@ void PPU::prepareBackground() {
 		uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - curr_bit))) >> curr_bit;
 
 		uint8_t color = high_bit | low_bit;
-		bg_scanline_buffer[curr_pixel] = { color, is_window };
+		bg_scanline_buffer[curr_pixel] = color;
+		
 		curr_bit--;
+
+		// Debug if hooks are present
+		if (hooks.on_render_event) {
+			RenderEvent event;
+
+			event.type = RenderEventType::BG_PIXEL;
+
+			event.x = curr_pixel;
+			event.y = bus->ly;
+
+			event.color_index = color;
+
+			hooks.on_render_event(event);
+		}
+	}
+}
+
+void PPU::prepareWindow() {
+	// Reset scanline and debug buffers
+	for (uint8_t x = 0; x < GB_W; x++) {
+		window_scanline_buffer[x].window = false;
+
+		if (hooks.on_render_event) {
+			RenderEvent event;
+
+			event.type = RenderEventType::WINDOW_PIXEL;
+
+			event.x = x;
+			event.y = bus->ly;
+
+			event.window_on = false;
+
+			hooks.on_render_event(event);
+		}
+	}
+
+	bool is_window = false;
+
+	uint8_t tile_x_index = 0;
+	uint8_t tile_data_low = 0;
+	uint8_t tile_data_high = 0;
+
+	int curr_bit = -1;
+	curr_bit -= bus->scx % 8;
+
+	if (!(bus->lcdc & 0b00100000) || !wy_condition) {
+		return;
+	}
+
+	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
+		// Check for window activation
+		// TODO: THIS BUGS OUT WHEN WX < 7
+		
+		// Activate on WX (FIX)
+		if (curr_pixel + 7 == bus->wx) {
+			is_window = true;
+
+			uint8_t tile_x = tile_x_index;
+			uint8_t tile_y = (bus->ly + bus->wy) & 0xFF;
+
+			uint8_t tile_index = getIdFromTilemap(true, tile_x, tile_y);
+			uint16_t tile_address = getTileAddress(tile_index);
+
+			tile_data_low = vram[tile_address + (2 * (tile_y % 8))];
+			tile_data_high = vram[tile_address + (2 * (tile_y % 8)) + 1];
+		}
+
+		if (!is_window) {
+			continue;
+		}
+
+		if (curr_bit < 0) {
+			uint8_t tile_x;
+			uint8_t tile_y;
+
+			tile_x = tile_x_index;
+			tile_y = (bus->ly + bus->wy) & 0xFF;
+			curr_bit = 7;
+
+			uint8_t tile_index = getIdFromTilemap(true, tile_x, tile_y);
+			uint16_t tile_address = getTileAddress(tile_index);
+
+			tile_data_low = vram[tile_address + (2 * (tile_y % 8))];
+			tile_data_high = vram[tile_address + (2 * (tile_y % 8)) + 1];
+
+			tile_x_index++;
+		}
+
+		uint8_t high_bit = ((tile_data_high & (0b10000000 >> (7 - curr_bit))) >> curr_bit) << 1;
+		uint8_t low_bit = (tile_data_low & (0b10000000 >> (7 - curr_bit))) >> curr_bit;
+
+		uint8_t color = high_bit | low_bit;
+
+		window_scanline_buffer[curr_pixel] = { color, true };
+		
+		curr_bit--;
+
+		// Debug if hooks are present
+		if (hooks.on_render_event) {
+			RenderEvent event;
+
+			event.type = RenderEventType::WINDOW_PIXEL;
+
+			event.x = curr_pixel;
+			event.y = bus->ly;
+
+			event.color_index = color;
+			event.window_on = true;
+
+			hooks.on_render_event(event);
+		}
 	}
 }
 
 void PPU::prepareObjects() {
-
-	// Clear obj buffer to transparent pixels
+	// Reset scanline and debug buffers
 	for (uint8_t x = 0; x < GB_W; x++) {
-		obj_scanline_buffer[x].color = 0;
+		obj_scanline_buffer[x].color_index = 0;
+
+		if (hooks.on_render_event) {
+			RenderEvent event;
+
+			event.type = RenderEventType::OBJECT_PIXEL;
+
+			event.x = x;
+			event.y = bus->ly;
+
+			event.color_index = 0;
+
+			hooks.on_render_event(event);
+		}
 	}
 
 	uint8_t objs[10] = { 40,40,40,40,40,40,40,40,40,40 };
@@ -116,7 +212,19 @@ void PPU::prepareObjects() {
 			tile_line = (OBJ_HEIGHT - 1) - tile_line;
 		}
 
-		uint16_t tile_addr = 16 * (tile_index & 0xFE) + 2 * tile_line;
+		uint8_t effective_tile = tile_index;
+
+		if (OBJ_HEIGHT == 16) {
+			effective_tile &= 0xFE;
+
+			if (tile_line >= 8) {
+				effective_tile += 1;
+				tile_line -= 8;
+			}
+		}
+
+		uint16_t tile_addr = 16 * effective_tile + 2 * tile_line;
+
 
 		uint8_t	tile_data_low = vram[tile_addr];
 		uint8_t	tile_data_high = vram[tile_addr + 1];
@@ -143,38 +251,83 @@ void PPU::prepareObjects() {
 			uint8_t new_color = high_bit | low_bit;
 			OBJ_Pixel& curr = obj_scanline_buffer[loc_x - 8];
 
-			if (new_color == 0 || (curr.color != 0 && tile_x >= curr.init_x)) {
+			if (new_color == 0 || (curr.color_index != 0 && tile_x >= curr.init_x)) {
 				continue;
 			}
-			curr.color = new_color;
-			curr.palette = tile_attr & PALETTE;
+			
+			curr.color_index = new_color;
+			curr.palette = tile_attr & PALETTE ? bus->obp1 : bus->obp0;
 			curr.priority = tile_attr & PRIORITY;
 			curr.init_x = tile_x;
+
+			if (hooks.on_render_event) {
+				RenderEvent event;
+
+				event.type = RenderEventType::OBJECT_PIXEL;
+
+				event.x = loc_x;
+				event.y = bus->ly;
+
+				event.color_index = new_color;
+				event.priority = curr.priority;
+				event.palette = curr.palette;
+
+				hooks.on_render_event(event);
+			}
 		}
 	}
 }
 
 void PPU::prepareScanline() {
+	// Debug if hooks are present
+	if (hooks.on_render_event) {
+		RenderEvent event;
+
+		event.type = RenderEventType::SCANLINE_START;
+
+		event.y = bus->ly;
+		event.scroll = bus->scx;
+
+		hooks.on_render_event(event);
+	}
+
+	// Prepare each layer
 	prepareBackground();
+	prepareWindow();
 	prepareObjects();
 
 	for (uint8_t curr_pixel = 0; curr_pixel < 160; curr_pixel++) {
-		uint8_t pixel_color;
+		uint8_t color = 0;
 
-		if (bg_scanline_buffer[curr_pixel].window || obj_scanline_buffer[curr_pixel].color == 0 || (obj_scanline_buffer[curr_pixel].priority && bg_scanline_buffer[curr_pixel].color != 0)) {
-			uint8_t color = bg_scanline_buffer[curr_pixel].color;
-			pixel_color = (bus->bgp & (0b11 << (2 * color))) >> (2 * color);
+		uint8_t bg_index;
+		if (window_scanline_buffer[curr_pixel].window) {
+			bg_index = window_scanline_buffer[curr_pixel].color_index;
 		}
 		else {
-			uint8_t color = obj_scanline_buffer[curr_pixel].color;
-			if (obj_scanline_buffer[curr_pixel].palette) {
-				pixel_color = (bus->obp1 & (0b11 << (2 * color))) >> (2 * color);
+			bg_index = bg_scanline_buffer[curr_pixel];
+		}
+
+		auto& obj = obj_scanline_buffer[curr_pixel];
+
+		bool obj_visible = (obj.color_index != 0);
+
+		if (obj_visible) {
+			bool obj_above_bg =
+				(obj.priority == 0) ||
+				(bg_index == 0);
+
+			if (obj_above_bg) {
+				color = getColorFromIndex(obj.palette, obj.color_index);
 			}
 			else {
-				pixel_color = (bus->obp0 & (0b11 << (2 * color))) >> (2 * color);
+				color = getColorFromIndex(bus->bgp, bg_scanline_buffer[curr_pixel]);
 			}
 		}
-		current_frame[bus->ly * 160 + curr_pixel] = pixel_color;
+		else {
+			color = getColorFromIndex(bus->bgp, bg_scanline_buffer[curr_pixel]);
+		}
+
+		current_frame[bus->ly * 160 + curr_pixel] = color;
 	}
 }
 
@@ -206,6 +359,10 @@ void PPU::clock() {
 		case 456:
 			dot_count = 0;
 			if (++bus->ly == 144) {
+				if (hooks.on_oam_capture) {
+					hooks.on_oam_capture(oam, vram);
+				}
+
 				changeMode(1);
 				return;
 			}
@@ -288,4 +445,8 @@ uint16_t PPU::getTileAddress(uint8_t tile_index) const {
 		return 0x0000 + 16 * tile_index;
 	}
 	return 0x1000 + 16 * static_cast<int8_t>(tile_index);
+}
+
+uint8_t PPU::getColorFromIndex(uint8_t palette, uint8_t index) const {
+	return (palette & (0b11 << (2 * index))) >> (2 * index);
 }

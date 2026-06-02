@@ -9,6 +9,13 @@ enum DEBUG_MODE {
 	STEP
 };
 
+enum class CONSOLE_MODE {
+	RUNNING,
+	PAUSED,
+	STEPPING,
+	EXITING
+};
+
 class Console {
 public:
 	Console(Config& config);
@@ -26,14 +33,8 @@ public:
 	bool running = true;
 	bool paused = false;
 	// int scale = 8; can i get rid of this somehow? what is it used for?
-	// normal mode -> update debugger every emu frame
-	// step mode -> update debugger every emu step
 
-	// TODO: TOGGLE MODE
-	//	         New control button 'O' switches debug mode (only works in debug mode)
-	//           When in Step Mode, emulator steps IFF step button 'I' is pressed
-	//           Deactivating Step Mode returns the console back to Normal Mode
-	int mode = DEBUG_MODE::NORMAL;
+	CONSOLE_MODE mode;
 
 	const uint64_t INPUT_POLL_INTERVAL_MS = 2;
 	uint64_t last_input_poll;
