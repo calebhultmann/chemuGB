@@ -20,10 +20,12 @@ public: // Bus devices
 	CPU cpu;
 	PPU ppu;
 	APU apu;
+	Joypad joypad;
+
 	std::shared_ptr<Cartridge> cart;
+
 	uint8_t WRAM[0x2000];
 	uint8_t HRAM[0x7F];
-	Joypad joypad;
 
 	// I/O registers
 	uint8_t joyp = 0; // Joypad
@@ -54,16 +56,13 @@ public:
 	uint8_t	readIOregs(uint16_t addr);
 	void	writeIOregs(uint16_t addr, uint8_t data);
 	
-	uint8_t	readAPUregs(uint16_t addr);
-	void	writeAPUregs(uint16_t addr, uint8_t data);
-
 	uint8_t	read(uint16_t addr);
 	void	write(uint16_t addr, uint8_t data);
 
 public: // system functions
 	int insertCartridge(const std::filesystem::path romPath);
 	void clock();
-	uint8_t t_state = 0;
+	uint32_t master_clock = 0;
 
 	bool halt = false;
 

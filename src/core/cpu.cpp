@@ -355,54 +355,57 @@ bool CPU::checkInterrupts() {
 	uint8_t requested = bus->ie & bus->interrupts;
 	if (requested & INTERRUPT_VBLANK) {
 		callInterrupt(INTERRUPT_VBLANK);
-		remaining_cycles = 19;
+		remaining_cycles = 5;
 		return true;
 	}
 	if (requested & INTERRUPT_LCD) {
 		callInterrupt(INTERRUPT_LCD);
-		remaining_cycles = 19;
+		remaining_cycles = 5;
 		return true;
 	}
 	if (requested & INTERRUPT_TIMER) {
 		callInterrupt(INTERRUPT_TIMER);
-		remaining_cycles = 19;
+		remaining_cycles = 5;
 		return true;
 	}
 	if (requested & INTERRUPT_SERIAL) {
 		callInterrupt(INTERRUPT_SERIAL);
-		remaining_cycles = 19;
+		remaining_cycles = 5;
 		return true;
 	}
 	if (requested & INTERRUPT_JOYPAD) {
 		callInterrupt(INTERRUPT_JOYPAD);
-		remaining_cycles = 19;
+		remaining_cycles = 5;
 		return true;
 	}
 	return false;
 }
 
 void CPU::clock() {
-	if (remaining_cycles == 0) {
-		// If IME is enabled, check for interrupt requests, handling them as needed
-		if (ime && checkInterrupts()) {
-			return;
-		}
-		
-		// If the last instruction was EI, now enable IME
-		if (ei_buffer) {
-			ei_buffer = false;
-			ime = true;
-		}
-
-		// Fetch and execute the next instruction
-		int opcode = fetchByte();
-		if (haltbug) {
-			haltbug = false;
-			pc--;
-		}
-		const Instruction& curr = opcode_lookup[opcode];
-		remaining_cycles = executeInstruction(curr);
+	if (remaining_cycles != 0) {
+		remaining_cycles--;
+		return;
 	}
+	// If IME is enabled, check for interrupt requests, handling them as needed
+	if (ime && checkInterrupts()) {
+		remaining_cycles--;
+		return;
+	}
+
+	// If the last instruction was EI, now enable IME
+	if (ei_buffer) {
+		ei_buffer = false;
+		ime = true;
+	}
+
+	// Fetch and execute the next instruction
+	int opcode = fetchByte();
+	if (haltbug) {
+		haltbug = false;
+		pc--;
+	}
+	const Instruction& curr = opcode_lookup[opcode];
+	remaining_cycles = executeInstruction(curr);
 
 	remaining_cycles--;
 }
@@ -446,7 +449,7 @@ int CPU::LD(Operand src, Operand dst) {
 		clearFlag(FLAG_N);
 		putFlag(FLAG_H, checkOverflow(3, sp, offset, false));
 		putFlag(FLAG_C, checkOverflow(7, sp, offset, false));
-		return 12;
+		return 3;
 	}
 
 	if (dst.type == OperandType::n16 && src.type == OperandType::R16) {
@@ -454,44 +457,44 @@ int CPU::LD(Operand src, Operand dst) {
 		write(addr, sp & 0xFF);
 		addr++;
 		write(addr, sp >> 8);
-		return 20;
+		return 5;
 	}
 
 	uint16_t src_v = readOperand(src);
 	writeOperand(dst, src_v);
 
 	if (src.type == OperandType::R16MEM || dst.type == OperandType::R16MEM) {
-		return 8;
+		return 2;
 	}
 
 	if (src.type == OperandType::a16) {
-		return 16;
+		return 4;
 	}
 
 	if (src.type == OperandType::n16) {
-		return 12;
+		return 3;
 	}
 
 	if (dst.type == OperandType::a16) {
-		return 20;
+		return 5;
 	}
 
 	if (dst.type == OperandType::R16) {
-		return 8;
+		return 2;
 	}
 
 	if (src.type == OperandType::n8) {
 		if (dst.index == REG_HL_DATA) {
-			return 12;
+			return 3;
 		}
-		return 8;
+		return 2;
 	}
 
 	if (src.index == REG_HL_DATA || dst.index == REG_HL_DATA) {
-		return 8;
+		return 2;
 	}
 
-	return 4;
+	return 1;
 }
 
 int CPU::LDH(Operand src, Operand dst) {
@@ -514,10 +517,10 @@ int CPU::LDH(Operand src, Operand dst) {
 	}
 
 	if (src.type == OperandType::a8 || dst.type == OperandType::a8) {
-		return 12;
+		return 3;
 	}
 
-	return 8;
+	return 2;
 }
 
 // Arithmetic
@@ -533,10 +536,10 @@ int CPU::ADC(Operand src, Operand dst) {
 	putFlag(FLAG_C, checkOverflow(7, src_v, dst_v, getFlag(FLAG_C)));
 
 	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
-		return 8;
+		return 2;
 	}
 
-	return 4;
+	return 1;
 }
 
 int CPU::ADD(Operand src, Operand dst) {
@@ -564,7 +567,7 @@ int CPU::ADD(Operand src, Operand dst) {
 		clearFlag(FLAG_N);
 		putFlag(FLAG_H, checkOverflow(11, src_v, dst_v, false));
 		putFlag(FLAG_C, checkOverflow(15, src_v, dst_v, false));
-		return 8;
+		return 2;
 	}
 	else {
 		putFlag(FLAG_Z, !isSP && ((sum & 0xFF) == 0));
@@ -574,14 +577,14 @@ int CPU::ADD(Operand src, Operand dst) {
 	}
 
 	if (dst.type == OperandType::R16) {
-		return 16;
+		return 4;
 	}
 
 	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
-		return 8;
+		return 2;
 	}
 
-	return 4;
+	return 1;
 }
 
 int CPU::SBC(Operand src, Operand dst) {
@@ -597,10 +600,10 @@ int CPU::SBC(Operand src, Operand dst) {
 	putFlag(FLAG_C, (src_v + carry) > dst_v);
 
 	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
-		return 8;
+		return 2;
 	}
 
-	return 4;
+	return 1;
 }
 
 int CPU::SUB(Operand src, Operand dst) {
@@ -615,10 +618,10 @@ int CPU::SUB(Operand src, Operand dst) {
 	putFlag(FLAG_C, src_v > dst_v);
 
 	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
-		return 8;
+		return 2;
 	}
 
-	return 4;
+	return 1;
 }
 
 int CPU::INC(Operand src, Operand dst) {
@@ -633,14 +636,14 @@ int CPU::INC(Operand src, Operand dst) {
 	}
 
 	if (src.type == OperandType::R16) {
-		return 8;
+		return 2;
 	}
 
 	if (src.index == REG_HL_DATA) {
-		return 12;
+		return 3;
 	}
 
-	return 4;
+	return 1;
 }
 
 int CPU::DEC(Operand src, Operand dst) {
@@ -655,14 +658,14 @@ int CPU::DEC(Operand src, Operand dst) {
 	}
 
 	if (src.type == OperandType::R16) {
-		return 8;
+		return 2;
 	}
 
 	if (src.index == REG_HL_DATA) {
-		return 12;
+		return 3;
 	}
 
-	return 4;
+	return 1;
 }
 
 int CPU::CP(Operand src, Operand dst) {
@@ -676,10 +679,10 @@ int CPU::CP(Operand src, Operand dst) {
 	putFlag(FLAG_C, src_v > dst_v);
 
 	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
-		return 8;
+		return 2;
 	}
 
-	return 4;
+	return 1;
 }
 
 // Bitwise Logic
@@ -695,10 +698,10 @@ int CPU::AND(Operand src, Operand dst) {
 	clearFlag(FLAG_C);
 
 	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
-		return 8;
+		return 2;
 	}
 
-	return 4;
+	return 1;
 }
 
 int CPU::CPL(Operand src, Operand dst) {
@@ -708,7 +711,7 @@ int CPU::CPL(Operand src, Operand dst) {
 	setFlag(FLAG_N);
 	setFlag(FLAG_H);
 
-	return 4;
+	return 1;
 }
 
 int CPU::OR(Operand src, Operand dst) {
@@ -723,10 +726,10 @@ int CPU::OR(Operand src, Operand dst) {
 	clearFlag(FLAG_C);
 
 	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
-		return 8;
+		return 2;
 	}
 
-	return 4;
+	return 1;
 }
 
 int CPU::XOR(Operand src, Operand dst) {
@@ -741,10 +744,10 @@ int CPU::XOR(Operand src, Operand dst) {
 	clearFlag(FLAG_C);
 
 	if (src.index == REG_HL_DATA || src.type == OperandType::n8) {
-		return 8;
+		return 2;
 	}
 
-	return 4;
+	return 1;
 }
 
 // Bit Flag
@@ -758,10 +761,10 @@ int CPU::BIT(Operand src, Operand dst) {
 	setFlag(FLAG_H);
 
 	if (src.index == REG_HL_DATA) {
-		return 12;
+		return 3;
 	}
 
-	return 8;
+	return 2;
 }
 
 int CPU::SET(Operand src, Operand dst) {
@@ -771,10 +774,10 @@ int CPU::SET(Operand src, Operand dst) {
 	writeOperand(dst, dst_v);
 
 	if (src.index == REG_HL_DATA) {
-		return 16;
+		return 4;
 	}
 
-	return 8;
+	return 2;
 }
 
 int CPU::RES(Operand src, Operand dst) {
@@ -784,10 +787,10 @@ int CPU::RES(Operand src, Operand dst) {
 	writeOperand(dst, dst_v);
 
 	if (src.index == REG_HL_DATA) {
-		return 16;
+		return 4;
 	}
 
-	return 8;
+	return 2;
 }
 
 // Bit Shift
@@ -803,10 +806,10 @@ int CPU::RL(Operand src, Operand dst) {
 	putFlag(FLAG_C, src_v & 0x80);
 
 	if (src.index == REG_HL_DATA) {
-		return 16;
+		return 4;
 	}
 
-	return 8;
+	return 2;
 }
 
 int CPU::RLA(Operand src, Operand dst) {
@@ -819,7 +822,7 @@ int CPU::RLA(Operand src, Operand dst) {
 	clearFlag(FLAG_H);
 	putFlag(FLAG_C, src_v & 0x80);
 
-	return 4;
+	return 1;
 }
 
 int CPU::RLC(Operand src, Operand dst) {
@@ -833,10 +836,10 @@ int CPU::RLC(Operand src, Operand dst) {
 	putFlag(FLAG_C, src_v >> 7);
 
 	if (src.index == REG_HL_DATA) {
-		return 16;
+		return 4;
 	}
 
-	return 8;
+	return 2;
 }
 
 int CPU::RLCA(Operand src, Operand dst) {
@@ -849,7 +852,7 @@ int CPU::RLCA(Operand src, Operand dst) {
 	clearFlag(FLAG_H);
 	putFlag(FLAG_C, src_v >> 7);
 
-	return 4;
+	return 1;
 }
 
 int CPU::RR(Operand src, Operand dst) {
@@ -863,10 +866,10 @@ int CPU::RR(Operand src, Operand dst) {
 	putFlag(FLAG_C, src_v & 1);
 
 	if (src.index == REG_HL_DATA) {
-		return 16;
+		return 4;
 	}
 
-	return 8;
+	return 2;
 }
 
 int CPU::RRA(Operand src, Operand dst) {
@@ -879,7 +882,7 @@ int CPU::RRA(Operand src, Operand dst) {
 	clearFlag(FLAG_H);
 	putFlag(FLAG_C, src_v & 1);
 
-	return 4;
+	return 1;
 }
 
 int CPU::RRC(Operand src, Operand dst) {
@@ -893,10 +896,10 @@ int CPU::RRC(Operand src, Operand dst) {
 	putFlag(FLAG_C, src_v & 1);
 
 	if (src.index == REG_HL_DATA) {
-		return 16;
+		return 4;
 	}
 
-	return 8;
+	return 2;
 }
 
 int CPU::RRCA(Operand src, Operand dst) {
@@ -909,7 +912,7 @@ int CPU::RRCA(Operand src, Operand dst) {
 	clearFlag(FLAG_H);
 	putFlag(FLAG_C, src_v & 1);
 
-	return 4;
+	return 1;
 }
 
 int CPU::SLA(Operand src, Operand dst) {
@@ -923,10 +926,10 @@ int CPU::SLA(Operand src, Operand dst) {
 	putFlag(FLAG_C, src_v & 0x80);
 
 	if (src.index == REG_HL_DATA) {
-		return 16;
+		return 4;
 	}
 
-	return 8;
+	return 2;
 }
 
 int CPU::SRA(Operand src, Operand dst) {
@@ -940,10 +943,10 @@ int CPU::SRA(Operand src, Operand dst) {
 	putFlag(FLAG_C, src_v & 1);
 
 	if (src.index == REG_HL_DATA) {
-		return 16;
+		return 4;
 	}
 
-	return 8;
+	return 2;
 }
 
 int CPU::SRL(Operand src, Operand dst) {
@@ -957,10 +960,10 @@ int CPU::SRL(Operand src, Operand dst) {
 	putFlag(FLAG_C, src_v & 1);
 
 	if (src.index == REG_HL_DATA) {
-		return 16;
+		return 4;
 	}
 
-	return 8;
+	return 2;
 }
 
 int CPU::SWAP(Operand src, Operand dst) {
@@ -975,17 +978,17 @@ int CPU::SWAP(Operand src, Operand dst) {
 	clearFlag(FLAG_C);
 
 	if (src.index == REG_HL_DATA) {
-		return 16;
+		return 4;
 	}
 
-	return 8;
+	return 2;
 }
 
 // Jumps and Subroutines
 int CPU::CALL(Operand src, Operand dst) {
 	uint16_t call_addr = readOperand(src);
 	if (dst.type == OperandType::COND && !readOperand(dst)) {
-		return 12;
+		return 3;
 	}
 
 	sp--;
@@ -994,35 +997,35 @@ int CPU::CALL(Operand src, Operand dst) {
 	write(sp, (pc & 0xFF));
 
 	pc = call_addr;
-	return 24;
+	return 6;
 }
 
 int CPU::JP(Operand src, Operand dst) {
 	uint16_t jp_addr = readOperand(src);
 	if (dst.type == OperandType::COND && !readOperand(dst)) {
-		return 12;
+		return 3;
 	}
 
 	pc = jp_addr;
 	if (src.type == OperandType::a16) {
-		return 16;
+		return 4;
 	}
-	return 4;
+	return 1;
 }
 
 int CPU::JR(Operand src, Operand dst) {
 	uint16_t jr_offset = readOperand(src);
 	if (dst.type == OperandType::COND && !readOperand(dst)) {
-		return 8;
+		return 2;
 	}
 
 	pc = pc + static_cast<int8_t>(jr_offset);
-	return 12;
+	return 3;
 }
 
 int CPU::RET(Operand src, Operand dst) {
 	if (src.type == OperandType::COND && !readOperand(src)) {
-		return 8;
+		return 2;
 	}
 
 	uint16_t low = read(sp);
@@ -1032,10 +1035,10 @@ int CPU::RET(Operand src, Operand dst) {
 
 	pc = (high << 8) | low;
 	if (src.type == OperandType::COND) {
-		return 20;
+		return 5;
 	}
 
-	return 16;
+	return 4;
 }
 
 int CPU::RETI(Operand src, Operand dst) {
@@ -1046,7 +1049,7 @@ int CPU::RETI(Operand src, Operand dst) {
 
 	ime = true;
 	pc = (high << 8) | low;
-	return 16;
+	return 4;
 }
 
 int CPU::RST(Operand src, Operand dst) {
@@ -1059,7 +1062,7 @@ int CPU::RST(Operand src, Operand dst) {
 
 	pc = rst_addr;
 
-	return 16;
+	return 4;
 }
 
 // Carry Flag
@@ -1067,14 +1070,14 @@ int CPU::CCF(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	putFlag(FLAG_C, !getFlag(FLAG_C));
-	return 4;
+	return 1;
 }
 
 int CPU::SCF(Operand src, Operand dst) {
 	clearFlag(FLAG_N);
 	clearFlag(FLAG_H);
 	setFlag(FLAG_C);
-	return 4;
+	return 1;
 }
 
 // Stack
@@ -1084,7 +1087,7 @@ int CPU::POP(Operand src, Operand dst) {
 	uint16_t high = read(sp);
 	sp++;
 	writeOperand(src, (high << 8) | low);
-	return 12;
+	return 3;
 }
 
 int CPU::PUSH(Operand src, Operand dst) {
@@ -1093,18 +1096,18 @@ int CPU::PUSH(Operand src, Operand dst) {
 	write(sp, (reg & 0xFF00) >> 8);
 	sp--;
 	write(sp, reg & 0xFF);
-	return 16;
+	return 4;
 }
 
 // Interrupt-related
 int CPU::DI(Operand src, Operand dst) {
 	ime = false;
-	return 4;
+	return 1;
 }
 
 int CPU::EI(Operand src, Operand dst) {
 	ei_buffer = true;
-	return 4;
+	return 1;
 }
 
 int CPU::HALT(Operand src, Operand dst) {
@@ -1145,23 +1148,23 @@ int CPU::DAA(Operand src, Operand dst) {
 	}
 	putFlag(FLAG_Z, af.high == 0);
 	clearFlag(FLAG_H);
-	return 4;
+	return 1;
 }
 
 int CPU::NOP(Operand src, Operand dst) {
 	// Do nothing!
-	return 4;
+	return 1;
 }
 
 int CPU::STOP(Operand src, Operand dst) {
 	// Not implemented currently
-	return 4;
+	return 1;
 }
 
 int CPU::CB(Operand src, Operand dst) {
 	int opcode = fetchByte();
 	const Instruction& curr = cb_lookup[opcode];
-	return executeInstruction(curr) + 4;
+	return executeInstruction(curr) + 1;
 }
 
 int CPU::INV(Operand src, Operand dst) {

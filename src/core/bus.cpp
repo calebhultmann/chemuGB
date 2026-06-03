@@ -16,53 +16,54 @@ int Bus::insertCartridge(const std::filesystem::path romPath) {
 	return cart->loadCartridge(romPath);
 }
 
+// Increments every T_cycle (Master Clock) at ~4 MHz (4,194,304 Hz)
 void Bus::clock() {
-	if (++t_state == 4) {
-		t_state = 0;
-		div++;
+
+	int bit;
+	switch (tac & 0b11) {
+	case 0b00: bit = 9; break;
+	case 0b01: bit = 3; break;
+	case 0b10: bit = 5; break;
+	case 0b11: bit = 7; break;
 	}
 
-	if (tac & 0b00000100) {
-		bool inc = false;
-		switch (tac & 0b00000011) {
-		case 0b00:
-			inc = ((div & 0x3FF) == 0);
-			break;
-		case 0b01:
-			inc = ((div & 0xF) == 0);
-			break;
-		case 0b10:
-			inc = ((div & 0x3F) == 0);
-			break;
-		case 0b11:
-			inc = ((div & 0xFF) == 0);
-			break;
+	bool old_state = (master_clock & (1 << bit)) && (tac & 0b100);
+
+	master_clock++;
+
+	bool new_state = (master_clock & (1 << bit)) && (tac & 0b100);
+
+	if (old_state && !new_state) {
+		if (tima == 0xFF) {
+			tima = tma;
+			interrupts |= INTERRUPT_TIMER;
 		}
-		if (inc) {
-			if (tima == 0xFF) {
-				tima = tma;
-				interrupts |= INTERRUPT_TIMER;
-			}
-			else {
-				tima++;
-			}
-		}
-	}
-	if (!halt) {
-		cpu.clock();
-	}
-	// Resume CPU when an interrupt is pending
-	else {
-		if (ie & interrupts) {
-			halt = false;
+		else {
+			tima++;
 		}
 	}
 
+	div = master_clock >> 8;
+
+	// Clock one M-cycle (~1MHz) every 4 T-cycles (~4MHz)
+	if (master_clock % 4 == 0) {
+		if (!halt) {
+			cpu.clock();
+		}
+		// Resume CPU when an interrupt is pending
+		else {
+			if (ie & interrupts) {
+				halt = false;
+			}
+		}
+	}
+
+	// Clock PPU every T-cycle (~4MHz)
 	if (lcdc & 0b10000000) {
 		ppu.clock();
 	}
 
-	apu.clock();
+	//apu.clock();
 }
 
 uint8_t Bus::readIOregs(uint16_t addr) {
