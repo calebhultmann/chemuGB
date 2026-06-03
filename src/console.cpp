@@ -46,6 +46,7 @@ void Console::run() {
 					debugger.frame(gb);
 				}
 			}
+			speaker.step();
 			break;
 
 		case CONSOLE_MODE::PAUSED:

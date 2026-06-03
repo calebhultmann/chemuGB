@@ -63,7 +63,7 @@ void Bus::clock() {
 		ppu.clock();
 	}
 
-	//apu.clock();
+	apu.clock();
 }
 
 uint8_t Bus::readIOregs(uint16_t addr) {

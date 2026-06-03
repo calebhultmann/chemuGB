@@ -9,7 +9,7 @@ int audioEngine::initialize() {
 	}
 
 	SDL_AudioSpec spec{};
-	spec.freq = 44000;
+	spec.freq = 44100;
 	spec.format = SDL_AUDIO_F32LE;
 	spec.channels = 2;
 
@@ -22,8 +22,47 @@ int audioEngine::initialize() {
 	
 	SDL_BindAudioStream(device, stream);
 
+
+	time = Clock::now();
+
 	return 0;
 }
+
+void audioEngine::step() {
+	auto present = Clock::now();
+
+	std::chrono::duration<float> elapsed = present - time;
+
+	float delta = elapsed.count();
+	if (delta < sampleTime) {
+		return;
+	}
+
+	time = present;
+
+	// Sample APU
+	sample = 0.0f;
+
+	// Push Left Sample
+	samples[0] = sample;
+	// Push Right Sample
+	samples[1] = sample;
+
+	SDL_PutAudioStreamData(
+		stream,
+		samples.data(),
+		2 * sizeof(float)
+	);
+}
+
+void sample_channels() {
+
+}
+
+
+
+
+
 #include <vector>
 #include <numbers>
 #include <cmath>

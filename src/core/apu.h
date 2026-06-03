@@ -8,7 +8,8 @@
 #define CH1_TMR_DIS		0b01000000
 #define CH1_TMR_INIT	0b00111111
 #define CH1_PRD_HIGH	0b00000111
-
+#define CH1_SWP_PACE	0b00000111
+#define CH1_ENV_DIR		0b00001000
 
 class Bus;
 

@@ -7,15 +7,13 @@
 
 
 void APU::clock() {
-
-
-	
 	if (bus->div & 0b00011111) {
 		return;
 	}
 
 	div++;
 
+	// Sound Length
 	if (div % 2 == 0) {
 		// If Channel 1 Length Enabled
 		if ((nr14 & CH1_TMR_ENA) && (ch1.timer < CH1_TMR_DIS)) {
@@ -23,17 +21,26 @@ void APU::clock() {
 				nr52 &= CH1_OFF;
 			}
 		}
-
-		// sound length
 	}
 	
+	// CH1 Freq Sweep
 	if (div % 4 == 0) {
-		// ch1 freq sweep
+
 	}
 
+	// Envelope Sweep
 	if (div % 8 == 0) {
-		// envelope sweep
-
+		// Channel 1 Sweep
+		ch1.sweep_timer++;
+		if (nr12 & CH1_SWP_PACE) {
+			if (ch1.sweep_timer % (nr12 & CH1_SWP_PACE) == 0) {
+				// NOTE: Logic will need to be added to control volume 0-15
+				(nr12 & CH1_ENV_DIR) ? ch1.volume++ : ch1.volume--;
+			}
+		}
+		// Channel 2 Sweep
+		// Channel 3 Sweep
+		// Channel 4 Sweep
 	}
 }
 
@@ -117,8 +124,6 @@ void APU::write(uint16_t addr, uint8_t data) {
 
 			// Volume is set to contents of NR12 initial volume.
 			ch1.volume = (nr12 >> 4);
-
-
 		}
 		
 		nr14 = data & 0b11000111; break;
