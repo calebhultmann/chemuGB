@@ -1,7 +1,15 @@
 #include "apu.h"
 #include "bus.h"
 
+#define FULL_TIMER	0b00111111
+#define TRIGGER		0b10000000
+
+
+
 void APU::clock() {
+
+
+	
 	if (bus->div & 0b00011111) {
 		return;
 	}
@@ -9,6 +17,13 @@ void APU::clock() {
 	div++;
 
 	if (div % 2 == 0) {
+		// If Channel 1 Length Enabled
+		if ((nr14 & CH1_TMR_ENA) && (ch1.timer < CH1_TMR_DIS)) {
+			if (++ch1.timer == CH1_TMR_DIS) {
+				nr52 &= CH1_OFF;
+			}
+		}
+
 		// sound length
 	}
 	
@@ -18,8 +33,8 @@ void APU::clock() {
 
 	if (div % 8 == 0) {
 		// envelope sweep
-	}
 
+	}
 }
 
 /*
@@ -29,6 +44,12 @@ void APU::clock() {
 * The channel’s DAC is turned off.
 
 * NOTE: The envelope reaching a volume of 0 does NOT turn the channel off!
+
+setting bit 7 of NRx4 turns channel x on
+
+
+Channel x’s DAC is enabled if and only if [NRx2] & $F8 != 0;
+the exception is CH3, whose DAC is directly controlled by bit 7 of NR30 instead.
 */
 
 uint8_t APU::read(uint16_t addr) const {
@@ -55,20 +76,54 @@ uint8_t APU::read(uint16_t addr) const {
 	case 0xFF25: return nr51;
 	case 0xFF26: return nr52;
 	}
+	return 0xFF;
 }
 
 void APU::write(uint16_t addr, uint8_t data) {
 	// Exit if trying to write in read-only mode (APU is off)
-	if (!(audio_regs.nr52 & 0b10000000) && (addr != 0xFF26)) {
+	if (!(nr52 & 0b10000000) && (addr != 0xFF26)) {
 		return;
 	}
 
 	switch (addr) {
-	case 0xFF10: nr10 = data & 0b01111111; break;
-	case 0xFF11: nr11 = data; break;
-	case 0xFF12: nr12 = data; break;
-	case 0xFF13: nr13 = data; break;
-	case 0xFF14: nr14 = data & 0b11000111; break;
+	// Channel 1
+	case 0xFF10: // Sweep
+		nr10 = data & 0b01111111; break;
+	case 0xFF11: // Length Timer & Duty Cycle
+		nr11 = data; break;
+	case 0xFF12: // Volume & Envelope
+		nr12 = data; break;
+	case 0xFF13: // Period Low
+		nr13 = data; break;
+	case 0xFF14: // Period High & Control
+		if (data & TRIGGER) {
+			/*
+			Envelope timer is reset. - ???
+			Sweep does several things. - ???
+			*/
+
+			// Ch1 is enabled.
+			nr52 |= CH1_ON;
+
+			// If length timer expired it is reset.
+			if (ch1.timer == CH1_TMR_DIS) {
+				ch1.timer = (nr11 & CH1_TMR_INIT);
+			}
+
+			//The period divider is set to the contents of NR13 and NR14.
+			ch1.period = nr14 & CH1_PRD_HIGH;
+			ch1.period <<= 8;
+			ch1.period &= nr13;
+
+			// Volume is set to contents of NR12 initial volume.
+			ch1.volume = (nr12 >> 4);
+
+
+		}
+		
+		nr14 = data & 0b11000111; break;
+
+	// Channel 2
 	case 0xFF16: nr21 = data; break;
 	case 0xFF17: nr22 = data; break;
 	case 0xFF18: nr23 = data; break;
@@ -84,6 +139,6 @@ void APU::write(uint16_t addr, uint8_t data) {
 	case 0xFF23: nr44 = data & 0b11000000; break;
 	case 0xFF24: nr50 = data; break;
 	case 0xFF25: nr51 = data; break;
-	case 0xFF26: nr52 = (data & 0b10000000) | (audio_regs.nr52 & 0b00001111); break;
+	case 0xFF26: nr52 = (data & 0b10000000) | (nr52 & 0b00001111); break;
 	}
 }
