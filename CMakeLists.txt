@@ -67,7 +67,11 @@ add_executable(Emulator
 	src/renderer/chemuPixelEngine.cpp
 	src/renderer/chemuPixelEngine.h
 	
-	
+	# Audio
+	src/audio/chemuAudioEngine.cpp
+	src/audio/chemuAudioEngine.h
+
+	# Core
 	"src/core/bus.cpp"
 	"src/core/bus.h"
 

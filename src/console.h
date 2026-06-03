@@ -3,6 +3,7 @@
 #include "debugger/debugger.h"
 #include <SDL3/SDL_events.h>
 #include "renderer/chemuPixelEngine.h"
+#include "audio/chemuAudioEngine.h"
 
 enum DEBUG_MODE {
 	NORMAL,
@@ -25,6 +26,7 @@ public:
 	chemuGB gb;
 	Debugger debugger;
 	pixelEngine engine;
+	audioEngine speaker;
 
 	// flags and attributes (in progress)
 	bool debug;

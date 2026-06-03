@@ -10,6 +10,8 @@ Console::Console(Config& config) {
 	}
 
 	int status = engine.initialize();
+	status = speaker.initialize();
+	//speaker.play_default_sound();
 	//if (status != Error::None) {
 	//	return status;
 	//}
