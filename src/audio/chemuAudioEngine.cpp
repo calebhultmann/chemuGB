@@ -1,6 +1,9 @@
 #include "chemuAudioEngine.h"
+#include "../core/apu.h"
 
-int audioEngine::initialize() {
+int audioEngine::initialize(APU* a) {
+	apu = a;
+
 	// Initialize SDL3 Audio
 	if (!SDL_Init(SDL_INIT_AUDIO)) {
 		SDL_Log("SDL_VIDEO could not be initialized. Error: %s", SDL_GetError());
@@ -24,39 +27,65 @@ int audioEngine::initialize() {
 
 
 	time = Clock::now();
-
+	debugtime = Clock::now();
 	return 0;
 }
+#include <iostream>
 
 void audioEngine::step() {
-	auto present = Clock::now();
+	using SampleDuration = std::chrono::duration<float>;
+	constexpr SampleDuration sampleDuration{ 1.0f / 44100.0f };
 
-	std::chrono::duration<float> elapsed = present - time;
-
-	float delta = elapsed.count();
-	if (delta < sampleTime) {
+	auto now = Clock::now();
+	if (now - time < sampleDuration) {
 		return;
 	}
 
-	time = present;
+	sample_channels();
 
-	// Sample APU
-	sample = 0.0f;
+	while (now - time >= sampleDuration) {
+		time += std::chrono::duration_cast<std::chrono::nanoseconds>(sampleDuration);
+		
+		//if (++hz == 44100) {
+		//	hz = 0;
+		//	double elapsed = std::chrono::duration<double>(now - debugtime).count();
+		//	debugtime = now;
+		//	std::cout << "elapsed: " << elapsed << '\n';
+		//}
 
-	// Push Left Sample
-	samples[0] = sample;
-	// Push Right Sample
-	samples[1] = sample;
+		// Push Left Sample
+		samples.push_back(left_sample);
+		// Push Right Sample
+		samples.push_back(right_sample);
+	}
 
 	SDL_PutAudioStreamData(
 		stream,
 		samples.data(),
-		2 * sizeof(float)
+		(int)samples.size() * sizeof(float)
 	);
+
+	samples.clear();
 }
 
-void sample_channels() {
-
+void audioEngine::sample_channels() {
+	// Channel 1
+	if (apu->nr52 & CH1_ON) {
+		int value = apu->ch1.duty_value;
+		int volume = apu->ch1.volume;
+		float real_volume = volume * (-2.0f / 15.0f);
+		real_volume += 1.0f;
+		
+		ch1_sample =
+			value ? real_volume : -1.0f;
+		
+		left_sample = ch1_sample;
+		right_sample = ch1_sample;
+	}
+	else {
+		left_sample = 0.0f;
+		right_sample = 0.0f;
+	}
 }
 
 

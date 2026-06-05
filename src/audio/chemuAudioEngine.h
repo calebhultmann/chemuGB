@@ -8,10 +8,21 @@
 
 using Clock = std::chrono::steady_clock;
 
+class APU;
+
 class audioEngine {
 public:
+	Clock::time_point debugtime;
+	int hz = 0;
+
+
+
+
 	Clock::time_point time;
 	const float sampleTime = 1 / 44100;
+	APU* apu = nullptr;
+	double audio_accumulator = 0;
+
 	float sample;
 
 	float ch1_sample;
@@ -19,13 +30,11 @@ public:
 	float ch3_sample;
 	float ch4_sample;
 
-	float left;
-	float right;
+	float left_sample;
+	float right_sample;
 
-	std::array<float, 2> samples;
-
-	int initialize();
-
+	std::vector<float> samples;
+	int initialize(APU*);
 	void step();
 
 	void sample_channels(); // might want 4 functions
@@ -33,7 +42,7 @@ public:
 	// volume and possible HPF vvv
 	void left();
 	void right();
-	void stream();
+	//void stream();
 
 
 	SDL_AudioDeviceID device;
