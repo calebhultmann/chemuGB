@@ -62,8 +62,9 @@ void Bus::clock() {
 	if (lcdc & 0b10000000) {
 		ppu.clock();
 	}
-
-	apu.clock();
+	if (apu.nr52 & 0b10000000) {
+		apu.clock();
+	}
 }
 
 uint8_t Bus::readIOregs(uint16_t addr) {

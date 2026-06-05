@@ -8,9 +8,9 @@ Console::Console(Config& config) {
 		// return init_status
 
 	}
-
+	
 	int status = engine.initialize();
-	status = speaker.initialize();
+	status = speaker.initialize(&gb.system.apu);
 	//speaker.play_default_sound();
 	//if (status != Error::None) {
 	//	return status;

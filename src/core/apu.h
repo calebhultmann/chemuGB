@@ -11,15 +11,34 @@
 #define CH1_SWP_PACE	0b00000111
 #define CH1_ENV_DIR		0b00001000
 
+static const uint8_t duty_table[4][8]{
+	{0,0,0,0,0,0,0,1},
+	{1,0,0,0,0,0,0,1},
+	{1,0,0,0,0,1,1,1},
+	{0,1,1,1,1,1,1,0}
+};
+
 class Bus;
 
 struct channel_1 {
-	uint8_t timer = 0;
-	uint16_t period = 0;
+	// Frequency Sweep
+	bool freq_sweep_dir;
+
+	// Length timer
+	uint8_t len_timer = 0;
+	bool len_enable;
+
+	// Wavy duty
+	uint8_t duty_position = 0;
+	bool duty_value = 0;
+
+	// Volume & Envelope
 	uint8_t volume = 0;
-	uint8_t sweep_timer = 0;
-	bool sweep_enable;
-	uint8_t duty = 0;
+	bool env_dir;
+	uint16_t env_sweep_timer = 0;
+
+	// Period
+	uint16_t period_value = 0;
 };
 
 class APU

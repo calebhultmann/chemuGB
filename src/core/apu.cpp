@@ -1,41 +1,76 @@
 #include "apu.h"
 #include "bus.h"
 
-#define FULL_TIMER	0b00111111
-#define TRIGGER		0b10000000
-
-
+#define FULL_TIMER		0b00111111
+#define TRIGGER			0b10000000
+#define DUTY_OVERFLOW	0x800
 
 void APU::clock() {
+	// Increment period timer every 4 T-cycles
+	// When period overflows, reset contents
+	// and advance duty position
+
+	// Period divider
+	if (bus->master_clock % 4 == 0) {
+		// Channel 1
+		ch1.period_value++;
+		
+		if (ch1.period_value == DUTY_OVERFLOW) {
+			// Reset period value
+			ch1.period_value = nr14 & CH1_PRD_HIGH;
+			ch1.period_value <<= 8;
+			ch1.period_value |= nr13;
+			
+			// Advance duty position
+			ch1.duty_position++;
+			ch1.duty_position &= 7;
+
+			// Find new duty value
+			ch1.duty_value = duty_table[nr11 >> 6][ch1.duty_position];
+		}
+	}
+
+
+
 	if (bus->div & 0b00011111) {
 		return;
 	}
 
+	// 512 Hz
 	div++;
 
-	// Sound Length
+	// Sound Length - 256Hz
 	if (div % 2 == 0) {
 		// If Channel 1 Length Enabled
-		if ((nr14 & CH1_TMR_ENA) && (ch1.timer < CH1_TMR_DIS)) {
-			if (++ch1.timer == CH1_TMR_DIS) {
+		if ((nr14 & CH1_TMR_ENA) && (ch1.len_timer < CH1_TMR_DIS)) {
+			if (++ch1.len_timer == CH1_TMR_DIS) {
 				nr52 &= CH1_OFF;
 			}
 		}
 	}
 	
-	// CH1 Freq Sweep
+	// CH1 Freq Sweep - 128Hz
 	if (div % 4 == 0) {
 
 	}
 
-	// Envelope Sweep
+	// Envelope Sweep - 64Hz
 	if (div % 8 == 0) {
 		// Channel 1 Sweep
-		ch1.sweep_timer++;
+		ch1.env_sweep_timer++;
 		if (nr12 & CH1_SWP_PACE) {
-			if (ch1.sweep_timer % (nr12 & CH1_SWP_PACE) == 0) {
+			if (ch1.env_sweep_timer % (nr12 & CH1_SWP_PACE) == 0) {
 				// NOTE: Logic will need to be added to control volume 0-15
-				(nr12 & CH1_ENV_DIR) ? ch1.volume++ : ch1.volume--;
+				if (nr12 & CH1_ENV_DIR) {
+					if (ch1.volume != 0xF) {
+						ch1.volume++;
+					}
+				}
+				else {
+					if (ch1.volume != 0) {
+						ch1.volume--;
+					}
+				}
 			}
 		}
 		// Channel 2 Sweep
@@ -88,7 +123,7 @@ uint8_t APU::read(uint16_t addr) const {
 
 void APU::write(uint16_t addr, uint8_t data) {
 	// Exit if trying to write in read-only mode (APU is off)
-	if (!(nr52 & 0b10000000) && (addr != 0xFF26)) {
+	if ((!(nr52 & 0b10000000)) && (addr != 0xFF26)) {
 		return;
 	}
 
@@ -104,26 +139,26 @@ void APU::write(uint16_t addr, uint8_t data) {
 		nr13 = data; break;
 	case 0xFF14: // Period High & Control
 		if (data & TRIGGER) {
-			/*
-			Envelope timer is reset. - ???
-			Sweep does several things. - ???
-			*/
+			//Sweep does several things. - ???
 
 			// Ch1 is enabled.
 			nr52 |= CH1_ON;
 
 			// If length timer expired it is reset.
-			if (ch1.timer == CH1_TMR_DIS) {
-				ch1.timer = (nr11 & CH1_TMR_INIT);
+			if (ch1.len_timer == CH1_TMR_DIS) {
+				ch1.len_timer = (nr11 & CH1_TMR_INIT);
 			}
 
 			//The period divider is set to the contents of NR13 and NR14.
-			ch1.period = nr14 & CH1_PRD_HIGH;
-			ch1.period <<= 8;
-			ch1.period &= nr13;
+			ch1.period_value = nr14 & CH1_PRD_HIGH;
+			ch1.period_value <<= 8;
+			ch1.period_value |= nr13;
 
 			// Volume is set to contents of NR12 initial volume.
 			ch1.volume = (nr12 >> 4);
+
+			// Envelope timer is reset.
+			ch1.env_sweep_timer = 0;
 		}
 		
 		nr14 = data & 0b11000111; break;
