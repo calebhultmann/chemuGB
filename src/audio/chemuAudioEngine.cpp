@@ -41,22 +41,17 @@ void audioEngine::step() {
 		return;
 	}
 
-	sample_channels();
+	dacs();
+	mixer();
+	volume();
 
 	while (now - time >= sampleDuration) {
 		time += std::chrono::duration_cast<std::chrono::nanoseconds>(sampleDuration);
-		
-		//if (++hz == 44100) {
-		//	hz = 0;
-		//	double elapsed = std::chrono::duration<double>(now - debugtime).count();
-		//	debugtime = now;
-		//	std::cout << "elapsed: " << elapsed << '\n';
-		//}
 
 		// Push Left Sample
-		samples.push_back(left_sample);
+		samples.push_back(left_analog);
 		// Push Right Sample
-		samples.push_back(right_sample);
+		samples.push_back(right_analog);
 	}
 
 	SDL_PutAudioStreamData(
@@ -68,51 +63,50 @@ void audioEngine::step() {
 	samples.clear();
 }
 
-void audioEngine::sample_channels() {
+void audioEngine::dacs() {
 	// Channel 1
-	if (apu->nr52 & CH1_ON) {
-		int value = apu->ch1.duty_value;
-		int volume = apu->ch1.volume;
-		float real_volume = volume * (-2.0f / 15.0f);
-		real_volume += 1.0f;
-		
-		ch1_sample =
-			value ? real_volume : -1.0f;
-		
-		left_sample = ch1_sample;
-		right_sample = ch1_sample;
+	// Disable DAC "pulls" towards Analog 0, which is Digital 7.5
+	float ch1_digital = (float)(apu->ch1.duty_value * apu->ch1.volume);
+	float ch1_pre_analog = (apu->ch1.dac_enable ? ch1_digital : 7.5f);
+	ch1_analog = ch1_pre_analog * dac_conversion + 1.0f;
+}
+
+void audioEngine::mixer() {
+	left_analog = 0;
+	right_analog = 0;
+
+	// Left
+	if (apu->nr51 & CH1_LEFT) {
+		left_analog += ch1_analog;
 	}
-	else {
-		left_sample = 0.0f;
-		right_sample = 0.0f;
+	if (apu->nr51 & CH2_LEFT) {
+		left_analog += ch2_analog;
+	}
+	if (apu->nr51 & CH3_LEFT) {
+		left_analog += ch3_analog;
+	}
+	if (apu->nr51 & CH4_LEFT) {
+		left_analog += ch4_analog;
+	}
+
+	// Right
+	if (apu->nr51 & CH1_RIGHT) {
+		right_analog += ch1_analog;
+	}
+	if (apu->nr51 & CH2_RIGHT) {
+		right_analog += ch2_analog;
+	}
+	if (apu->nr51 & CH3_RIGHT) {
+		right_analog += ch3_analog;
+	}
+	if (apu->nr51 & CH4_RIGHT) {
+		right_analog += ch4_analog;
 	}
 }
 
-
-
-
-
-#include <vector>
-#include <numbers>
-#include <cmath>
-void audioEngine::play_default_sound() {
-	constexpr int sample_rate = 44000;
-	constexpr float frequency = 880.0f;
-	std::vector<float> samples;
-
-	for (int i = 0; i < sample_rate; i++) {
-		float t = static_cast<float>(i) / sample_rate;
-
-		float sample =
-			std::sin(2.0f * std::numbers::pi_v<float>
-				*frequency * t);
-
-		samples.push_back(sample);
-		samples.push_back(sample);
-	}
-
-	SDL_PutAudioStreamData(
-		stream,
-		samples.data(),
-		(int)(samples.size() * sizeof(float)));
+void audioEngine::volume() {
+	uint8_t left = (apu->nr50 & VOLUME_LEFT) >> 4;
+	uint8_t right = apu->nr50 & VOLUME_RIGHT;
+	left_analog *= (float)((left + 1) / 8);
+	right_analog *= (float)((right + 1) / 8);
 }

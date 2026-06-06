@@ -14,7 +14,7 @@ class audioEngine {
 public:
 	Clock::time_point debugtime;
 	int hz = 0;
-
+	const float dac_conversion = -2.0f / 15.0f;
 
 
 
@@ -24,26 +24,23 @@ public:
 	double audio_accumulator = 0;
 
 	float sample;
+	float ch1_analog;
+	float ch2_analog = 0;
+	float ch3_analog = 0;
+	float ch4_analog = 0;
 
-	float ch1_sample;
-	float ch2_sample;
-	float ch3_sample;
-	float ch4_sample;
-
-	float left_sample;
-	float right_sample;
+	float left_analog;
+	float right_analog;
 
 	std::vector<float> samples;
 	int initialize(APU*);
 	void step();
 
-	void sample_channels(); // might want 4 functions
-	void mix();
+	void dacs();
+	void mixer();
 	// volume and possible HPF vvv
-	void left();
-	void right();
-	//void stream();
-
+	void volume();
+	void output();
 
 	SDL_AudioDeviceID device;
 	SDL_AudioStream* stream;
