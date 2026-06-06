@@ -1,5 +1,20 @@
 #pragma once
 #include <cstdint>
+#include <chrono>
+using Clock = std::chrono::steady_clock;
+
+
+// Master Macros
+#define CH4_LEFT		0b10000000
+#define CH3_LEFT		0b01000000
+#define CH2_LEFT		0b00100000
+#define CH1_LEFT		0b00010000
+#define CH4_RIGHT		0b00001000
+#define CH3_RIGHT		0b00000100
+#define CH2_RIGHT		0b00000010
+#define CH1_RIGHT		0b00000001
+#define VOLUME_LEFT		0b01110000
+#define VOLUME_RIGHT	0b00000111
 
 // Channel 1 Macros
 #define CH1_ON			0b00000001
@@ -39,6 +54,9 @@ struct channel_1 {
 
 	// Period
 	uint16_t period_value = 0;
+
+	// DAC
+	bool dac_enable;
 };
 
 class APU
@@ -54,7 +72,7 @@ public:
 	uint8_t ch3_timer = 0;
 	uint8_t ch4_timer = 0;
 
-
+	bool no_tick = false;
 
 	// Channel 1 - Pulse with period sweep
 	uint8_t nr10; // Sweep

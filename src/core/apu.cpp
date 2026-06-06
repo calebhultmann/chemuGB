@@ -30,14 +30,18 @@ void APU::clock() {
 		}
 	}
 
-
-
 	if (bus->div & 0b00011111) {
+		no_tick = false;
+		return;
+	}
+	
+	if (no_tick) {
 		return;
 	}
 
 	// 512 Hz
 	div++;
+	no_tick = true;
 
 	// Sound Length - 256Hz
 	if (div % 2 == 0) {
@@ -51,7 +55,7 @@ void APU::clock() {
 	
 	// CH1 Freq Sweep - 128Hz
 	if (div % 4 == 0) {
-
+		// Make sure this turns off channel!
 	}
 
 	// Envelope Sweep - 64Hz
@@ -60,7 +64,6 @@ void APU::clock() {
 		ch1.env_sweep_timer++;
 		if (nr12 & CH1_SWP_PACE) {
 			if (ch1.env_sweep_timer % (nr12 & CH1_SWP_PACE) == 0) {
-				// NOTE: Logic will need to be added to control volume 0-15
 				if (nr12 & CH1_ENV_DIR) {
 					if (ch1.volume != 0xF) {
 						ch1.volume++;
@@ -134,15 +137,23 @@ void APU::write(uint16_t addr, uint8_t data) {
 	case 0xFF11: // Length Timer & Duty Cycle
 		nr11 = data; break;
 	case 0xFF12: // Volume & Envelope
-		nr12 = data; break;
+		nr12 = data;
+		ch1.dac_enable = ((nr12 & 0xF8) != 0);
+		if (!ch1.dac_enable) {
+			nr52 &= CH1_OFF;
+		}
+		break;
 	case 0xFF13: // Period Low
 		nr13 = data; break;
 	case 0xFF14: // Period High & Control
+		nr14 = data & 0b11000111;
 		if (data & TRIGGER) {
 			//Sweep does several things. - ???
 
 			// Ch1 is enabled.
-			nr52 |= CH1_ON;
+			if (ch1.dac_enable) {
+				nr52 |= CH1_ON;
+			}
 
 			// If length timer expired it is reset.
 			if (ch1.len_timer == CH1_TMR_DIS) {
@@ -160,8 +171,7 @@ void APU::write(uint16_t addr, uint8_t data) {
 			// Envelope timer is reset.
 			ch1.env_sweep_timer = 0;
 		}
-		
-		nr14 = data & 0b11000111; break;
+		break;
 
 	// Channel 2
 	case 0xFF16: nr21 = data; break;
