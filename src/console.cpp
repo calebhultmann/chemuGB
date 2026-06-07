@@ -10,7 +10,6 @@ Console::Console(Config& config) {
 	}
 	
 	int status = engine.initialize();
-	status = speaker.initialize(&gb.system.apu);
 	//speaker.play_default_sound();
 	//if (status != Error::None) {
 	//	return status;
@@ -46,7 +45,6 @@ void Console::run() {
 					debugger.frame(gb);
 				}
 			}
-			speaker.step();
 			break;
 
 		case CONSOLE_MODE::PAUSED:

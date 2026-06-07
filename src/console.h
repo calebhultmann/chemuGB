@@ -26,7 +26,6 @@ public:
 	chemuGB gb;
 	Debugger debugger;
 	pixelEngine engine;
-	audioEngine speaker;
 
 	// flags and attributes (in progress)
 	bool debug;

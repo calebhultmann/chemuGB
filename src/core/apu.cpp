@@ -5,6 +5,10 @@
 #define TRIGGER			0b10000000
 #define DUTY_OVERFLOW	0x800
 
+void APU::initialize() {
+	speaker.initialize(this);
+}
+
 void APU::clock() {
 	// Increment period timer every 4 T-cycles
 	// When period overflows, reset contents
@@ -30,6 +34,16 @@ void APU::clock() {
 		}
 	}
 
+	cycle_accumulator++;
+	if (cycle_accumulator >= cyclesPerSample) {
+		cycle_accumulator -= cyclesPerSample;
+		speaker.sample();
+	}
+
+	if (speaker.samples.size() >= 512) {
+		speaker.flush();
+	}
+
 	if (bus->div & 0b00011111) {
 		no_tick = false;
 		return;
@@ -42,6 +56,8 @@ void APU::clock() {
 	// 512 Hz
 	div++;
 	no_tick = true;
+
+	speaker.adjustRate();
 
 	// Sound Length - 256Hz
 	if (div % 2 == 0) {

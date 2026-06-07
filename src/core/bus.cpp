@@ -4,6 +4,7 @@ Bus::Bus() {
 	cpu.connectBus(this);
 	ppu.connectBus(this);
 	apu.connectBus(this);
+	apu.initialize();
 	cart = std::make_shared<Cartridge>();
 	joypad.connectBus(this);
 }

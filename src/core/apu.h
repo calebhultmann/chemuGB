@@ -1,6 +1,8 @@
 #pragma once
 #include <cstdint>
 #include <chrono>
+#include "../audio/chemuAudioEngine.h"
+
 using Clock = std::chrono::steady_clock;
 
 
@@ -65,6 +67,12 @@ public:
 	Bus* bus = nullptr;
 	void connectBus(Bus* b) { bus = b; }
 	
+	audioEngine speaker;
+	void initialize();
+
+	double cyclesPerSample = 4194304.0 / 44100.0;
+	double cycle_accumulator = 0;
+
 	uint32_t div = 0;
 	channel_1 ch1;
 	

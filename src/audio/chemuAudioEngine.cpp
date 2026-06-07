@@ -25,42 +25,7 @@ int audioEngine::initialize(APU* a) {
 	
 	SDL_BindAudioStream(device, stream);
 
-
-	time = Clock::now();
-	debugtime = Clock::now();
 	return 0;
-}
-#include <iostream>
-
-void audioEngine::step() {
-	using SampleDuration = std::chrono::duration<float>;
-	constexpr SampleDuration sampleDuration{ 1.0f / 44100.0f };
-
-	auto now = Clock::now();
-	if (now - time < sampleDuration) {
-		return;
-	}
-
-	dacs();
-	mixer();
-	volume();
-
-	while (now - time >= sampleDuration) {
-		time += std::chrono::duration_cast<std::chrono::nanoseconds>(sampleDuration);
-
-		// Push Left Sample
-		samples.push_back(left_analog);
-		// Push Right Sample
-		samples.push_back(right_analog);
-	}
-
-	SDL_PutAudioStreamData(
-		stream,
-		samples.data(),
-		(int)samples.size() * sizeof(float)
-	);
-
-	samples.clear();
 }
 
 void audioEngine::dacs() {
@@ -107,6 +72,42 @@ void audioEngine::mixer() {
 void audioEngine::volume() {
 	uint8_t left = (apu->nr50 & VOLUME_LEFT) >> 4;
 	uint8_t right = apu->nr50 & VOLUME_RIGHT;
-	left_analog *= (float)((left + 1) / 8);
-	right_analog *= (float)((right + 1) / 8);
+	left_analog *= (float)((float)(left + 1) / 8.0f);
+	right_analog *= (float)((float)(right + 1) / 8.0f);
+}
+
+
+void audioEngine::sample() {
+	dacs();
+	mixer();
+	volume();
+
+	samples.push_back(left_analog);
+	samples.push_back(right_analog);
+}
+
+void audioEngine::flush() {
+	while (SDL_GetAudioStreamQueued(stream) > (int)(sizeof(float) * 2 * 44100 * 0.15f)) {
+		SDL_Delay(1);
+	}
+
+	SDL_PutAudioStreamData(
+		stream,
+		samples.data(),
+		(int)samples.size() * sizeof(float)
+	);
+
+	samples.clear();
+}
+
+void audioEngine::adjustRate() {
+	int queued = SDL_GetAudioStreamQueued(stream);
+	float bufferedSeconds = queued / (sizeof(float) * 2 * 44100.0f);
+
+	// Target ~50ms of buffer — enough headroom without noticeable lag
+	constexpr float targetBuffer = 0.015f;
+	float error = bufferedSeconds - targetBuffer;
+
+	// Nudge cyclesPerSample — positive error = running fast = slow down intake
+	apu->cyclesPerSample = (4194304.0 / 44100.0) * (1.0 + error * 0.02);
 }
