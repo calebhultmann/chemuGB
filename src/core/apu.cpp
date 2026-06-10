@@ -32,6 +32,23 @@ void APU::clock() {
 			// Find new duty value
 			ch1.duty_value = duty_table[nr11 >> 6][ch1.duty_position];
 		}
+
+		// Channel 2
+		ch2.period_value++;
+
+		if (ch2.period_value == DUTY_OVERFLOW) {
+			// Reset period value
+			ch2.period_value = nr24 & CH2_PRD_HIGH;
+			ch2.period_value <<= 8;
+			ch2.period_value |= nr23;
+
+			// Advance duty position
+			ch2.duty_position++;
+			ch2.duty_position &= 7;
+
+			// Find new duty value
+			ch2.duty_value = duty_table[nr21 >> 6][ch2.duty_position];
+		}
 	}
 
 	cycle_accumulator++;
@@ -67,6 +84,13 @@ void APU::clock() {
 				nr52 &= CH1_OFF;
 			}
 		}
+
+		// If Channel 2 Length Enabled
+		if ((nr24 & CH2_TMR_ENA) && (ch2.len_timer < CH2_TMR_DIS)) {
+			if (++ch2.len_timer == CH2_TMR_DIS) {
+				nr52 &= CH2_OFF;
+			}
+		}
 	}
 	
 	// CH1 Freq Sweep - 128Hz
@@ -93,6 +117,21 @@ void APU::clock() {
 			}
 		}
 		// Channel 2 Sweep
+ 		ch2.env_sweep_timer++;
+		if (nr22 & CH2_SWP_PACE) {
+			if (ch2.env_sweep_timer % (nr22 & CH2_SWP_PACE) == 0) {
+				if (nr22 & CH2_ENV_DIR) {
+					if (ch2.volume != 0xF) {
+						ch2.volume++;
+					}
+				}
+				else {
+					if (ch2.volume != 0) {
+						ch2.volume--;
+					}
+				}
+			}
+		}
 		// Channel 3 Sweep
 		// Channel 4 Sweep
 	}
@@ -190,10 +229,44 @@ void APU::write(uint16_t addr, uint8_t data) {
 		break;
 
 	// Channel 2
-	case 0xFF16: nr21 = data; break;
-	case 0xFF17: nr22 = data; break;
-	case 0xFF18: nr23 = data; break;
-	case 0xFF19: nr24 = data & 0b11000111; break;
+	case 0xFF16: // Length Timer & Duty Cycle
+		nr21 = data; break;
+	case 0xFF17: // Volume & Envelope
+		nr22 = data;
+		ch2.dac_enable = ((nr22 & 0xF8) != 0);
+		if (!ch2.dac_enable) {
+			nr52 &= CH2_OFF;
+		}
+		break;
+	case 0xFF18: // Period Low
+		nr23 = data; break;
+	case 0xFF19: // Period High & Control
+		nr24 = data & 0b11000111;
+		if (data & TRIGGER) {
+			// Ch2 is enabled.
+			if (ch2.dac_enable) {
+				nr52 |= CH2_ON;
+			}
+
+			// If length timer expired it is reset.
+			if (ch2.len_timer == CH2_TMR_DIS) {
+				ch2.len_timer = (nr21 & CH2_TMR_INIT);
+			}
+
+			//The period divider is set to the contents of NR13 and NR14.
+			ch2.period_value = nr24 & CH2_PRD_HIGH;
+			ch2.period_value <<= 8;
+			ch2.period_value |= nr23;
+
+			// Volume is set to contents of NR12 initial volume.
+			ch2.volume = (nr22 >> 4);
+
+			// Envelope timer is reset.
+			ch2.env_sweep_timer = 0;
+		}
+		break;
+
+	// Channel 3
 	case 0xFF1A: nr30 = data & 0b10000000; break;
 	case 0xFF1B: nr31 = data; break;
 	case 0xFF1C: nr32 = data & 0b01100000; break;

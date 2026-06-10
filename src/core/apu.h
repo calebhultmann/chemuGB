@@ -28,6 +28,16 @@ using Clock = std::chrono::steady_clock;
 #define CH1_SWP_PACE	0b00000111
 #define CH1_ENV_DIR		0b00001000
 
+// Channel 2 Macros
+#define CH2_ON			0b00000010
+#define CH2_OFF			0b11111101
+#define CH2_TMR_ENA		0b01000000
+#define CH2_TMR_DIS		0b01000000
+#define CH2_TMR_INIT	0b00111111
+#define CH2_PRD_HIGH	0b00000111
+#define CH2_SWP_PACE	0b00000111
+#define CH2_ENV_DIR		0b00001000
+
 static const uint8_t duty_table[4][8]{
 	{0,0,0,0,0,0,0,1},
 	{1,0,0,0,0,0,0,1},
@@ -41,6 +51,27 @@ struct channel_1 {
 	// Frequency Sweep
 	bool freq_sweep_dir;
 
+	// Length timer
+	uint8_t len_timer = 0;
+	bool len_enable;
+
+	// Wavy duty
+	uint8_t duty_position = 0;
+	bool duty_value = 0;
+
+	// Volume & Envelope
+	uint8_t volume = 0;
+	bool env_dir;
+	uint16_t env_sweep_timer = 0;
+
+	// Period
+	uint16_t period_value = 0;
+
+	// DAC
+	bool dac_enable;
+};
+
+struct channel_2 {
 	// Length timer
 	uint8_t len_timer = 0;
 	bool len_enable;
@@ -75,8 +106,8 @@ public:
 
 	uint32_t div = 0;
 	channel_1 ch1;
+	channel_2 ch2;
 	
-	uint8_t ch2_timer = 0;
 	uint8_t ch3_timer = 0;
 	uint8_t ch4_timer = 0;
 
