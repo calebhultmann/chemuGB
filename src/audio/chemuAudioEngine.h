@@ -17,7 +17,7 @@ public:
 	APU* apu = nullptr;
 
 	float ch1_analog;
-	float ch2_analog = 0;
+	float ch2_analog;
 	float ch3_analog = 0;
 	float ch4_analog = 0;
 

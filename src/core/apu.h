@@ -68,7 +68,7 @@ struct channel_1 {
 	uint16_t period_value = 0;
 
 	// DAC
-	bool dac_enable;
+	bool dac_enable = false;
 };
 
 struct channel_2 {
@@ -89,7 +89,7 @@ struct channel_2 {
 	uint16_t period_value = 0;
 
 	// DAC
-	bool dac_enable;
+	bool dac_enable = false;
 };
 
 class APU
