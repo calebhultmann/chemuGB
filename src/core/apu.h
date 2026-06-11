@@ -38,6 +38,20 @@ using Clock = std::chrono::steady_clock;
 #define CH2_SWP_PACE	0b00000111
 #define CH2_ENV_DIR		0b00001000
 
+
+
+// Channel 4 Macros
+#define CH4_ON			0b00001000
+#define CH4_OFF			0b11110111
+#define CH4_TMR_ENA		0b01000000
+#define CH4_TMR_DIS		0b01000000
+#define CH4_TMR_INIT	0b00111111
+#define CH4_SHORT_LSFR	0b00001000
+#define CH4_SWP_PACE	0b00000111
+#define CH4_ENV_DIR		0b00001000
+#define CH4_LONG_BIT	0b1000000000000000
+#define CH4_SHORT_BIT	0b10000000
+
 static const uint8_t duty_table[4][8]{
 	{0,0,0,0,0,0,0,1},
 	{1,0,0,0,0,0,0,1},
@@ -53,7 +67,6 @@ struct channel_1 {
 
 	// Length timer
 	uint8_t len_timer = 0;
-	bool len_enable;
 
 	// Wavy duty
 	uint8_t duty_position = 0;
@@ -74,7 +87,6 @@ struct channel_1 {
 struct channel_2 {
 	// Length timer
 	uint8_t len_timer = 0;
-	bool len_enable;
 
 	// Wavy duty
 	uint8_t duty_position = 0;
@@ -87,6 +99,28 @@ struct channel_2 {
 
 	// Period
 	uint16_t period_value = 0;
+
+	// DAC
+	bool dac_enable = false;
+};
+
+struct channel_4 {
+	// Length timer
+	uint8_t len_timer = 0;
+
+	// Volume & Envelope
+	uint8_t volume = 0;
+	bool env_dir;
+	uint16_t env_sweep_timer = 0;
+
+	// LSFR
+	uint16_t lsfr = 0;
+	bool lsfr_value = false;
+
+	// Counter
+	uint8_t divider = 0;
+	uint8_t shift = 0;
+	uint16_t shift_timer = 0;
 
 	// DAC
 	bool dac_enable = false;
@@ -107,9 +141,11 @@ public:
 	uint32_t div = 0;
 	channel_1 ch1;
 	channel_2 ch2;
+	//channel_3 ch3;
+	channel_4 ch4;
+
 	
 	uint8_t ch3_timer = 0;
-	uint8_t ch4_timer = 0;
 
 	bool no_tick = false;
 

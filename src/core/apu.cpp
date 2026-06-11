@@ -49,6 +49,49 @@ void APU::clock() {
 			// Find new duty value
 			ch2.duty_value = duty_table[nr21 >> 6][ch2.duty_position];
 		}
+
+		// Channel 4
+		if (bus->master_clock % 16 == 0 &&
+			!(ch4.shift == 14 || ch4.shift == 15)) {
+
+			ch4.shift_timer++;
+
+			uint8_t scale = 1;
+
+			uint16_t divide = 1;
+			if (ch4.shift != 0) {
+				divide <<= (ch4.shift - 1);
+			}
+				
+			if (ch4.divider == 0) {
+				scale = 2;
+			}
+			else {
+				divide *= ch4.divider;
+			}
+
+			if ((ch4.shift_timer * scale) % divide == 0) {
+				ch4.shift_timer = 0;
+				bool bit = (ch4.lsfr & 0b1) == (ch4.lsfr & 0b10);
+				if (bit) {
+					ch4.lsfr |= CH4_LONG_BIT;
+
+					if (nr43 & CH4_SHORT_LSFR) {
+						ch4.lsfr |= CH4_SHORT_BIT;
+					}
+				}
+				else {
+					ch4.lsfr &= ~CH4_LONG_BIT;
+
+					if (nr43 & CH4_SHORT_LSFR) {
+						ch4.lsfr &= ~CH4_SHORT_BIT;
+					}
+				}
+
+				ch4.lsfr_value = ch4.lsfr & 1;
+				ch4.lsfr >>= 1;
+			}
+		}
 	}
 
 	cycle_accumulator++;
@@ -89,6 +132,13 @@ void APU::clock() {
 		if ((nr24 & CH2_TMR_ENA) && (ch2.len_timer < CH2_TMR_DIS)) {
 			if (++ch2.len_timer == CH2_TMR_DIS) {
 				nr52 &= CH2_OFF;
+			}
+		}
+
+		// If Channel 4 Length Enabled
+		if ((nr44 & CH4_TMR_ENA) && (ch4.len_timer < CH4_TMR_DIS)) {
+			if (++ch4.len_timer == CH4_TMR_DIS) {
+				nr52 &= CH4_OFF;
 			}
 		}
 	}
@@ -133,7 +183,23 @@ void APU::clock() {
 			}
 		}
 		// Channel 3 Sweep
+
 		// Channel 4 Sweep
+		ch4.env_sweep_timer++;
+		if (nr42 & CH4_SWP_PACE) {
+			if (ch4.env_sweep_timer % (nr42 & CH4_SWP_PACE) == 0) {
+				if (nr42 & CH4_ENV_DIR) {
+					if (ch4.volume != 0xF) {
+						ch4.volume++;
+					}
+				}
+				else {
+					if (ch4.volume != 0) {
+						ch4.volume--;
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -272,10 +338,48 @@ void APU::write(uint16_t addr, uint8_t data) {
 	case 0xFF1C: nr32 = data & 0b01100000; break;
 	case 0xFF1D: nr33 = data; break;
 	case 0xFF1E: nr34 = data & 0b11000111; break;
-	case 0xFF20: nr41 = data & 0b00111111; break;
-	case 0xFF21: nr42 = data; break;
-	case 0xFF22: nr43 = data; break;
-	case 0xFF23: nr44 = data & 0b11000000; break;
+
+	// Channel 4
+	case 0xFF20: // Length Timer
+		nr41 = data & 0b00111111; break;
+	case 0xFF21: // Volume & Envelope
+		nr42 = data;
+		ch4.dac_enable = ((nr42 & 0xF8) != 0);
+		if (!ch4.dac_enable) {
+			nr52 &= CH4_OFF;
+		}
+		break;
+	case 0xFF22: // Frequency & Randomness
+		nr43 = data;
+		ch4.divider = nr43 & 0b111;
+		ch4.shift = nr43 >> 4;
+		break;
+	case 0xFF23: // CH4 Control
+		nr44 = data & 0b11000000;
+		
+		if (data & TRIGGER) {
+			// Ch4 is enabled.
+			if (ch4.dac_enable) {
+				nr52 |= CH4_ON;
+			}
+
+			// If length timer expired it is reset.
+			if (ch4.len_timer == CH4_TMR_DIS) {
+				ch4.len_timer = (nr41 & CH4_TMR_INIT);
+			}
+
+			// Envelope timer is reset.
+			ch4.env_sweep_timer = 0;
+
+			// Volume is set to contents of NR12 initial volume.
+			ch4.volume = (nr42 >> 4);
+
+			// LSFR bits are reset
+			ch4.lsfr = 0;
+		}
+		break;
+
+	// Global Control
 	case 0xFF24: nr50 = data; break;
 	case 0xFF25: nr51 = data; break;
 	case 0xFF26: nr52 = (data & 0b10000000) | (nr52 & 0b00001111); break;
