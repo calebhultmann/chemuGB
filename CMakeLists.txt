@@ -67,12 +67,16 @@ add_executable(Emulator
 	src/renderer/chemuPixelEngine.cpp
 	src/renderer/chemuPixelEngine.h
 	
-	
-	src/bus.cpp
-	src/bus.h
+	# Audio
+	src/audio/chemuAudioEngine.cpp
+	src/audio/chemuAudioEngine.h
 
-	src/cartridge.cpp
-	src/cartridge.h
+	# Core
+	"src/core/bus.cpp"
+	"src/core/bus.h"
+
+	"src/core/cartridge.cpp"
+	"src/core/cartridge.h"
 	
 	src/config.cpp
 	src/config.h
@@ -80,21 +84,24 @@ add_executable(Emulator
 	src/console.cpp
 	src/console.h
 	
-	src/cpu.cpp
-	src/cpu.h
+	"src/core/cpu.cpp"
+	"src/core/cpu.h"
 	
 	src/emulator.cpp
 	src/emulator.h
 	
 	src/errors.h
 	
-	src/joypad.cpp
-	src/joypad.h
+	"src/core/joypad.cpp"
+	"src/core/joypad.h"
 	
 	src/main.cpp
 	
-	src/ppu.cpp
-	src/ppu.h
+	"src/core/ppu.cpp"
+	"src/core/ppu.h"
+
+	src/core/apu.cpp
+	src/core/apu.h
 	)
 
 

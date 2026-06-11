@@ -3,6 +3,8 @@
 Bus::Bus() {
 	cpu.connectBus(this);
 	ppu.connectBus(this);
+	apu.connectBus(this);
+	apu.initialize();
 	cart = std::make_shared<Cartridge>();
 	joypad.connectBus(this);
 }
@@ -15,50 +17,54 @@ int Bus::insertCartridge(const std::filesystem::path romPath) {
 	return cart->loadCartridge(romPath);
 }
 
+// Increments every T_cycle (Master Clock) at ~4 MHz (4,194,304 Hz)
 void Bus::clock() {
-	if (++t_state == 4) {
-		t_state = 0;
-		div++;
+
+	int bit;
+	switch (tac & 0b11) {
+	case 0b00: bit = 9; break;
+	case 0b01: bit = 3; break;
+	case 0b10: bit = 5; break;
+	case 0b11: bit = 7; break;
 	}
 
-	if (tac & 0b00000100) {
-		bool inc = false;
-		switch (tac & 0b00000011) {
-		case 0b00:
-			inc = ((div & 0x3FF) == 0);
-			break;
-		case 0b01:
-			inc = ((div & 0xF) == 0);
-			break;
-		case 0b10:
-			inc = ((div & 0x3F) == 0);
-			break;
-		case 0b11:
-			inc = ((div & 0xFF) == 0);
-			break;
+	bool old_state = (master_clock & (1 << bit)) && (tac & 0b100);
+
+	master_clock++;
+
+	bool new_state = (master_clock & (1 << bit)) && (tac & 0b100);
+
+	if (old_state && !new_state) {
+		if (tima == 0xFF) {
+			tima = tma;
+			interrupts |= INTERRUPT_TIMER;
 		}
-		if (inc) {
-			if (tima == 0xFF) {
-				tima = tma;
-				interrupts |= INTERRUPT_TIMER;
-			}
-			else {
-				tima++;
-			}
-		}
-	}
-	if (!halt) {
-		cpu.clock();
-	}
-	// Resume CPU when an interrupt is pending
-	else {
-		if (ie & interrupts) {
-			halt = false;
+		else {
+			tima++;
 		}
 	}
 
+	div = master_clock >> 8;
+
+	// Clock one M-cycle (~1MHz) every 4 T-cycles (~4MHz)
+	if (master_clock % 4 == 0) {
+		if (!halt) {
+			cpu.clock();
+		}
+		// Resume CPU when an interrupt is pending
+		else {
+			if (ie & interrupts) {
+				halt = false;
+			}
+		}
+	}
+
+	// Clock PPU every T-cycle (~4MHz)
 	if (lcdc & 0b10000000) {
 		ppu.clock();
+	}
+	if (apu.nr52 & 0b10000000) {
+		apu.clock();
 	}
 }
 
@@ -72,27 +78,6 @@ uint8_t Bus::readIOregs(uint16_t addr) {
 	case 0xFF06: return tma;
 	case 0xFF07: return tac;
 	case 0xFF0F: return interrupts;
-	case 0xFF10: return audio_regs.nr10;
-	case 0xFF11: return audio_regs.nr11 & 0b11000000;
-	case 0xFF12: return audio_regs.nr12;
-	case 0xFF13: return 0xFF;
-	case 0xFF14: return audio_regs.nr14 & 0b01000000;
-	case 0xFF16: return audio_regs.nr21 & 0b11000000;
-	case 0xFF17: return audio_regs.nr22;
-	case 0xFF18: return 0xFF;
-	case 0xFF19: return audio_regs.nr24 & 0b01000000;
-	case 0xFF1A: return audio_regs.nr30;
-	case 0xFF1B: return 0xFF;
-	case 0xFF1C: return audio_regs.nr32;
-	case 0xFF1D: return 0xFF;
-	case 0xFF1E: return audio_regs.nr34 & 0b01000000;
-	case 0xFF20: return 0xFF;
-	case 0xFF21: return audio_regs.nr42;
-	case 0xFF22: return audio_regs.nr43;
-	case 0xFF23: return audio_regs.nr44 & 0b01000000;
-	case 0xFF24: return audio_regs.nr50;
-	case 0xFF25: return audio_regs.nr51;
-	case 0xFF26: return audio_regs.nr52;
 	case 0xFF40: return lcdc;
 	case 0xFF41: return stat;
 	case 0xFF42: return scy;
@@ -135,27 +120,6 @@ void Bus::writeIOregs(uint16_t addr, uint8_t data) {
 	case 0xFF06: tma = data; break;
 	case 0xFF07: tac = data & 0b00000111; break;
 	case 0xFF0F: interrupts = data & 0b00011111; break;
-	case 0xFF10: audio_regs.nr10 = data & 0b01111111; break;
-	case 0xFF11: audio_regs.nr11 = data; break;
-	case 0xFF12: audio_regs.nr12 = data; break;
-	case 0xFF13: audio_regs.nr13 = data; break;
-	case 0xFF14: audio_regs.nr14 = data & 0b11000111; break;
-	case 0xFF16: audio_regs.nr21 = data; break;
-	case 0xFF17: audio_regs.nr22 = data; break;
-	case 0xFF18: audio_regs.nr23 = data; break;
-	case 0xFF19: audio_regs.nr24 = data & 0b11000111; break;
-	case 0xFF1A: audio_regs.nr30 = data & 0b10000000; break;
-	case 0xFF1B: audio_regs.nr31 = data; break;
-	case 0xFF1C: audio_regs.nr32 = data & 0b01100000; break;
-	case 0xFF1D: audio_regs.nr33 = data; break;
-	case 0xFF1E: audio_regs.nr34 = data & 0b11000111; break;
-	case 0xFF20: audio_regs.nr41 = data & 0b00111111; break;
-	case 0xFF21: audio_regs.nr42 = data; break;
-	case 0xFF22: audio_regs.nr43 = data; break;
-	case 0xFF23: audio_regs.nr44 = data & 0b11000000; break;
-	case 0xFF24: audio_regs.nr50 = data; break;
-	case 0xFF25: audio_regs.nr51 = data; break;
-	case 0xFF26: audio_regs.nr52 = (data & 0b10000000) | (audio_regs.nr52 & 0b00001111); break;
 	case 0xFF40: lcdc = data; break;
 	case 0xFF41: stat = (data & 0b0111100) | (stat | 0b00000011); break;
 	case 0xFF42: scy = data; break;
@@ -211,6 +175,9 @@ uint8_t Bus::read(uint16_t addr) {
 	else if (addr >= 0xFEA0 && addr <= 0xFEFF) {
 		// not usable
 	}
+	else if (addr >= 0xFF10 && addr <= 0xFF26) {
+		return apu.read(addr);
+	}
 	else if (addr >= 0xFF00 && addr <= 0xFF7F) {
 		return readIOregs(addr);
 	}
@@ -245,6 +212,9 @@ void Bus::write(uint16_t addr, uint8_t data) {
 	}
 	else if (addr >= 0xFEA0 && addr <= 0xFEFF) {
 		 // not usable
+	}
+	else if (addr >= 0xFF10 && addr <= 0xFF26) {
+		apu.write(addr, data);
 	}
 	else if (addr >= 0xFF00 && addr <= 0xFF7F) {
 		writeIOregs(addr, data);

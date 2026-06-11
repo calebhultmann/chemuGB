@@ -1,6 +1,6 @@
 #pragma once
 
-#include "bus.h"
+#include "core/bus.h"
 #include <filesystem>
 
 class chemuGB {

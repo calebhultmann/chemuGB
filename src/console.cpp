@@ -8,8 +8,9 @@ Console::Console(Config& config) {
 		// return init_status
 
 	}
-
+	
 	int status = engine.initialize();
+	//speaker.play_default_sound();
 	//if (status != Error::None) {
 	//	return status;
 	//}
