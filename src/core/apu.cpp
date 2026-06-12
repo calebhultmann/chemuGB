@@ -7,6 +7,40 @@
 
 void APU::initialize() {
 	speaker.initialize(this);
+	shutoff();
+}
+
+void APU::shutoff() {
+	// Reset all audio registers
+	nr10 = 0;
+	nr11 = 0;
+	nr12 = 0;
+	nr13 = 0;
+	nr14 = 0;
+	nr21 = 0;
+	nr22 = 0;
+	nr23 = 0;
+	nr24 = 0;
+	nr30 = 0;
+	nr31 = 0;
+	nr32 = 0;
+	nr33 = 0;
+	nr34 = 0;
+	nr41 = 0;
+	nr42 = 0;
+	nr43 = 0;
+	nr44 = 0;
+	nr50 = 0;
+	nr51 = 0;
+
+	// Disable all DACs
+	ch1.dac_enable = false;
+	ch2.dac_enable = false;
+	//ch3.dac_enable = false;
+	ch4.dac_enable = false;
+
+	// Disable all channels
+	nr52 &= 0b11110000;
 }
 
 void APU::clock() {
@@ -72,7 +106,7 @@ void APU::clock() {
 
 			if ((ch4.shift_timer * scale) % divide == 0) {
 				ch4.shift_timer = 0;
-				bool bit = (ch4.lsfr & 0b1) == (ch4.lsfr & 0b10);
+				bool bit = (ch4.lsfr & 0b1) == ((ch4.lsfr >> 1) & 0b1);
 				if (bit) {
 					ch4.lsfr |= CH4_LONG_BIT;
 
@@ -382,6 +416,12 @@ void APU::write(uint16_t addr, uint8_t data) {
 	// Global Control
 	case 0xFF24: nr50 = data; break;
 	case 0xFF25: nr51 = data; break;
-	case 0xFF26: nr52 = (data & 0b10000000) | (nr52 & 0b00001111); break;
+	case 0xFF26: // Audio Master Control
+		// TODO: When APU is written off, all registers are set as 0 and read-only (this turns off all dacs!)
+		nr52 = (data & 0b10000000) | (nr52 & 0b00001111);
+		if (!(data & 0b10000000)) {
+			shutoff();
+		}
+		break;
 	}
 }

@@ -134,6 +134,7 @@ public:
 	
 	audioEngine speaker;
 	void initialize();
+	void shutoff();
 
 	double cyclesPerSample = 4194304.0 / 44100.0;
 	double cycle_accumulator = 0;
@@ -150,31 +151,31 @@ public:
 	bool no_tick = false;
 
 	// Channel 1 - Pulse with period sweep
-	uint8_t nr10; // Sweep
-	uint8_t nr11; // Length Timer & Duty Cycle
-	uint8_t nr12; // Volume & Envelope
-	uint8_t nr13; // Period Low
-	uint8_t nr14; // Period High & Control
+	uint8_t nr10 = 0; // Sweep
+	uint8_t nr11 = 0; // Length Timer & Duty Cycle
+	uint8_t nr12 = 0; // Volume & Envelope
+	uint8_t nr13 = 0; // Period Low
+	uint8_t nr14 = 0; // Period High & Control
 	// Channel 2 - Pulse
-	uint8_t nr21; // Length Timer & Duty Cycle
-	uint8_t nr22; // Volume & Envelope
-	uint8_t nr23; // Period Low
-	uint8_t nr24; // Period High & Control
+	uint8_t nr21 = 0; // Length Timer & Duty Cycle
+	uint8_t nr22 = 0; // Volume & Envelope
+	uint8_t nr23 = 0; // Period Low
+	uint8_t nr24 = 0; // Period High & Control
 	// Channel 3 - Wave output
-	uint8_t nr30; // DAC Enable
-	uint8_t nr31; // Length Timer
-	uint8_t nr32; // Output Level
-	uint8_t nr33; // Period Low
-	uint8_t nr34; // Period High & Control
+	uint8_t nr30 = 0; // DAC Enable
+	uint8_t nr31 = 0; // Length Timer
+	uint8_t nr32 = 0; // Output Level
+	uint8_t nr33 = 0; // Period Low
+	uint8_t nr34 = 0; // Period High & Control
 	// Channel 4 - Noise
-	uint8_t nr41; // Length Timer
-	uint8_t nr42; // Volume & Envelope
-	uint8_t nr43; // Frequency & Randomness
-	uint8_t nr44; // Control
+	uint8_t nr41 = 0; // Length Timer
+	uint8_t nr42 = 0; // Volume & Envelope
+	uint8_t nr43 = 0; // Frequency & Randomness
+	uint8_t nr44 = 0; // Control
 
-	uint8_t nr50; // Master Volume & VIN Panning
-	uint8_t nr51; // Sound Panning
-	uint8_t nr52; // Audio Master Control
+	uint8_t nr50 = 0; // Master Volume & VIN Panning
+	uint8_t nr51 = 0; // Sound Panning
+	uint8_t nr52 = 0; // Audio Master Control
 
 	uint8_t read(uint16_t addr) const;
 	void write(uint16_t addr, uint8_t data);
