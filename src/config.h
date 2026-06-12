@@ -3,6 +3,7 @@
 
 struct Config {
 	bool debug = false;
+	bool color = false;
 	// breakpoint?
 	// trace?
 	std::filesystem::path filePath;

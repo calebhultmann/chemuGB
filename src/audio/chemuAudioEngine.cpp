@@ -38,6 +38,10 @@ void audioEngine::dacs() {
 	float ch2_digital = (float)(apu->ch2.duty_value * apu->ch2.volume);
 	float ch2_pre_analog = (apu->ch2.dac_enable ? ch2_digital : 7.5f);
 	ch2_analog = ch2_pre_analog * dac_conversion + 1.0f;
+
+	float ch4_digital = (float)(apu->ch4.lsfr_value * apu->ch4.volume);
+	float ch4_pre_analog = (apu->ch4.dac_enable ? ch4_digital : 7.5f);
+	ch4_analog = ch4_pre_analog * dac_conversion + 1.0f;
 }
 
 void audioEngine::mixer() {

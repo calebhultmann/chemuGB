@@ -8,6 +8,10 @@ int parse_args(Config& config, int argc, char** argv) {
 		if (arg == "--debug") {
 			config.debug = true;
 		}
+
+		if (arg == "--color") {
+			config.color = true;
+		}
 	}
 
 	char* rom = argv[argc - 1];
